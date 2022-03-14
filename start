@@ -1,0 +1,87 @@
+#!/bin/bash
+source /root/.bashrc
+
+# check file exists /www/.env and source it else exit script if not found
+if [ -f /var/www/.env ]; then
+    source /var/www/.env
+else
+    echo "File /www/.env not found. Exiting..."
+    exit 1
+fi
+
+CNF_APP_DEBUG=${APP_DEBUG:-true}
+CNF_APP_URL=${APP_URL:-"http://localhost"}
+CNF_APP_HOST=$(/usr/bin/php -r "echo parse_url('${CNF_APP_URL}', PHP_URL_HOST);")
+CNF_APP_TIMEZONE=${APP_TIMEZONE:-"UTC"}
+CNF_OCTANE_SERVER=${OCTANE_SERVER:-"swoole"}
+
+# check in variable APP_SSL if CNF_APP_URL started with http:// or https://
+if [[ "${CNF_APP_URL}" =~ ^https:// ]]; then
+    CNF_APP_SSL=${APP_SSL:-true}
+else
+    CNF_APP_SSL=${APP_SSL:-false}
+fi
+
+CNF_SOKETI_PATH=$(which soketi);
+CNF_SOKETI_PORT=${SOKETI_PORT:-6002}
+CNF_SOKETI_ID=${SOKETI_ID:-"some-id"}
+CNF_SOKETI_KEY=${SOKETI_KEY:-"some-key"}
+CNF_SOKETI_SECRET=${SOKETI_SECRET:-"some-secret"}
+CNF_SOKETI_WEBHOOK=${SOKETI_WEBHOOK:-"http://localhost:8080"}
+
+echo "Starting Soketi..."
+echo $(jq '.debug = '$CNF_APP_DEBUG' | .port = '$CNF_SOKETI_PORT' | ."appManager.array.apps.0.id" = "'$CNF_SOKETI_ID'" | ."appManager.array.apps.0.key" = "'$CNF_SOKETI_KEY'" | ."appManager.array.apps.0.secret" = "'$CNF_SOKETI_SECRET'" | ."appManager.array.apps.0.webhooks"[0].url = "'$CNF_SOKETI_WEBHOOK'"' /var/soketi/config.json) > /var/soketi/config.json
+echo "Soketi started"
+
+if [[ $CNF_APP_SSL == "true" ]]; then
+    echo "Starting SSL certificate..."
+    openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
+    openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
+    -subj "/C=CA/ST=QC/O=Company, Inc./CN="${CNF_APP_HOST} \
+    -out /etc/ssl/certs/laravel.crt \
+    -keyout /etc/ssl/certs/laravel.key \
+    2>/dev/null
+    echo "SSL certificate generated"
+fi
+
+# configure timezone
+ln -snf /usr/share/zoneinfo/${CNF_APP_TIMEZONE} /etc/localtime
+echo ${CNF_APP_TIMEZONE} > /etc/timezone
+echo "Timezone configured"
+
+# defive octane server
+sed -e 's@__SOKETI__@'$CNF_SOKETI_PATH'@' -i /etc/supervisord.conf
+sed -e 's/server=swoole/server='$CNF_OCTANE_SERVER'/' -i /etc/supervisord.conf
+echo "Octane server configured"
+
+# remplazar __APP_HOST__ de archivo ./nginx/sites-available/site.conf
+sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/site.conf
+sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/soketi.conf
+sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
+sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-soketi.conf
+echo "Host configured"
+
+if [ $CNF_APP_SSL == true ] ; then \
+    rm -f /etc/nginx/sites-available/site.conf;
+    rm -f /etc/nginx/sites-available/soketi.conf;
+else
+    rm -f /etc/nginx/sites-available/ssl-site.conf;
+    rm -f /etc/nginx/sites-available/ssl-soketi.conf;
+fi
+echo "SSL configured"
+
+chown -R apache:apache storage
+chown -R apache:apache bootstrap/cache
+echo "Storage and cache directories configured"
+
+
+echo "Starting supervisord..."
+# check if non argv passed else run bash
+if [ $# -eq 0 ]; then
+    composer require laravel/octane spiral/roadrunner -W
+    php artisan octane:install --server=$CNF_OCTANE_SERVER
+    php artisan migrate
+    /usr/bin/supervisord -n -c /etc/supervisord.conf
+else
+    exec "$@"
+fi
