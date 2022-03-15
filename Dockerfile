@@ -18,7 +18,6 @@ RUN dnf -y install \
     openssl \
     procps \
     cronie \
-    ffmpeg \
     unzip \
     wget \
     git \
@@ -44,7 +43,6 @@ RUN dnf -y install \
     php-memcache \
     php-imagick \
     php-opcache \
-    php-mongodb \
     php-swoole \
     php-bcmath \
     php-xdebug \
@@ -95,7 +93,7 @@ COPY ./start /start
 ENV OPCACHE_ENABLE=1
 RUN OPCACHE_FILE=$(find /etc/php.d -name '*-opcache.ini') && \
     sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE && \
-    sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$ENABLE_OPCACHE'/' -i $OPCACHE_FILE
+    sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
 RUN chmod +x /start
 RUN chmod +x /usr/bin/rr

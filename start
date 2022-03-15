@@ -33,7 +33,7 @@ echo "Starting Soketi..."
 echo $(jq '.debug = '$CNF_APP_DEBUG' | .port = '$CNF_SOKETI_PORT' | ."appManager.array.apps.0.id" = "'$CNF_SOKETI_ID'" | ."appManager.array.apps.0.key" = "'$CNF_SOKETI_KEY'" | ."appManager.array.apps.0.secret" = "'$CNF_SOKETI_SECRET'" | ."appManager.array.apps.0.webhooks"[0].url = "'$CNF_SOKETI_WEBHOOK'"' /var/soketi/config.json) > /var/soketi/config.json
 echo "Soketi started"
 
-if [[ $CNF_APP_SSL == "true" ]]; then
+if [ $CNF_APP_SSL == true ]; then
     echo "Starting SSL certificate..."
     openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
     openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
@@ -51,7 +51,7 @@ echo "Timezone configured"
 
 # defive octane server
 sed -e 's@__SOKETI__@'$CNF_SOKETI_PATH'@' -i /etc/supervisord.conf
-sed -e 's/server=swoole/server='$CNF_OCTANE_SERVER'/' -i /etc/supervisord.conf
+sed -e 's/server=.*/server='$CNF_OCTANE_SERVER'/' -i /etc/supervisord.conf
 echo "Octane server configured"
 
 # remplazar __APP_HOST__ de archivo ./nginx/sites-available/site.conf
@@ -74,13 +74,36 @@ chown -R apache:apache storage
 chown -R apache:apache bootstrap/cache
 echo "Storage and cache directories configured"
 
+if [ ! -d /var/www/vendor ]; then
+    composer install
+fi
+
+if [ ! -d /var/www/node_modules ]; then
+    npm install
+fi
+
+LARAVEL_OCTANE_EXISTS=$(jq '.require["laravel/octane"]' /var/www/composer.json)
+if [ "$LARAVEL_OCTANE_EXISTS" == "null" ]; then
+    composer require laravel/octane -W
+fi
+
+LARAVEL_ROADRUNNER_EXISTS=$(jq '.require["spiral/roadrunner"]' /var/www/composer.json)
+if [ "$LARAVEL_ROADRUNNER_EXISTS" == "null" ]; then
+    composer require spiral/roadrunner -W
+fi
+
+# check symlink exists /var/www/public/storage and create it if not found
+if [ ! -L /var/www/public/storage ]; then
+    php artisan storage:link
+fi
+
+if [ ! -f /var/www/config/octane.php ]; then
+    php artisan octane:install --server=$CNF_OCTANE_SERVER
+fi
 
 echo "Starting supervisord..."
 # check if non argv passed else run bash
 if [ $# -eq 0 ]; then
-    composer require laravel/octane spiral/roadrunner -W
-    php artisan octane:install --server=$CNF_OCTANE_SERVER
-    php artisan migrate
     /usr/bin/supervisord -n -c /etc/supervisord.conf
 else
     exec "$@"
