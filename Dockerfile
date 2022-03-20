@@ -25,7 +25,7 @@ RUN dnf -y install \
 RUN dnf config-manager --set-enabled remi
 RUN dnf module reset php
 
-ARG PHP_VERSION=8.0
+ARG PHP_VERSION=8.1
 RUN dnf -y module install php:remi-${PHP_VERSION}
 RUN dnf -y install \
     php \
