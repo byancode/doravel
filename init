@@ -30,28 +30,25 @@ echo "👇️ Deploy keys 👇️"
 echo "https://docs.github.com/es/developers/overview/managing-deploy-keys#deploy-keys"
 echo ""
 
-RSA_KEY=$(cat $PWD/ssh/id_rsa | base64)
-RSA_PUB=$(cat $PWD/ssh/id_rsa.pub | base64)
+RSA_KEY=$(cat $PWD/ssh/id_rsa | base64 --wrap=0)
+RSA_PUB=$(cat $PWD/ssh/id_rsa.pub | base64 --wrap=0)
 
-script='
+script='#!/bin/bash
 sudo dnf -y install dnf-plugins-core git
 sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
 sudo dnf -y install docker-ce docker-ce-cli containerd.io
 sudo systemctl start docker
+
 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
+
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
 git config --global user.name "'$name'"
 git config --global user.email "'$email'"
+
 echo "'$RSA_KEY'" | base64 -d > $HOME/.ssh/id_rsa
 echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
+
 git clone '$url' /var/www && cd /var/www
-'
-
-echo '
-# iniciar en servidor
-
-```bash
-'"$script"'
-```
-' > $PWD/SERVER.md
+' > $PWD/deploy.sh
