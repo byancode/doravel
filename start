@@ -1,7 +1,7 @@
 #!/bin/bash
 source /root/.bashrc
 
-# check file exists /www/.env and source it else exit script if not found
+
 if [ -f /var/www/.env ]; then
     source /var/www/.env
 else
@@ -13,9 +13,7 @@ CNF_APP_DEBUG=${APP_DEBUG:-true}
 CNF_APP_URL=${APP_URL:-"http://localhost"}
 CNF_APP_HOST=$(/usr/bin/php -r "echo parse_url('${CNF_APP_URL}', PHP_URL_HOST);")
 CNF_APP_TIMEZONE=${APP_TIMEZONE:-"UTC"}
-CNF_OCTANE_SERVER=${OCTANE_SERVER:-"swoole"}
 
-# check in variable APP_SSL if CNF_APP_URL started with http:// or https://
 if [[ "${CNF_APP_URL}" =~ ^https:// ]]; then
     CNF_APP_SSL=${APP_SSL:-true}
 else
@@ -51,10 +49,8 @@ echo "Timezone configured"
 
 # defive octane server
 sed -e 's@__SOKETI__@'$CNF_SOKETI_PATH'@' -i /etc/supervisord.conf
-sed -e 's/server=.*/server='$CNF_OCTANE_SERVER'/' -i /etc/supervisord.conf
-echo "Octane server configured"
+echo "Soketi configured"
 
-# remplazar __APP_HOST__ de archivo ./nginx/sites-available/site.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/site.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/soketi.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
@@ -87,12 +83,6 @@ if [ "$LARAVEL_OCTANE_EXISTS" == "null" ]; then
     composer require laravel/octane -W
 fi
 
-LARAVEL_ROADRUNNER_EXISTS=$(jq '.require["spiral/roadrunner"]' /var/www/composer.json)
-if [ "$LARAVEL_ROADRUNNER_EXISTS" == "null" ]; then
-    composer require spiral/roadrunner -W
-fi
-
-# check symlink exists /var/www/public/storage and create it if not found
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
 fi
@@ -102,7 +92,6 @@ if [ ! -f /var/www/config/octane.php ]; then
 fi
 
 echo "Starting supervisord..."
-# check if non argv passed else run bash
 if [ $# -eq 0 ]; then
     /usr/bin/supervisord -n -c /etc/supervisord.conf
 else

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cd /var/www/
+
+LANG=en_GB
+TEXT_GIT_PULL='"git pull"'
+
+while true; do
+    MESSAGE=$(git remote update && git status -uno | grep -o "$TEXT_GIT_PULL")
+    if [ "$MESSAGE" == "$TEXT_GIT_PULL" ]; then
+        git pull
+        poweroff
+        break;
+    fi
+    sleep 5
+done

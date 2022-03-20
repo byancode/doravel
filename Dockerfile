@@ -9,16 +9,15 @@ RUN dnf -y install \
     http://rpms.remirepo.net/fedora/remi-release-35.rpm
 RUN dnf -y install \
     https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-RUN dnf -y install \
-    https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 RUN dnf -y install \
     ImageMagick \
     supervisor \
     openssl \
-    procps \
     cronie \
+    expect \
     unzip \
+    spawn \
     wget \
     git \
     jq
@@ -26,7 +25,7 @@ RUN dnf -y install \
 RUN dnf config-manager --set-enabled remi
 RUN dnf module reset php
 
-ENV PHP_VERSION=8.0
+ARG PHP_VERSION=8.0
 RUN dnf -y module install php:remi-${PHP_VERSION}
 RUN dnf -y install \
     php \
@@ -62,17 +61,14 @@ RUN chmod +x /usr/local/bin/composer
 
 RUN mkdir -p /var/soketi
 
-ENV NVM_VERSION=0.39.1
-ENV NODE_VERSION="--lts"
+ARG NVM_VERSION=0.39.1
+ARG NODE_VERSION="--lts"
 
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
 RUN source /root/.bashrc && \
     nvm install $(echo $NODE_VERSION) && \
     npm install -g @soketi/soketi && \
     npm install -g yarn
-
-ENV ROADRUNNER_VERSION=latest
-COPY --from=spiralscout/roadrunner:latest /usr/bin/rr /usr/bin/rr
 
 ENV PHP_UPLOAD_MAX_FILESIZE=1G
 ENV PHP_MAX_EXECUTION_TIME=600
@@ -88,6 +84,7 @@ COPY ./config/opcache.blacklist /etc/php.d/opcache-default.blacklist
 COPY ./config/supervisord.conf /etc/supervisord.conf
 COPY ./config/opcache.ini /etc/php.d/*-opcache.ini
 COPY ./config/soketi.json /var/soketi/config.json
+COPY ./deploy /deploy
 COPY ./start /start
 
 ENV OPCACHE_ENABLE=1
@@ -95,9 +92,8 @@ RUN OPCACHE_FILE=$(find /etc/php.d -name '*-opcache.ini') && \
     sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE && \
     sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
+RUN chmod +x /deploy
 RUN chmod +x /start
-RUN chmod +x /usr/bin/rr
-RUN mkdir -p /run/php-fpm
 
 RUN sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i /etc/php-fpm.d/www.conf
 RUN sed -e 's/listen.acl_users/;listen.acl_users/' -i /etc/php-fpm.d/www.conf
@@ -112,6 +108,12 @@ COPY ./nginx/mime.types /etc/nginx/mime.types
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
 RUN rm -f /etc/nginx/conf.d/php-fpm.conf
+
+ENV GIT_NAME="Byancode"
+ENV GIT_EMAIL="byancode@gmail.com"
+
+RUN git config --global user.name "$GIT_NAME"
+RUN git config --global user.email "$GIT_EMAIL"
 
 EXPOSE 80
 EXPOSE 443

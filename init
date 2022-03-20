@@ -1,0 +1,30 @@
+#!/bin/bash
+
+name=$(git config --get user.name)
+email=$(git config --get user.email)
+branch=$(git rev-parse --abbrev-ref HEAD)
+repository=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/')
+
+if [ ! -d $PWD/ssh ]; then
+    mkdir $PWD/ssh
+fi
+if [ -f $PWD/ssh/id_rsa.pub ]; then
+    rm $PWD/ssh/id_rsa.pub
+fi
+if [ -f $PWD/ssh/id_rsa ]; then
+    rm $PWD/ssh/id_rsa
+fi
+
+ssh-keygen -t rsa -b 4096 -C "$email" -f $PWD/ssh/id_rsa -q -N ""
+
+echo ""
+echo "### SSH key generated ###"
+echo ""
+cat $PWD/ssh/id_rsa.pub
+echo ""
+echo ""
+echo "⚠️⚠️ IMPORTANTE ⚠️⚠️"
+echo "No olvide agregar la clave pública a su repositorio de GitHub!"
+echo "👇️ Deploy keys 👇️"
+echo "https://docs.github.com/es/developers/overview/managing-deploy-keys#deploy-keys"
+echo ""

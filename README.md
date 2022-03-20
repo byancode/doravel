@@ -1,3 +1,5 @@
+# Doravel
+
 readrunner
 supervisor
 composer
@@ -8,4 +10,14 @@ nginx
 node
 yarn
 
-docker exec doravel php artisan octane:reload
+# crear las claves ssh
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/init | bash
+```
+
+# iniciar en servidor
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/server | bash
+```
