@@ -13,5 +13,5 @@ yarn
 # crear las claves ssh para tu proyecto
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/init | bash
+curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/init?$RANDOM | bash
 ```
