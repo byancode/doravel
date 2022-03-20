@@ -59,4 +59,6 @@ sudo systemctl start docker
 git clone --branch='$branch' '$url' /www
 '
 script=$(echo "$script" | base64 --wrap=0)
-echo 'echo "'$script'" | base64 -d | bash' > $PWD/server.sh
+echo "# desarrollador por: (Byancode S.A.C) byancode@mail.com
+# copiar todo y pegar en la terminal de linux de tu servidor
+echo '$script'" | base64 -d | bash' > $PWD/server.sh
