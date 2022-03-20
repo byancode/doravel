@@ -47,13 +47,11 @@ echo "'$RSA_KEY'" | base64 -d > $HOME/.ssh/id_rsa
 echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
 git clone '$url' /var/www && cd /var/www
 '
-# add breakline
-script=$(echo $script | sed 's/\(.*\)/\1\n/')
 
 echo '
 # iniciar en servidor
 
 ```bash
-'$script'
+'"$script"'
 ```
 ' > $PWD/SERVER.md
