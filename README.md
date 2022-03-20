@@ -13,11 +13,11 @@ yarn
 # crear las claves ssh
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/init | bash
+curl -fsSL https://bit.ly/36w7Ugo | bash
 ```
 
 # iniciar en servidor
 
 ```bash
-curl -o server https://raw.githubusercontent.com/byancode/doravel/main/server && chmod -x server && bash server
+curl -fsSL https://bit.ly/3qlosif > ./server && bash ./server
 ```
