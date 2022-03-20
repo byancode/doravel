@@ -33,6 +33,13 @@ echo ""
 RSA_KEY=$(cat $PWD/ssh/id_rsa | base64 --wrap=0)
 RSA_PUB=$(cat $PWD/ssh/id_rsa.pub | base64 --wrap=0)
 
+ENV_SERVER='
+GIT_NAME="'$name'"
+GIT_EMAIL="'$email'"
+GIT_BRANCH="'$branch'"
+GIT_REPOSITORY="'$repository'"'
+echo "$ENV_SERVER" > $PWD/git.env
+
 script='#!/bin/bash
 
 sudo dnf -y install dnf-plugins-core git
@@ -52,4 +59,4 @@ sudo systemctl start docker
 git clone --branch='$branch' '$url' /www
 '
 script=$(echo "$script" | base64 --wrap=0)
-echo 'echo "'$script'" | bash' > $PWD/server.sh
+echo 'echo "'$script'" | base64 -d | bash' > $PWD/server.sh
