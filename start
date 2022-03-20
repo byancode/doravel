@@ -9,6 +9,8 @@ else
     exit 1
 fi
 
+/known
+
 CNF_APP_DEBUG=${APP_DEBUG:-true}
 CNF_APP_URL=${APP_URL:-"http://localhost"}
 CNF_APP_HOST=$(/usr/bin/php -r "echo parse_url('${CNF_APP_URL}', PHP_URL_HOST);")

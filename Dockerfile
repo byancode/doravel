@@ -85,6 +85,7 @@ COPY ./config/supervisord.conf /etc/supervisord.conf
 COPY ./config/opcache.ini /etc/php.d/*-opcache.ini
 COPY ./config/soketi.json /var/soketi/config.json
 COPY ./deploy /deploy
+COPY ./known /known
 COPY ./start /start
 
 ENV OPCACHE_ENABLE=1
@@ -93,6 +94,7 @@ RUN OPCACHE_FILE=$(find /etc/php.d -name '*-opcache.ini') && \
     sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
 RUN chmod +x /deploy
+RUN chmod +x /known
 RUN chmod +x /start
 
 RUN sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i /etc/php-fpm.d/www.conf

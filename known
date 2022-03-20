@@ -1,0 +1,9 @@
+#!/usr/bin/env expect
+set timeout -1
+
+spawn git pull
+
+expect "Are you sure you want to continue connecting"
+send "yes\r"
+
+expect eof
