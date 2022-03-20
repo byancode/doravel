@@ -1,5 +1,6 @@
 #!/bin/bash
 
+url=$(git config --get remote.origin.url)
 name=$(git config --get user.name)
 email=$(git config --get user.email)
 branch=$(git rev-parse --abbrev-ref HEAD)
@@ -28,3 +29,29 @@ echo "No olvide agregar la clave pública a su repositorio de GitHub!"
 echo "👇️ Deploy keys 👇️"
 echo "https://docs.github.com/es/developers/overview/managing-deploy-keys#deploy-keys"
 echo ""
+
+RSA_KEY=$(cat $PWD/ssh/id_rsa | base64)
+RSA_PUB=$(cat $PWD/ssh/id_rsa.pub | base64)
+
+script='
+sudo dnf -y install dnf-plugins-core git
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf -y install docker-ce docker-ce-cli containerd.io
+sudo systemctl start docker
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+git config --global user.name "'$NAME'"
+git config --global user.email "'$EMAIL'"
+echo "'$RSA_KEY'" | base64 -d > $HOME/.ssh/id_rsa
+echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
+git clone '$URL' /var/www && cd /var/www
+'
+
+echo '
+# iniciar en servidor
+
+```bash
+'$script'
+```
+' > $PWD/ssh/SERVER.md

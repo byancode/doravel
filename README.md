@@ -10,14 +10,8 @@ nginx
 node
 yarn
 
-# crear las claves ssh
+# crear las claves ssh para tu proyecto
 
 ```bash
-curl -fsSL https://bit.ly/36w7Ugo | bash
-```
-
-# iniciar en servidor
-
-```bash
-curl -fsSL https://bit.ly/3qlosif > ./server && bash ./server
+curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/init | bash
 ```
