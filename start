@@ -35,12 +35,15 @@ echo "Soketi started"
 
 if [ $CNF_APP_SSL == true ]; then
     echo "Starting SSL certificate..."
+    CNF_APP_IP=$(/bin/hostname -I | /usr/bin/awk '{print $1}')
+    sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/ssl/sancert.cnf
+    sed -e 's/__APP_IP__/'$CNF_APP_IP'/' -i /etc/ssl/sancert.cnf
+    
     openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
     openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
-    -subj "/C=CA/ST=QC/O=Company, Inc./CN="${CNF_APP_HOST} \
+    -subj "/C=PE/ST=Lima/O=Byancode S.A.C/OU=/CN="${CNF_APP_HOST} \
     -out /etc/ssl/certs/laravel.crt \
-    -keyout /etc/ssl/certs/laravel.key \
-    2>/dev/null
+    -keyout /etc/ssl/certs/laravel.key
     echo "SSL certificate generated"
 fi
 

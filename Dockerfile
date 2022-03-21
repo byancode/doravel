@@ -84,6 +84,7 @@ COPY ./config/opcache.blacklist /etc/php.d/opcache-default.blacklist
 COPY ./config/supervisord.conf /etc/supervisord.conf
 COPY ./config/opcache.ini /etc/php.d/*-opcache.ini
 COPY ./config/soketi.json /var/soketi/config.json
+COPY ./config/sancert.cnf /etc/ssl/sancert.cnf
 COPY ./deploy /deploy
 COPY ./known /known
 COPY ./start /start
