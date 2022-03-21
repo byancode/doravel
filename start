@@ -41,7 +41,7 @@ if [ $CNF_APP_SSL == true ]; then
     
     openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
     openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
-    -subj "/C=PE/ST=Lima/O=Byancode S.A.C/OU=/CN="${CNF_APP_HOST} \
+    -subj "/C=PE/ST=Lima/O=Byancode S.A.C/CN="${CNF_APP_HOST} \
     -out /etc/ssl/certs/laravel.crt \
     -keyout /etc/ssl/certs/laravel.key
     echo "SSL certificate generated"
