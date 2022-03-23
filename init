@@ -4,7 +4,7 @@ url=$(git config --get remote.origin.url)
 name=$(git config --get user.name)
 email=$(git config --get user.email)
 branch=$(git rev-parse --abbrev-ref HEAD)
-repository=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/')
+repository=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
 
 if [ ! -d $PWD/ssh ]; then
     mkdir $PWD/ssh
@@ -56,8 +56,10 @@ git config --global user.email "'$email'"
 echo "'$RSA_KEY'" | base64 -d > $HOME/.ssh/id_rsa
 echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
 
+chmod 600 $HOME/.ssh/id_rsa
+
 sudo systemctl start docker
-git clone --branch='$branch' '$url' /www
+git clone --branch='$branch' git@github.com:'$repository'.git /www
 
 echo ""
 echo "👇️👇️👇️👇️👇️👇️"
