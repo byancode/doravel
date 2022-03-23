@@ -67,4 +67,4 @@ echo ""
 script=$(echo "$script" | base64 --wrap=0)
 echo "# $credits
 # copiar todo y pegar en la terminal de linux de tu servidor
-echo '$script'" | base64 -d | bash' > $PWD/server.sh
+echo '$script' | base64 -d | bash" > $PWD/server.sh
