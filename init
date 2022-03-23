@@ -40,6 +40,7 @@ GIT_BRANCH="'$branch'"
 GIT_REPOSITORY="'$repository'"'
 echo "$ENV_SERVER" > $PWD/git.env
 
+credits='desarrollado por: (Byancode S.A.C) byancode@gmail.com'
 script='#!/bin/bash
 
 sudo dnf -y install dnf-plugins-core git
@@ -57,8 +58,13 @@ echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
 
 sudo systemctl start docker
 git clone --branch='$branch' '$url' /www
+
+echo ""
+echo "👇️👇️👇️👇️👇️👇️"
+echo "'$credits'"
+echo ""
 '
 script=$(echo "$script" | base64 --wrap=0)
-echo "# desarrollador por: (Byancode S.A.C) byancode@mail.com
+echo "# $credits
 # copiar todo y pegar en la terminal de linux de tu servidor
 echo '$script'" | base64 -d | bash' > $PWD/server.sh
