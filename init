@@ -6,6 +6,26 @@ email=$(git config --get user.email)
 branch=$(git rev-parse --abbrev-ref HEAD)
 repository=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
 
+# check url if http
+if [[ $url =~ ^http:// ]]; then
+    echo ""
+    echo "Oops... necesitas que tu repositorio sea con ssh"
+    echo ""
+    read -p '¿Quieres que lo pasemos a ssh? (y/n): ' aswer
+    echo ""
+    if [ $aswer == "y" ]; then
+        git remote remove origin
+        git remote add origin git@github.com:$repository.git
+    else
+        echo "Puedes intentar hacerlo manualmente:"
+        echo "----------------------------------------"
+        echo "git remote remove origin"
+        echo "git remote add origin git@github.com:$repository.git"
+        echo ""
+        exit 1
+    fi
+fi
+
 if [ ! -d $PWD/.doravel ]; then
     mkdir $PWD/.doravel
 fi
@@ -80,18 +100,15 @@ if [ -f $PWD/docker-compose.yml ] && [ ! -f $PWD/docker-compose.old.yml ]; then
     cp $PWD/docker-compose.yml $PWD/docker-compose.old.yml
 fi
 
-
-tmpfile=$(mktemp)
-echo "#!/bin/bash
 RESPOSE='y'
+
 if [ -f $PWD/docker-compose.yml ]; then
     read -p '¿Desea sobreescribir el archivo docker-compose.yml? (y/n): ' RESPOSE
 fi
-if [ \"\$RESPOSE\" == 'y' ]; then
-    echo \"$DOCKER_COMPOSE_CONTENT\" | base64 -d > $PWD/docker-compose.yml
-fi" > $tmpfile
-chmod +x $tmpfile
-$tmpfile
+
+if [ "$RESPOSE" == 'y' ]; then
+    echo $DOCKER_COMPOSE_CONTENT | base64 -d > $PWD/docker-compose.yml
+fi
 
 START_FILE_CONTENT='#!/bin/bash
 SCRIPT=`realpath $0`
