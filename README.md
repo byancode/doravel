@@ -20,7 +20,7 @@ bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/init)
 encender proyecto
 
 ```bash
-.doravel/run
+.doravel/start
 ```
 
 detener proyecto
