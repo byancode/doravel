@@ -6,22 +6,20 @@ email=$(git config --get user.email)
 branch=$(git rev-parse --abbrev-ref HEAD)
 repository=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
 
-if [ ! -d $PWD/ssh ]; then
-    mkdir $PWD/ssh
+if [ ! -d $PWD/.doravel ]; then
+    mkdir $PWD/.doravel
 fi
-if [ -f $PWD/ssh/id_rsa.pub ]; then
-    rm $PWD/ssh/id_rsa.pub
+if [ ! -d $PWD/.doravel/.ssh ]; then
+    mkdir $PWD/.doravel/.ssh
 fi
-if [ -f $PWD/ssh/id_rsa ]; then
-    rm $PWD/ssh/id_rsa
+if [ ! -f $PWD/.doravel/.ssh/id_rsa ]; then
+    ssh-keygen -t rsa -b 4096 -C "$email" -f $PWD/.doravel/.ssh/id_rsa -q -N ""
 fi
-
-ssh-keygen -t rsa -b 4096 -C "$email" -f $PWD/ssh/id_rsa -q -N ""
 
 echo ""
 echo "### SSH key generated ###"
 echo ""
-cat $PWD/ssh/id_rsa.pub
+cat $PWD/.doravel/.ssh/id_rsa.pub
 echo ""
 echo ""
 echo "⚠️⚠️ IMPORTANTE ⚠️⚠️"
@@ -30,20 +28,88 @@ echo "👇️ Deploy keys 👇️"
 echo "https://docs.github.com/es/developers/overview/managing-deploy-keys#deploy-keys"
 echo ""
 
-RSA_KEY=$(cat $PWD/ssh/id_rsa | base64 --wrap=0)
-RSA_PUB=$(cat $PWD/ssh/id_rsa.pub | base64 --wrap=0)
+RSA_KEY=$(cat $PWD/.doravel/.ssh/id_rsa | base64 --wrap=0)
+RSA_PUB=$(cat $PWD/.doravel/.ssh/id_rsa.pub | base64 --wrap=0)
 
 ENV_SERVER='
 GIT_NAME="'$name'"
 GIT_EMAIL="'$email'"
 GIT_BRANCH="'$branch'"
 GIT_REPOSITORY="'$repository'"'
-echo "$ENV_SERVER" > $PWD/git.env
+echo "$ENV_SERVER" > $PWD/.doravel/.env
+
+DOCKER_COMPOSE_CONTENT=$(echo 'version: "3"
+services:
+    website:
+        restart: always
+        env_file:
+            - .doravel/.env
+        image: byancode/doravel
+        environment:
+            - OPCACHE_ENABLE=1
+        volumes:
+            - $HOME/.ssh:/root/.ssh
+            - .:/var/www
+        ports:
+            - 80:80
+            - 443:443
+        networks:
+            - default
+    mysql:
+        restart: always
+        image: mariadb:latest
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: $DB_USERNAME
+            MYSQL_DATABASE: $DB_DATABASE
+            MYSQL_PASSWORD: $DB_PASSWORD
+        expose:
+            - 3306
+        volumes:
+            - database:/var/lib/mysql
+        networks:
+            - default
+networks:
+    default:
+        driver: bridge
+volumes:
+    database:
+' | base64 --wrap=0)
+
+if [ -f $PWD/docker-compose.yml ] && [ ! -f $PWD/docker-compose.old.yml ]; then
+    cp $PWD/docker-compose.yml $PWD/docker-compose.old.yml
+fi
+
+
+tmpfile=$(mktemp)
+echo "#!/bin/bash
+RESPOSE=y
+if [ -f $PWD/docker-compose.yml ]; then
+    read -p '¿Desea sobreescribir el archivo docker-compose.yml? (y/n): ' RESPOSE
+fi
+if [ \$RESPOSE == 'y' ]; then
+    echo "$DOCKER_COMPOSE_CONTENT" | base64 -d > $PWD/docker-compose.yml
+fi" > $tmpfile
+chmod +x $tmpfile
+$tmpfile
+
+START_FILE_CONTENT='#!/bin/bash
+SCRIPT=`realpath $0`
+SCRIPT_PATH=`dirname $SCRIPT`
+export BASE_PATH=`dirname $SCRIPT_PATH`
+docker-compose --env-file=$BASE_PATH/.env up -d';
+echo "$START_FILE_CONTENT" > $PWD/.doravel/start
+
+echo "#!/bin/bash
+docker-compose down" > $PWD/.doravel/stop
+
+chmod +x $PWD/.doravel/start
+chmod +x $PWD/.doravel/stop
 
 credits='desarrollado por: (Byancode S.A.C) byancode@gmail.com'
 script='#!/bin/bash
 
-sudo dnf -y install dnf-plugins-core git
+sudo dnf -y install dnf-plugins-core git spwan expect
 sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
 sudo dnf -y install docker-ce docker-ce-cli containerd.io
 
@@ -59,7 +125,21 @@ echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
 chmod 600 $HOME/.ssh/id_rsa
 
 sudo systemctl start docker
-git clone --branch='$branch' git@github.com:'$repository'.git /www
+
+LANG=en_US
+tmpfile=$(mktemp)
+echo "#!/usr/bin/env expect
+set timeout -1
+
+spawn git clone --branch='$branch' git@github.com:'$repository'.git .
+expect \"Are you sure you want to continue connecting\"
+send \"yes\r\"
+
+expect eof" > $tmpfile
+chmod +x $tmpfile
+$tmpfile
+
+bash .doravel/start
 
 echo ""
 echo "👇️👇️👇️👇️👇️👇️"
@@ -69,4 +149,4 @@ echo ""
 script=$(echo "$script" | base64 --wrap=0)
 echo "# $credits
 # copiar todo y pegar en la terminal de linux de tu servidor
-echo '$script' | base64 -d | bash" > $PWD/server.sh
+mkdir -p /www && cd /www && echo '$script' | base64 -d | bash" > $PWD/.doravel/install.sh
