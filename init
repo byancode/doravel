@@ -97,11 +97,14 @@ START_FILE_CONTENT='#!/bin/bash
 SCRIPT=`realpath $0`
 SCRIPT_PATH=`dirname $SCRIPT`
 export BASE_PATH=`dirname $SCRIPT_PATH`
-docker-compose --env-file=$BASE_PATH/.env up -d';
+docker-compose --project-directory=$BASE_PATH --env-file=$BASE_PATH/.env up -d';
 echo "$START_FILE_CONTENT" > $PWD/.doravel/start
 
-echo "#!/bin/bash
-docker-compose down" > $PWD/.doravel/stop
+echo '#!/bin/bash
+SCRIPT=`realpath $0`
+SCRIPT_PATH=`dirname $SCRIPT`
+export BASE_PATH=`dirname $SCRIPT_PATH`
+docker-compose --project-directory=$BASE_PATH down' > $PWD/.doravel/stop
 
 chmod +x $PWD/.doravel/start
 chmod +x $PWD/.doravel/stop
