@@ -12,7 +12,7 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 con esto tendremos una facil instalacion en el servidor y de la forma mas segura dado que la clave solo puede tener permiso de lectura
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/init | bash
+bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/init)
 ```
 
 # comandos basicos

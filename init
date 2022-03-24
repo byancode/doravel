@@ -152,4 +152,4 @@ echo ""
 script=$(echo "$script" | base64 --wrap=0)
 echo "# $credits
 # copiar todo y pegar en la terminal de linux de tu servidor
-mkdir -p /www && cd /www && echo '$script' | base64 -d | bash" > $PWD/.doravel/install.sh
+mkdir -p /www && cd /www && bash <(echo '$script' | base64 -d)" > $PWD/.doravel/install.sh
