@@ -83,12 +83,12 @@ fi
 
 tmpfile=$(mktemp)
 echo "#!/bin/bash
-RESPOSE=y
+RESPOSE='y'
 if [ -f $PWD/docker-compose.yml ]; then
     read -p '¿Desea sobreescribir el archivo docker-compose.yml? (y/n): ' RESPOSE
 fi
-if [ \$RESPOSE == 'y' ]; then
-    echo "$DOCKER_COMPOSE_CONTENT" | base64 -d > $PWD/docker-compose.yml
+if [ \"\$RESPOSE\" == 'y' ]; then
+    echo \"$DOCKER_COMPOSE_CONTENT\" | base64 -d > $PWD/docker-compose.yml
 fi" > $tmpfile
 chmod +x $tmpfile
 $tmpfile
