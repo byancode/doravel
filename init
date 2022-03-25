@@ -9,7 +9,7 @@ repository=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | 
 # check url if http
 if [[ $url =~ ^http:// ]]; then
     echo ""
-    echo "Oops... necesitas que tu repositorio sea con ssh"
+    echo "⚠️ Oops... necesitas que el remote origin de tu proyecto sea con ssh"
     echo ""
     read -p '¿Quieres que lo pasemos a ssh? (y/n): ' aswer
     echo ""
@@ -17,7 +17,7 @@ if [[ $url =~ ^http:// ]]; then
         git remote remove origin
         git remote add origin git@github.com:$repository.git
     else
-        echo "Puedes intentar hacerlo manualmente:"
+        echo "👇️ Puedes intentar hacerlo manualmente:"
         echo "----------------------------------------"
         echo "git remote remove origin"
         echo "git remote add origin git@github.com:$repository.git"
