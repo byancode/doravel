@@ -9,7 +9,7 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 
 # crear y registra las claves ssh para tu proyecto
 
-con esto tendremos una facil instalacion en el servidor y de la forma mas segura dado que la clave solo puede tener permiso de lectura
+Instala en tu servidor **Fedora** de manera rapida y segura
 
 ```bash
 bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/init)
@@ -23,8 +23,26 @@ encender proyecto
 .doravel/start
 ```
 
+reiniciar laravel
+
+```bash
+.doravel/restart
+```
+
+refrescar octane
+
+```bash
+.doravel/reload
+```
+
 detener proyecto
 
 ```bash
 .doravel/stop
+```
+
+reparar permiso de archivos
+
+```bash
+.doravel/fix
 ```
