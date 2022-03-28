@@ -41,6 +41,12 @@ detener proyecto
 .doravel/stop
 ```
 
+Ejecutar comandos artisan
+
+```bash
+.doravel/artisan migrate
+```
+
 reparar permiso de archivos
 
 ```bash
