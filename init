@@ -120,6 +120,13 @@ echo '#!/bin/bash
 SCRIPT=`realpath $0`
 SCRIPT_PATH=`dirname $SCRIPT`
 export BASE_PATH=`dirname $SCRIPT_PATH`
+chown -R $(id -u):$(id -g) $BASE_PATH/storage
+chown -R $(id -u):$(id -g) $BASE_PATH/bootstrap/cache' > $PWD/.doravel/fix
+
+echo '#!/bin/bash
+SCRIPT=`realpath $0`
+SCRIPT_PATH=`dirname $SCRIPT`
+export BASE_PATH=`dirname $SCRIPT_PATH`
 docker-compose --project-directory=$BASE_PATH down' > $PWD/.doravel/stop
 
 echo '#!/bin/bash
