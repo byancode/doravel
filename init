@@ -188,8 +188,10 @@ expect eof" > $tmpfile
 chmod +x $tmpfile
 $tmpfile
 
-bash .doravel/start
-bash .doravel/artisan migrate:fresh
+.doravel/start
+echo "esperando a que se inicie el servidor..."
+sleep 10
+.doravel/artisan migrate:fresh
 
 echo ""
 echo "👇️👇️👇️👇️👇️👇️"
