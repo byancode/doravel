@@ -201,8 +201,6 @@ $tmpfile
 
 .doravel/start
 echo "esperando a que se inicie el servidor..."
-sleep 10
-.doravel/artisan migrate:fresh
 
 echo ""
 echo "👇️👇️👇️👇️👇️👇️"
