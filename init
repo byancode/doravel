@@ -31,6 +31,10 @@ if [ ! -d $PWD/.doravel ]; then
 fi
 if [ ! -d $PWD/.doravel/.ssh ]; then
     mkdir $PWD/.doravel/.ssh
+    echo "
+!.id_rsa
+!.id_rsa.pub
+    " > $PWD/.doravel/.ssh/.gitignore
 fi
 if [ ! -f $PWD/.doravel/.ssh/id_rsa ]; then
     ssh-keygen -t rsa -b 4096 -C "$email" -f $PWD/.doravel/.ssh/id_rsa -q -N ""
