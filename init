@@ -147,6 +147,13 @@ SCRIPT_PATH=`dirname $SCRIPT`
 export BASE_PATH=`dirname $SCRIPT_PATH`
 docker-compose --project-directory=$BASE_PATH exec -- doravel php artisan $@' > $PWD/.doravel/artisan
 
+echo '#!/bin/bash
+SCRIPT=`realpath $0`
+SCRIPT_PATH=`dirname $SCRIPT`
+export BASE_PATH=`dirname $SCRIPT_PATH`
+docker-compose --project-directory=$BASE_PATH exec -it -- doravel bash' > $PWD/.doravel/console
+
+chmod +x $PWD/.doravel/console
 chmod +x $PWD/.doravel/artisan
 chmod +x $PWD/.doravel/restart
 chmod +x $PWD/.doravel/reload
