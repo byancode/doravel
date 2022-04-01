@@ -38,6 +38,7 @@ if [ ! -d $PWD/.doravel/.ssh ]; then
 fi
 if [ ! -f $PWD/.doravel/.ssh/id_rsa ]; then
     ssh-keygen -t rsa -b 4096 -C "$email" -f $PWD/.doravel/.ssh/id_rsa -q -N ""
+    chmod 600 $PWD/.doravel/.ssh/id_rsa
 fi
 
 echo ""
