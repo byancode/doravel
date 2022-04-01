@@ -1,4 +1,18 @@
 #!/bin/bash
+# detect distro linux
+distro=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
+
+# check if git is installed
+if ! [ -x "$(command -v git)" ]; then
+    echo 'Error: git is not installed.' >&2
+    exit 1
+fi
+
+# check if ssh-keygen is installed
+if ! [ -x "$(command -v ssh-keygen)" ]; then
+    echo 'Error: ssh-keygen is not installed.' >&2
+    exit 1
+fi
 
 url=$(git config --get remote.origin.url)
 name=$(git config --get user.name)
