@@ -31,7 +31,7 @@ if [ ! -d $PWD/.doravel ]; then
 fi
 if [ ! -d $PWD/.doravel/.ssh ]; then
     mkdir $PWD/.doravel/.ssh
-    echo "
+    echo "*
 !.id_rsa
 !.id_rsa.pub
     " > $PWD/.doravel/.ssh/.gitignore
