@@ -56,8 +56,10 @@ echo "Timezone configured"
 sed -e 's@__SOKETI__@'$CNF_SOKETI_PATH'@' -i /etc/supervisord.conf
 echo "Soketi configured"
 
+sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/fpm.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/site.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/soketi.conf
+sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-fpm.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-soketi.conf
 echo "Host configured"

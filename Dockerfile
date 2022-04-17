@@ -103,10 +103,7 @@ RUN sed -e 's/listen.acl_users/;listen.acl_users/' -i /etc/php-fpm.d/www.conf
 RUN sed -e 's/listen =.*/listen = 0.0.0.0:9000/' -i /etc/php-fpm.d/www.conf
 
 COPY ./nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf
-COPY ./nginx/sites/site.conf /etc/nginx/sites-available/site.conf
-COPY ./nginx/sites/soketi.conf /etc/nginx/sites-available/soketi.conf
-COPY ./nginx/sites/ssl-site.conf /etc/nginx/sites-available/ssl-site.conf
-COPY ./nginx/sites/ssl-soketi.conf /etc/nginx/sites-available/ssl-soketi.conf
+COPY ./nginx/sites /etc/nginx/sites-available
 COPY ./nginx/mime.types /etc/nginx/mime.types
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
