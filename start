@@ -65,9 +65,11 @@ sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/ssl-soket
 echo "Host configured"
 
 if [ $CNF_APP_SSL == true ] ; then \
+    rm -f /etc/nginx/sites-available/fpm.conf;
     rm -f /etc/nginx/sites-available/site.conf;
     rm -f /etc/nginx/sites-available/soketi.conf;
 else
+    rm -f /etc/nginx/sites-available/ssl-fpm.conf;
     rm -f /etc/nginx/sites-available/ssl-site.conf;
     rm -f /etc/nginx/sites-available/ssl-soketi.conf;
 fi
