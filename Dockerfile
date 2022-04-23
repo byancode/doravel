@@ -102,8 +102,13 @@ RUN sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i /etc/php-fpm.d
 RUN sed -e 's/listen.acl_users/;listen.acl_users/' -i /etc/php-fpm.d/www.conf
 RUN sed -e 's/listen =.*/listen = 0.0.0.0:9000/' -i /etc/php-fpm.d/www.conf
 
+COPY ./nginx/sites/fpm.conf /etc/nginx/sites-available/fpm.conf
+COPY ./nginx/sites/site.conf /etc/nginx/sites-available/site.conf
+COPY ./nginx/sites/soketi.conf /etc/nginx/sites-available/soketi.conf
+COPY ./nginx/sites/ssl-fpm.conf /etc/nginx/sites-available/ssl-fpm.conf
+COPY ./nginx/sites/ssl-site.conf /etc/nginx/sites-available/ssl-site.conf
+COPY ./nginx/sites/ssl-soketi.conf /etc/nginx/sites-available/ssl-soketi.conf
 COPY ./nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf
-COPY ./nginx/sites /etc/nginx/sites-available
 COPY ./nginx/mime.types /etc/nginx/mime.types
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
@@ -116,6 +121,7 @@ RUN git config --global user.name "$GIT_NAME"
 RUN git config --global user.email "$GIT_EMAIL"
 
 EXPOSE 80
+EXPOSE 88
 EXPOSE 443
 EXPOSE 6002
 
