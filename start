@@ -15,6 +15,7 @@ CNF_APP_DEBUG=${APP_DEBUG:-true}
 CNF_APP_URL=${APP_URL:-"http://localhost"}
 CNF_APP_HOST=$(/usr/bin/php -r "echo parse_url('${CNF_APP_URL}', PHP_URL_HOST);")
 CNF_APP_TIMEZONE=${APP_TIMEZONE:-"UTC"}
+CNF_APP_SELF_CERT=${APP_SELF_CERT:-true}
 
 if [[ "${CNF_APP_URL}" =~ ^https:// ]]; then
     CNF_APP_SSL=${APP_SSL:-true}
@@ -33,12 +34,13 @@ echo "Starting Soketi..."
 echo $(jq '.debug = '$CNF_APP_DEBUG' | .port = '$CNF_SOKETI_PORT' | ."appManager.array.apps.0.id" = "'$CNF_SOKETI_ID'" | ."appManager.array.apps.0.key" = "'$CNF_SOKETI_KEY'" | ."appManager.array.apps.0.secret" = "'$CNF_SOKETI_SECRET'" | ."appManager.array.apps.0.webhooks"[0].url = "'$CNF_SOKETI_WEBHOOK'"' /var/soketi/config.json) > /var/soketi/config.json
 echo "Soketi started"
 
-if [ $CNF_APP_SSL == true ]; then
+if [ $CNF_APP_SSL == true ] && [ $CNF_APP_SELF_CERT == true ]; then
     echo "Starting SSL certificate..."
+
     CNF_APP_IP=$(/bin/hostname -I | /usr/bin/awk '{print $1}')
     sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/ssl/sancert.cnf
     sed -e 's/__APP_IP__/'$CNF_APP_IP'/' -i /etc/ssl/sancert.cnf
-    
+
     openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
     openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
     -subj "/C=PE/ST=Lima/O=Byancode S.A.C/CN="${CNF_APP_HOST} \
@@ -100,8 +102,12 @@ if [ ! -f /var/www/config/octane.php ]; then
     php artisan octane:install --server=$CNF_OCTANE_SERVER
 fi
 
-echo "Starting supervisord..."
+if [ -f /var/www/supervisord.conf ]; then
+    cat /var/www/supervisord.conf >> /etc/supervisord.conf
+fi
+
 if [ $# -eq 0 ]; then
+    echo "Starting supervisord..."
     /usr/bin/supervisord -n -c /etc/supervisord.conf
 else
     exec "$@"

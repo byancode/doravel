@@ -82,8 +82,8 @@ RUN sed -e 's/memory_limit =.*/memory_limit='$PHP_MEMORY_LIMIT'/' -i /etc/php.in
 
 COPY ./config/opcache.blacklist /etc/php.d/opcache-default.blacklist
 COPY ./config/supervisord.conf /etc/supervisord.conf
-COPY ./config/opcache.ini /etc/php.d/*-opcache.ini
 COPY ./config/soketi.json /var/soketi/config.json
+COPY ./config/opcache.ini /etc/php.d/opcache.ini
 COPY ./config/sancert.cnf /etc/ssl/sancert.cnf
 COPY ./deploy /deploy
 COPY ./known /known
@@ -91,6 +91,7 @@ COPY ./start /start
 
 ENV OPCACHE_ENABLE=1
 RUN OPCACHE_FILE=$(find /etc/php.d -name '*-opcache.ini') && \
+    cp -f /etc/php.d/opcache.ini $OPCACHE_FILE && \
     sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE && \
     sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
