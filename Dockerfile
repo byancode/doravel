@@ -6,12 +6,9 @@ RUN dnf -y update
 RUN dnf -y upgrade --refresh
 RUN dnf -y install dnf-plugins-core
 RUN dnf -y install \
-    http://rpms.remirepo.net/fedora/remi-release-35.rpm
-RUN dnf -y install \
-    https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+    http://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm
 
 RUN dnf -y install \
-    ImageMagick \
     supervisor \
     openssl \
     cronie \

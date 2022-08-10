@@ -115,9 +115,6 @@ volumes:
     database:
 ' | base64 --wrap=0)
 
-if [ -f $PWD/docker-compose.yml ] && [ ! -f $PWD/docker-compose.old.yml ]; then
-    cp $PWD/docker-compose.yml $PWD/docker-compose.old.yml
-fi
 
 RESPOSE='y'
 
@@ -125,9 +122,14 @@ if [ -f $PWD/docker-compose.yml ]; then
     read -p '¿Desea sobreescribir el archivo docker-compose.yml? (y/n): ' RESPOSE
 fi
 
+if [ "$RESPOSE" == 'y' ] && [ -f $PWD/docker-compose.yml ]; then
+    cp $PWD/docker-compose.yml $PWD/docker-compose.old.yml
+fi
+
 if [ "$RESPOSE" == 'y' ]; then
     echo $DOCKER_COMPOSE_CONTENT | base64 -d > $PWD/docker-compose.yml
 fi
+
 
 echo '#!/bin/bash
 SCRIPT=`realpath $0`
@@ -180,7 +182,16 @@ chmod +x $PWD/.doravel/start
 chmod +x $PWD/.doravel/stop
 chmod +x $PWD/.doravel/fix
 
-credits='desarrollado por: (Byancode S.A.C) byancode@gmail.com'
+
+
+
+
+credits='
+┌────────────────────────────────────────────────────────────────┐
+│                      desarrollado por:                         │
+│             (Byancode S.A.C) byancode@gmail.com                │
+└────────────────────────────────────────────────────────────────┘
+'
 script='#!/bin/bash
 
 sudo dnf -y install dnf-plugins-core
