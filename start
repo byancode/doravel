@@ -1,15 +1,34 @@
 #!/bin/bash
 source /root/.bashrc
 
+function is_false {
+    if [ "$1" == "false" ] || [ "$1" == "False" ] || [ "$1" == "FALSE" ] || [ "$1" == "0" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
 
-if [ -f /var/www/.env ]; then
-    source /var/www/.env
-else
+CNF_APP_ENV=${APP_ENV:-local}
+
+if [ ! -f /var/www/.env ]; then
     echo "File /www/.env not found. Exiting..."
     exit 1
 fi
 
-/known
+if [ $CNF_APP_ENV == "local" ]; then
+    if [ -f /var/www/.env.local ]; then
+        source /var/www/.env.local
+    else
+        source /var/www/.env
+    fi
+else
+    if [ -f /var/www/.env.$CNF_APP_ENV ]; then
+        source /var/www/.env.$CNF_APP_ENV
+    else
+        source /var/www/.env
+    fi
+fi
 
 CNF_APP_DEBUG=${APP_DEBUG:-true}
 CNF_APP_URL=${APP_URL:-"http://localhost"}
@@ -55,8 +74,13 @@ echo ${CNF_APP_TIMEZONE} > /etc/timezone
 echo "Timezone configured"
 
 # defive octane server
-sed -e 's@__SOKETI__@'$CNF_SOKETI_PATH'@' -i /etc/supervisord.conf
+sed -e 's@__SOKETI__@'$CNF_SOKETI_PATH'@' -i /var/config/doravel-soketi.conf
 echo "Soketi configured"
+
+sed -e 's/__APP_ENV__/'$CNF_APP_ENV'/' -i /etc/nginx/sites-available/ssl-fpm.conf
+sed -e 's/__APP_ENV__/'$CNF_APP_ENV'/' -i /etc/nginx/sites-available/fpm.conf
+sed -e 's/__APP_ENV__/'$CNF_APP_ENV'/' -i /var/config/doravel-octane.conf
+echo "Environment configured"
 
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/fpm.conf
 sed -e 's/__APP_HOST__/'$CNF_APP_HOST'/' -i /etc/nginx/sites-available/site.conf
@@ -89,17 +113,42 @@ if [ ! -d /var/www/node_modules ]; then
     npm install
 fi
 
-LARAVEL_OCTANE_EXISTS=$(jq '.require["laravel/octane"]' /var/www/composer.json)
-if [ "$LARAVEL_OCTANE_EXISTS" == "null" ]; then
-    composer require laravel/octane -W
-fi
-
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
 fi
 
-if [ ! -f /var/www/config/octane.php ]; then
-    php artisan octane:install --server=$CNF_OCTANE_SERVER
+if is_false ${DORAVEL_SCHEDULE_DISABLE:-0}; then
+    cat /var/config/doravel-schedule.conf >> /etc/supervisord.conf
+fi
+
+if is_false ${DORAVEL_FPM_DISABLE:-0}; then
+    cat /var/config/doravel-fpm.conf >> /etc/supervisord.conf
+else
+    rm -f /etc/nginx/sites-available/fpm.conf
+    rm -f /etc/nginx/sites-available/ssl-fpm.conf
+fi
+
+if is_false ${DORAVEL_OCTANE_DISABLE:-0}; then
+    cat /var/config/doravel-octane.conf >> /etc/supervisord.conf
+else
+    rm -f /etc/nginx/sites-available/site.conf
+    rm -f /etc/nginx/sites-available/ssl-site.conf
+fi
+
+if is_false ${DORAVEL_DEPLOY_DISABLE:-0}; then
+    cat /var/config/doravel-deploy.conf >> /etc/supervisord.conf
+    /git-pull # creamos conexion ssh para git
+fi
+
+if is_false ${DORAVEL_SOKETI_DISABLE:-0}; then
+    cat /var/config/doravel-soketi.conf >> /etc/supervisord.conf
+else
+    rm -f /etc/nginx/sites-available/soketi.conf
+    rm -f /etc/nginx/sites-available/ssl-soketi.conf
+fi
+
+if is_false ${DORAVEL_NGINX_DISABLE:-0}; then
+    cat /var/config/doravel-nginx.conf >> /etc/supervisord.conf
 fi
 
 if [ -f /var/www/supervisord.conf ]; then

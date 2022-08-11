@@ -82,8 +82,16 @@ COPY ./config/supervisord.conf /etc/supervisord.conf
 COPY ./config/soketi.json /var/soketi/config.json
 COPY ./config/opcache.ini /etc/php.d/opcache.ini
 COPY ./config/sancert.cnf /etc/ssl/sancert.cnf
+
+COPY ./config/doravel-schedule.conf /var/config/doravel-schedule.conf
+COPY ./config/doravel-deploy.conf /var/config/doravel-deploy.conf
+COPY ./config/doravel-octane.conf /var/config/doravel-octane.conf
+COPY ./config/doravel-soketi.conf /var/config/doravel-soketi.conf
+COPY ./config/doravel-nginx.conf /var/config/doravel-nginx.conf
+COPY ./config/doravel-fpm.conf /var/config/doravel-fpm.conf
+
+COPY ./git-pull /git-pull
 COPY ./deploy /deploy
-COPY ./known /known
 COPY ./start /start
 
 ENV OPCACHE_ENABLE=1
@@ -92,25 +100,27 @@ RUN OPCACHE_FILE=$(find /etc/php.d -name '*-opcache.ini') && \
     sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE && \
     sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
+RUN chmod +x /git-pull
 RUN chmod +x /deploy
-RUN chmod +x /known
 RUN chmod +x /start
 
 RUN sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i /etc/php-fpm.d/www.conf
 RUN sed -e 's/listen.acl_users/;listen.acl_users/' -i /etc/php-fpm.d/www.conf
 RUN sed -e 's/listen =.*/listen = 0.0.0.0:9000/' -i /etc/php-fpm.d/www.conf
 
+COPY ./nginx/mime.types /etc/nginx/mime.types
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+
 COPY ./nginx/sites/fpm.conf /etc/nginx/sites-available/fpm.conf
+COPY ./nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf
 COPY ./nginx/sites/site.conf /etc/nginx/sites-available/site.conf
 COPY ./nginx/sites/soketi.conf /etc/nginx/sites-available/soketi.conf
 COPY ./nginx/sites/ssl-fpm.conf /etc/nginx/sites-available/ssl-fpm.conf
 COPY ./nginx/sites/ssl-site.conf /etc/nginx/sites-available/ssl-site.conf
 COPY ./nginx/sites/ssl-soketi.conf /etc/nginx/sites-available/ssl-soketi.conf
-COPY ./nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf
-COPY ./nginx/mime.types /etc/nginx/mime.types
-COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
 RUN rm -f /etc/nginx/conf.d/php-fpm.conf
+RUN mkdir /run/php-fpm
 
 ENV GIT_NAME="Byancode"
 ENV GIT_EMAIL="byancode@gmail.com"
@@ -118,9 +128,14 @@ ENV GIT_EMAIL="byancode@gmail.com"
 RUN git config --global user.name "$GIT_NAME"
 RUN git config --global user.email "$GIT_EMAIL"
 
+COPY ./www /var/www
+
 EXPOSE 80
-EXPOSE 88
+EXPOSE 90
 EXPOSE 443
+EXPOSE 444
 EXPOSE 6002
+EXPOSE 8000
+EXPOSE 9000
 
 ENTRYPOINT ["/start"]
