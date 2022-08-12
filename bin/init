@@ -117,7 +117,7 @@ if [ "$RESPOSE" == 'y' ] && [ -f ./docker-compose.yml ]; then
 fi
 
 if [ "$RESPOSE" == 'y' ]; then
-    echo $DOCKER_COMPOSE > ./docker-compose.yml
+    echo "$DOCKER_COMPOSE" > ./docker-compose.yml
 fi
 
 curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel > ./doravel
