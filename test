@@ -1,0 +1,18 @@
+#!/bin/bash
+
+function is_true {
+    if [ "$1" == "true" ] || [ "$1" == "True" ] || [ "$1" == "TRUE" ] || [ "$1" == "1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+DORAVEL_ENV=${DORAVEL_ENV:-false}
+
+
+if [ is_true $DORAVEL_ENV ] && [ is_true $DORAVEL_ENV ]; then
+   echo "DORAVEL_ENV is true"
+else
+    echo "DORAVEL_ENV is false"
+fi

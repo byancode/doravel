@@ -1,0 +1,231 @@
+#!/bin/bash
+source /root/.bashrc
+
+function is_true {
+    if [ "$1" == "true" ] || [ "$1" == "True" ] || [ "$1" == "TRUE" ] || [ "$1" == "1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+DORAVEL_ENV=${DORAVEL_ENV:-"local"}
+
+if [ ! -f /var/www/.env ]; then
+    echo "File /www/.env not found. Exiting..."
+    exit 1
+fi
+
+if [ $DORAVEL_ENV == "local" ]; then
+    if [ -f /var/www/.env.local ]; then
+        source /var/www/.env.local
+    else
+        source /var/www/.env
+    fi
+else
+    if [ -f /var/www/.env.$DORAVEL_ENV ]; then
+        source /var/www/.env.$DORAVEL_ENV
+    else
+        source /var/www/.env
+    fi
+fi
+
+
+DORAVEL_SERVICE_FPM=${DORAVEL_SERVICE_FPM:-true}
+DORAVEL_SERVICE_NGINX=${DORAVEL_SERVICE_NGINX:-true}
+DORAVEL_SERVICE_DEPLOY=${DORAVEL_SERVICE_DEPLOY:-true}
+DORAVEL_SERVICE_SOKETI=${DORAVEL_SERVICE_SOKETI:-true}
+DORAVEL_SERVICE_OCTANE=${DORAVEL_SERVICE_OCTANE:-true}
+DORAVEL_SERVICE_OPCACHE=${DORAVEL_SERVICE_OPCACHE:-true}
+DORAVEL_SERVICE_SCHEDULE=${DORAVEL_SERVICE_SCHEDULE:-true}
+
+
+
+DORAVEL_GIT_NAME=${DORAVEL_GIT_NAME:-"Byancode"}
+DORAVEL_GIT_EMAIL=${DORAVEL_GIT_EMAIL:-"byancode@gmail.com"}
+
+
+
+PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-1G}
+PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-60}
+PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-1G}
+PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}
+
+
+
+git config --global user.name  "$(echo $DORAVEL_GIT_NAME)"
+git config --global user.email "$(echo $DORAVEL_GIT_EMAIL)"
+
+
+
+sed -e 's/upload_max_filesize =.*/upload_max_filesize='$PHP_UPLOAD_MAX_FILESIZE'/' -i /etc/php.ini
+sed -e 's/max_execution_time =.*/max_execution_time='$PHP_MAX_EXECUTION_TIME'/' -i /etc/php.ini
+sed -e 's/post_max_size =.*/post_max_size='$PHP_POST_MAX_SIZE'/' -i /etc/php.ini
+sed -e 's/memory_limit =.*/memory_limit='$PHP_MEMORY_LIMIT'/' -i /etc/php.ini
+
+
+
+if is_true $DORAVEL_SERVICE_OPCACHE; then
+    OPCACHE_ENABLE=1
+else
+    OPCACHE_ENABLE=0
+fi
+
+OPCACHE_FILE=$(find /etc/php.d -name '*-opcache.ini')
+cp -f /etc/php.d/opcache.ini $OPCACHE_FILE
+sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+
+
+
+APP_DEBUG=${APP_DEBUG:-true}
+APP_URL=${APP_URL:-"http://localhost"}
+APP_HOST=$(/usr/bin/php -r "echo parse_url('$APP_URL', PHP_URL_HOST);")
+APP_TIMEZONE=${APP_TIMEZONE:-"UTC"}
+APP_SELF_CERT=${APP_SELF_CERT:-true}
+
+
+
+if [[ "${APP_URL}" =~ ^https:// ]]; then
+    APP_SSL=${APP_SSL:-true}
+else
+    APP_SSL=${APP_SSL:-false}
+fi
+
+
+
+if is_true $DORAVEL_SERVICE_SOKETI; then
+    SOKETI_PATH=$(which soketi);
+    SOKETI_PORT=${SOKETI_PORT:-6002}
+    SOKETI_ID=${SOKETI_ID:-"some-id"}
+    SOKETI_KEY=${SOKETI_KEY:-"some-key"}
+    SOKETI_SECRET=${SOKETI_SECRET:-"some-secret"}
+    SOKETI_WEBHOOK=${SOKETI_WEBHOOK:-"http://localhost:8080"}
+
+    echo "Starting Soketi..."
+    echo $(jq '.debug = '$APP_DEBUG' | .port = '$SOKETI_PORT' | ."appManager.array.apps.0.id" = "'$SOKETI_ID'" | ."appManager.array.apps.0.key" = "'$SOKETI_KEY'" | ."appManager.array.apps.0.secret" = "'$SOKETI_SECRET'" | ."appManager.array.apps.0.webhooks"[0].url = "'$SOKETI_WEBHOOK'"' /var/soketi/config.json) > /var/soketi/config.json
+    echo "Soketi started"
+
+    # defive octane server
+    sed -e 's@__SOKETI__@'$SOKETI_PATH'@' -i /var/config/doravel-soketi.conf
+    echo "Soketi configured"
+fi
+
+
+
+
+if is_true $APP_SSL && is_true $APP_SELF_CERT; then
+    echo "Starting SSL certificate..."
+
+    APP_IP=$(/bin/hostname -I | /usr/bin/awk '{print $1}')
+    sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/ssl/sancert.cnf
+    sed -e 's/__APP_IP__/'$APP_IP'/' -i /etc/ssl/sancert.cnf
+
+    openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
+    openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
+    -subj "/C=PE/ST=Lima/O=Byancode S.A.C/CN="${APP_HOST} \
+    -out /etc/ssl/certs/laravel.crt \
+    -keyout /etc/ssl/certs/laravel.key
+    echo "SSL certificate generated"
+fi
+
+
+# configure timezone
+ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime
+echo ${APP_TIMEZONE} > /etc/timezone
+echo "Timezone configured"
+
+
+
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-fpm.conf
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/fpm.conf
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /var/config/doravel-octane.conf
+echo "Environment configured"
+
+
+
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/fpm.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/site.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/soketi.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-fpm.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-soketi.conf
+echo "Host configured"
+
+
+
+if is_true $APP_SSL ; then \
+    rm -f /etc/nginx/sites-available/fpm.conf;
+    rm -f /etc/nginx/sites-available/site.conf;
+    rm -f /etc/nginx/sites-available/soketi.conf;
+else
+    rm -f /etc/nginx/sites-available/ssl-fpm.conf;
+    rm -f /etc/nginx/sites-available/ssl-site.conf;
+    rm -f /etc/nginx/sites-available/ssl-soketi.conf;
+fi
+echo "SSL configured"
+
+
+if [ ! -d /var/www/vendor ]; then
+    composer install
+fi
+
+if [ ! -d /var/www/node_modules ]; then
+    npm install
+fi
+
+if [ ! -L /var/www/public/storage ]; then
+    php artisan storage:link
+fi
+
+
+chown -R apache:apache ./storage
+chown -R apache:apache ./bootstrap/cache
+echo "Storage and cache directories configured"
+
+
+if is_true $DORAVEL_SERVICE_SCHEDULE; then
+    cat /var/config/doravel-schedule.conf >> /etc/supervisord.conf
+fi
+
+if is_true $DORAVEL_SERVICE_FPM; then
+    cat /var/config/doravel-fpm.conf >> /etc/supervisord.conf
+else
+    rm -f /etc/nginx/sites-available/fpm.conf
+    rm -f /etc/nginx/sites-available/ssl-fpm.conf
+fi
+
+if is_true $DORAVEL_SERVICE_OCTANE; then
+    cat /var/config/doravel-octane.conf >> /etc/supervisord.conf
+else
+    rm -f /etc/nginx/sites-available/site.conf
+    rm -f /etc/nginx/sites-available/ssl-site.conf
+fi
+
+if is_true $DORAVEL_SERVICE_DEPLOY; then
+    cat /var/config/doravel-deploy.conf >> /etc/supervisord.conf
+    /git-pull # creamos conexion ssh para git
+fi
+
+if is_true $DORAVEL_SERVICE_SOKETI; then
+    cat /var/config/doravel-soketi.conf >> /etc/supervisord.conf
+else
+    rm -f /etc/nginx/sites-available/soketi.conf
+    rm -f /etc/nginx/sites-available/ssl-soketi.conf
+fi
+
+if is_true $DORAVEL_SERVICE_NGINX; then
+    cat /var/config/doravel-nginx.conf >> /etc/supervisord.conf
+fi
+
+if [ -f /var/www/supervisord.conf ]; then
+    echo ""                       >> /etc/supervisord.conf
+    cat /var/www/supervisord.conf >> /etc/supervisord.conf
+fi
+
+if [ $# -eq 0 ]; then
+    echo "Starting supervisord..."
+    /usr/bin/supervisord -n -c /etc/supervisord.conf
+else
+    exec "$@"
+fi
