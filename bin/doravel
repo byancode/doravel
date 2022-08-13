@@ -54,7 +54,7 @@ fi
 
 # compobamos si exite el comando
 
-if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ]; then
+if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ]; then
     echo "the command $COMMAND is not valid"
     exit 0
 fi
@@ -102,6 +102,16 @@ while [ "$#" -gt 0 ]; do
             ENV_FILE=".env.$ENV_NAME"
             shift
             ;;
+        --dev)
+            ENV_NAME="dev"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
+        --development)
+            ENV_NAME="development"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
         --prod)
             ENV_NAME="prod"
             ENV_FILE=".env.$ENV_NAME"
@@ -146,6 +156,12 @@ if [ "$ENV_NAME" == "testing" ] && [ ! -f "./$ENV_FILE" ] && [ -f "./.env.test" 
     DCP_NAME="docker-compose.$ENV_NAME"
 fi
 
+if [ "$ENV_NAME" == "development" ] && [ ! -f "./$ENV_FILE" ] && [ -f "./.env.dev" ]; then
+    ENV_NAME="dev"
+    ENV_FILE=".env.$ENV_NAME"
+    DCP_NAME="docker-compose.$ENV_NAME"
+fi
+
 if [ "$ENV_NAME" == "production" ] && [ ! -f "./$ENV_FILE" ] && [ -f "./.env.prod" ]; then
     ENV_NAME="prod"
     ENV_FILE=".env.$ENV_NAME"
@@ -173,6 +189,12 @@ fi
 if [ ! -f "./$ENV_FILE" ]; then
     ENV_NAME="local"
     ENV_FILE=".env"
+fi
+
+DCP_OVERRIDE="docker-compose.override"
+
+if [ "$ENV_NAME" != "local" ] && [ -f "./$DCP_OVERRIDE.yml" ]; then
+    ARGUMENTS="$ARGUMENTS --file=$DCP_OVERRIDE.yml"
 fi
 
 if [ -f "./$DCP_NAME.yml" ]; then
@@ -212,3 +234,8 @@ fi
 if [ $COMMAND == "stop" ]; then
     docker-compose $(echo $ARGUMENTS) stop
 fi
+
+if [ $COMMAND == "ps" ] || [ $COMMAND == "top" ] || [ $COMMAND == "build" ] || [ $COMMAND == "help" ] || [ $COMMAND == "logs" ]; then
+    docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
+fi
+
