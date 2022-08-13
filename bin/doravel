@@ -62,8 +62,8 @@ fi
 # comandos que no requiere de un .env
 
 if [ $COMMAND == "fix" ]; then
-    chown -R $(id -un):$(id -gn) ./storage
-    chown -R $(id -un):$(id -gn) ./bootstrap/cache
+    sudo chown -R $(id -un):$(id -gn) ./storage
+    sudo chown -R $(id -un):$(id -gn) ./bootstrap/cache
 
     exit 0
 fi
