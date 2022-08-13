@@ -39,7 +39,9 @@ if [ ! -d "./app" ] || [ ! -f "./.env" ]; then
     exit 0
 fi
 
-if [ "$1" == "init" ]; then
+COMMAND="$1"
+
+if [ $COMMAND == "init" ]; then
     echo "Initializing doravel..."
     read -p "Do you want to initialize doravel? [y/N] " RESPOSE
 
@@ -52,14 +54,14 @@ fi
 
 # compobamos si exite el comando
 
-if [ "$1" != "init" ] && [ "$1" != "start" ] && [ "$1" != "up" ] && [ "$1" != "stop" ] && [ "$1" != "down" ] && [ "$1" != "restart" ] && [ "$1" != "reload" ] && [ "$1" != "console" ] && [ "$1" != "terminal" ] && [ "$1" != "artisan" ] && [ "$1" != "fix" ]; then
-    echo "the command $1 is not valid"
+if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ]; then
+    echo "the command $COMMAND is not valid"
     exit 0
 fi
 
 # comandos que no requiere de un .env
 
-if [ "$1" == "fix" ]; then
+if [ $COMMAND == "fix" ]; then
     chown -R $(id -un):$(id -gn) ./storage
     chown -R $(id -un):$(id -gn) ./bootstrap/cache
 
@@ -77,9 +79,50 @@ if [ ! -f "$DCP_NAME.yml" ]; then
     exit 1
 fi
 
-if [ "$2" == "-e" ] || [ "$2" == "--env" ]; then
-    ENV_NAME="$3"
-fi
+OPTIONS=''
+while [ "$#" -gt 0 ]; do
+    case "$2" in
+        -e | --env)
+            ENV_NAME="$3"
+            ENV_FILE=".env.$ENV_NAME"
+            shift 2
+            ;;
+        --local)
+            ENV_NAME="local"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
+        --test)
+            ENV_NAME="test"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
+        --testing)
+            ENV_NAME="testing"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
+        --prod)
+            ENV_NAME="prod"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
+        --production)
+            ENV_NAME="production"
+            ENV_FILE=".env.$ENV_NAME"
+            shift
+            ;;
+        *)
+            if [[ "$2" =~ ^- ]]; then
+                OPTIONS="$OPTIONS $2"
+                shift
+                continue
+            fi
+            OPTIONS="$OPTIONS $2"
+            shift
+            ;;
+    esac
+done
 
 if [ "$ENV_NAME" == "" ]; then
     ENV_NAME="local"
@@ -142,30 +185,30 @@ PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
 PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
-if [ "$1" == "console" ] || [ "$1" == "terminal" ]; then
+if [ $COMMAND == "console" ] || [ $COMMAND == "terminal" ]; then
     docker-compose $(echo $ARGUMENTS) exec -- doravel bash
 fi
 
-if [ "$1" == "artisan" ]; then
-    docker-compose $(echo $ARGUMENTS) exec -- doravel php artisan ${@:3}
+if [ $COMMAND == "artisan" ]; then
+    docker-compose $(echo $ARGUMENTS) exec -- doravel php artisan $(echo $OPTIONS)
 fi
 
-if [ "$1" == "up" ]; then
-    docker-compose $(echo $ARGUMENTS) up ${@:3}
+if [ $COMMAND == "up" ]; then
+    docker-compose $(echo $ARGUMENTS) up $(echo $OPTIONS)
 fi
 
-if [ "$1" == "start" ]; then
+if [ $COMMAND == "start" ]; then
     docker-compose $(echo $ARGUMENTS) start
 fi
 
-if [ "$1" == "restart" ] || [ "$1" == "reload" ]; then
+if [ $COMMAND == "restart" ] || [ $COMMAND == "reload" ]; then
     docker-compose $(echo $ARGUMENTS) restart -- doravel
 fi
 
-if [ "$1" == "down" ]; then
-    docker-compose $(echo $ARGUMENTS) down ${@:3}
+if [ $COMMAND == "down" ]; then
+    docker-compose $(echo $ARGUMENTS) down $(echo $OPTIONS)
 fi
 
-if [ "$1" == "stop" ]; then
+if [ $COMMAND == "stop" ]; then
     docker-compose $(echo $ARGUMENTS) stop
 fi

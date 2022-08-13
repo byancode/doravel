@@ -75,9 +75,12 @@ services:
             - 443:443
         networks:
             - default
+        depends_on:
+            - mysql
+            - redis
     mysql:
         restart: always
-        image: mariadb:latest
+        image: mariadb
         environment:
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
             MYSQL_DATABASE: $DB_DATABASE
@@ -91,7 +94,7 @@ services:
             - default
     redis:
         restart: always
-        image: redis:latest
+        image: redis
         expose:
             - 6379
         volumes:
@@ -126,9 +129,9 @@ chmod +x ./doravel
 
 
 echo '#!/bin/bash
-####################################################################
-# -- copiar todo y pegar en la terminal de linux de tu servidor -- #
-####################################################################
+#────────────────────────────────────────────────────────────────┐
+# ─ copiar todo y pegar en la terminal de linux de tu servidor ─ │
+#────────────────────────────────────────────────────────────────┘
 
 mkdir -p /www && cd /www
 
