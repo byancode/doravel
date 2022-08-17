@@ -10,24 +10,17 @@ function is_true {
 }
 
 DORAVEL_ENV=${DORAVEL_ENV:-"local"}
+export APP_ENV="$DORAVEL_ENV"
 
 if [ ! -f /var/www/.env ]; then
     echo "File /www/.env not found. Exiting..."
     exit 1
 fi
 
-if [ $DORAVEL_ENV == "local" ]; then
-    if [ -f /var/www/.env.local ]; then
-        source /var/www/.env.local
-    else
-        source /var/www/.env
-    fi
+if [ -f /var/www/.env.$DORAVEL_ENV ]; then
+    source /var/www/.env.$DORAVEL_ENV
 else
-    if [ -f /var/www/.env.$DORAVEL_ENV ]; then
-        source /var/www/.env.$DORAVEL_ENV
-    else
-        source /var/www/.env
-    fi
+    source /var/www/.env
 fi
 
 
