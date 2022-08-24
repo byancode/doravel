@@ -158,14 +158,14 @@ expect <<END
     set timeout -1
     spawn git clone --branch='$DORAVEL_GIT_BRANCH' git@github.com:'$DORAVEL_GIT_REPOSITORY'.git .
 
-    expect "Are you sure you want to continue connecting?\r"
+    expect "continue connecting\r"
     send "yes\r"
 
     expect eof
 END
 
-./doravel up --env production
+./doravel up --env production -d
 
 echo "espera unos segundos para que se carguen los servicios"
-echo "🙂: ./doravel up --env production"
+echo "🙂: ./doravel up --env production -d"
 ' > ./install
