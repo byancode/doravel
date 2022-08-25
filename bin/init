@@ -141,6 +141,7 @@ echo "
 │             (Byancode S.A.C) byancode@gmail.com                │
 └────────────────────────────────────────────────────────────────┘
 "
+ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
 bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/bin/docker)
 

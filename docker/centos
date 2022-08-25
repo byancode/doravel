@@ -1,4 +1,6 @@
 #!/bin/bash
+sed -i -e "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-*
+sed -i -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-*
 
 dnf remove -y \
             docker \
@@ -15,7 +17,7 @@ dnf remove -y \
 dnf -y install dnf-plugins-core
 
 dnf config-manager \
-    --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+    --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 
 dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 dnf -y install git openssh-server expect
