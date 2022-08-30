@@ -2,17 +2,20 @@
 sed -i -e "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-*
 sed -i -e "s|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" /etc/yum.repos.d/CentOS-*
 
+yum update -y
+yum install -y dnf yum-utils
+
 dnf remove -y \
-            docker \
-            docker-client \
-            docker-client-latest \
-            docker-common \
-            docker-latest \
-            docker-latest-logrotate \
-            docker-logrotate \
-            docker-selinux \
-            docker-engine-selinux \
-            docker-engine
+    docker \
+    docker-client \
+    docker-client-latest \
+    docker-common \
+    docker-latest \
+    docker-latest-logrotate \
+    docker-logrotate \
+    docker-selinux \
+    docker-engine-selinux \
+    docker-engine
 
 dnf -y install dnf-plugins-core
 
