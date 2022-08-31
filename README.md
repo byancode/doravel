@@ -21,7 +21,7 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 > funcionalidades que te brinda DORAVEL
 
 ```bash
-sudo bash <(curl -fsSL https://bit.ly/3C14uQB)
+bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/init)
 ```
 
 # comandos
