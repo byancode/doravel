@@ -176,49 +176,51 @@ chown -R apache:apache ./storage
 chown -R apache:apache ./bootstrap/cache
 echo "Storage and cache directories configured"
 
+# create temporary supervisor configuration
+cat /etc/supervisord.conf > /supervisord.conf
 
 if is_true $DORAVEL_SERVICE_SCHEDULE; then
-    cat /var/config/doravel-schedule.conf >> /etc/supervisord.conf
+    cat /var/config/doravel-schedule.conf >> /supervisord.conf
 fi
 
 if is_true $DORAVEL_SERVICE_FPM; then
-    cat /var/config/doravel-fpm.conf >> /etc/supervisord.conf
+    cat /var/config/doravel-fpm.conf >> /supervisord.conf
 else
     rm -f /etc/nginx/sites-available/fpm.conf
     rm -f /etc/nginx/sites-available/ssl-fpm.conf
 fi
 
 if is_true $DORAVEL_SERVICE_OCTANE; then
-    cat /var/config/doravel-octane.conf >> /etc/supervisord.conf
+    cat /var/config/doravel-octane.conf >> /supervisord.conf
 else
     rm -f /etc/nginx/sites-available/site.conf
     rm -f /etc/nginx/sites-available/ssl-site.conf
 fi
 
 if is_true $DORAVEL_SERVICE_DEPLOY; then
-    cat /var/config/doravel-deploy.conf >> /etc/supervisord.conf
+    cat /var/config/doravel-deploy.conf >> /supervisord.conf
     /git-pull # creamos conexion ssh para git
 fi
 
 if is_true $DORAVEL_SERVICE_SOKETI; then
-    cat /var/config/doravel-soketi.conf >> /etc/supervisord.conf
+    cat /var/config/doravel-soketi.conf >> /supervisord.conf
 else
     rm -f /etc/nginx/sites-available/soketi.conf
     rm -f /etc/nginx/sites-available/ssl-soketi.conf
 fi
 
 if is_true $DORAVEL_SERVICE_NGINX; then
-    cat /var/config/doravel-nginx.conf >> /etc/supervisord.conf
+    cat /var/config/doravel-nginx.conf >> /supervisord.conf
 fi
 
 if [ -f /var/www/supervisord.conf ]; then
-    echo ""                       >> /etc/supervisord.conf
-    cat /var/www/supervisord.conf >> /etc/supervisord.conf
+    echo ""                       >> /supervisord.conf
+    cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
 if [ $# -eq 0 ]; then
     echo "Starting supervisord..."
-    /usr/bin/supervisord -n -c /etc/supervisord.conf
+    /usr/bin/supervisord -n -c /supervisord.conf
 else
     exec "$@"
 fi
