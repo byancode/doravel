@@ -31,3 +31,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/in
 ./doravel down --env prod
 ./doravel restart --env prod
 ```
+
+# docker install - optional
+
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/docker)
+```
