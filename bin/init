@@ -31,10 +31,6 @@ fi
 
 if [ ! -d ./storage/.ssh ]; then
     mkdir ./storage/.ssh
-
-    echo '*'             > ./storage/.ssh/.gitignore
-    echo '!.id_rsa'     >> ./storage/.ssh/.gitignore
-    echo '!.id_rsa.pub' >> ./storage/.ssh/.gitignore
 fi
 if [ ! -f ./storage/.ssh/id_rsa ]; then
     ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""

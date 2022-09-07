@@ -103,10 +103,6 @@ if [ $COMMAND == "ssh-keys" ]; then
     echo "Generating ssh keys..."
     if [ ! -d ./storage/.ssh ]; then
         mkdir ./storage/.ssh
-
-        echo '*'             > ./storage/.ssh/.gitignore
-        echo '!.id_rsa'     >> ./storage/.ssh/.gitignore
-        echo '!.id_rsa.pub' >> ./storage/.ssh/.gitignore
     fi
     if [ ! -f ./storage/.ssh/id_rsa ]; then
         email=$(git config --global user.email)
