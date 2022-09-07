@@ -87,7 +87,7 @@ fi
 
 if [ $COMMAND == "upgrade" ]; then
     echo "Upgrading doravel..."
-    curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel -o ./doravel
+    curl -H 'Cache-Control: no-cache, no-store' "https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel?$RANDOM" -o ./doravel
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
     fi
