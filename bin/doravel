@@ -75,6 +75,7 @@ if [ $COMMAND == "fix" ]; then
 fi
 
 if [ $COMMAND == "global" ] && [ -f ./doravel ]; then
+    echo "Install doravel global..."
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
     fi
@@ -85,9 +86,10 @@ if [ $COMMAND == "global" ] && [ -f ./doravel ]; then
 fi
 
 if [ $COMMAND == "upgrade" ]; then
+    echo "Upgrading doravel..."
     curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel -o ./doravel
-    if [ ! -d "$HOME/bin" ]; then
-        mkdir "$HOME/bin"
+    if [ ! -d ~/bin ]; then
+        mkdir ~/bin
     fi
     cp ./doravel ~/bin/doravel
     chmod +x ~/bin/doravel
