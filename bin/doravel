@@ -54,7 +54,7 @@ fi
 
 # compobamos si exite el comando
 
-if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ]; then
+if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ] && [ $COMMAND != "ssh-keys" ] && [ $COMMAND != "self-upgrade" ] || [ $COMMAND != "selfupgrade" ] || [ $COMMAND != "global" ]; then
     echo "the command $COMMAND is not valid"
     exit 0
 fi
@@ -67,6 +67,39 @@ if [ $COMMAND == "fix" ]; then
 
     exit 0
 fi
+
+if [ $COMMAND == "global" ] && [ -f ./doravel ]; then
+    if [ ! -d ~/bin ]; then
+        mkdir ~/bin
+    fi
+    cp ./doravel ~/bin/doravel
+    chmod +x ~/bin/doravel
+fi
+
+if [ $COMMAND == "self-upgrade" ] || [ $COMMAND == "selfupgrade" ]; then
+    curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel -o ./doravel
+    if [ ! -d ~/bin ]; then
+        mkdir ~/bin
+    fi
+    cp ./doravel ~/bin/doravel
+    chmod +x ~/bin/doravel
+    chmod +x ./doravel
+if
+
+
+if [ $COMMAND == "ssh-keys" ]; then
+    if [ ! -d ./storage/.ssh ]; then
+        mkdir ./storage/.ssh
+
+        echo '*'             > ./storage/.ssh/.gitignore
+        echo '!.id_rsa'     >> ./storage/.ssh/.gitignore
+        echo '!.id_rsa.pub' >> ./storage/.ssh/.gitignore
+    fi
+    if [ ! -f ./storage/.ssh/id_rsa ]; then
+        ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""
+        chmod 600 ./storage/.ssh/id_rsa
+    fi
+if
 
 # comandos que requieren de un .env
 
