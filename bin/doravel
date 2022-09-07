@@ -76,7 +76,7 @@ if [ $COMMAND == "global" ] && [ -f ./doravel ]; then
     chmod +x ~/bin/doravel
 fi
 
-if [ $COMMAND == "self-upgrade" ] || [ $COMMAND == "selfupgrade" ]; then
+if [ $COMMAND == "upgrade" ]; then
     curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel -o ./doravel
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
