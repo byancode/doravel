@@ -159,18 +159,13 @@ fi
 echo "SSL configured"
 
 
-if [ ! -d /var/www/vendor ]; then
-    composer install
-fi
-
-if [ ! -d /var/www/node_modules ]; then
-    npm install
-fi
+composer install --quiet
+npm install
+npm audit fix
 
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
 fi
-
 
 chown -R apache:apache ./storage
 chown -R apache:apache ./bootstrap/cache

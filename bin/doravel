@@ -3,18 +3,43 @@
 function print_help {
     echo 'Modo de uso: doravel [COMMAND] [OPTIONS]
 
-COMMAND:
-    init      Inicia un proyecto con doravel
-    start     Restablece todos los servicios
-    up        Iniciar los servicios del proyecto
-    stop      Pausa todos los servicios
-    down      Para y eliminar los servicios
-    restart   Reiniciar los servicios
-    reload    Recarrega los servicios
-    console   Abre el terminal bash de doravel
-    terminal  Abre el terminal bash de doravel
-    artisan   Ejecuta un comando artisan
-    fix       Corrige el usuario y grupo
+DORAVEL COMMANDS:
+    init               Inicia un proyecto con doravel
+    reload             Reinicia el contenedor de laravel
+    console            Abre el terminal bash de doravel
+    terminal           Abre el terminal bash de doravel
+    artisan            Ejecuta un comando artisan
+    fix                Corrige el usuario y grupo
+    global             Instala el comando doravel globalmente
+    upgrade            Actualiza doravel
+    ssh-keys           Genera las llaves ssh para el deploy
+
+DOCKER-COMPOSE COMMANDS:
+    build              Build or rebuild services
+    config             Validate and view the Compose file
+    create             Create services
+    down               Stop and remove resources
+    events             Receive real time events from containers
+    exec               Execute a command in a running container
+    help               Get help on a command
+    images             List images
+    kill               Kill containers
+    logs               View output from containers
+    pause              Pause services
+    port               Print the public port for a port binding
+    ps                 List containers
+    pull               Pull service images
+    push               Push service images
+    restart            Restart services
+    rm                 Remove stopped containers
+    run                Run a one-off command
+    scale              Set number of containers for a service
+    start              Start services
+    stop               Stop services
+    top                Display the running processes
+    unpause            Unpause services
+    up                 Create and start containers
+    version            Show version information and quit
 
 OPTIONS:
     -e | --env     .env file to use
@@ -52,15 +77,54 @@ if [ $COMMAND == "init" ]; then
     exit 0
 fi
 
-if [ $COMMAND != "" ]; then
-    echo "Running doravel with command $COMMAND..."
-else
+if [ $COMMAND == "" ]; then
     echo "Running doravel..."
 fi
 
-# compobamos si exite el comando
 
-if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ] && [ $COMMAND != "ssh-keys" ] && [ $COMMAND != "upgrade" ] && [ $COMMAND != "global" ]; then
+COMMANDS=(
+# doravel commands
+    "fix"
+    "init"
+    "global"
+    "reload"
+    "console"
+    "artisan"
+    "upgrade"
+    "terminal"
+    "ssh-keys"
+# docker-compose commands
+    "build"
+    "config"
+    "create"
+    "down"
+    "events"
+    "exec"
+    "help"
+    "images"
+    "kill"
+    "logs"
+    "pause"
+    "port"
+    "ps"
+    "pull"
+    "push"
+    "restart"
+    "rm"
+    "run"
+    "scale"
+    "start"
+    "stop"
+    "top"
+    "unpause"
+    "up"
+    "version"
+)
+
+# compobamos si exite el comando
+if [[ " ${COMMANDS[*]} " =~ " ${COMMAND} " ]]; then
+    echo "Running doravel with command $COMMAND..."
+else
     echo "the command $COMMAND is not valid"
     exit 0
 fi
@@ -87,7 +151,7 @@ fi
 
 if [ $COMMAND == "upgrade" ]; then
     echo "Upgrading doravel..."
-    curl -H 'Cache-Control: no-cache, no-store' "https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel?$RANDOM" -o ./doravel
+    curl "https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel" -o ./doravel
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
     fi
@@ -179,7 +243,7 @@ while [ "$#" -gt 0 ]; do
             shift
             ;;
         *)
-            if [[ "$2" =~ ^- ]]; then
+            if [[ "$2" == "--" ]] || [[ "$2" =~ ^- ]]; then
                 OPTIONS="$OPTIONS $2"
                 shift
                 continue
@@ -269,32 +333,17 @@ ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
 if [ $COMMAND == "console" ] || [ $COMMAND == "terminal" ]; then
     docker-compose $(echo $ARGUMENTS) exec -- doravel bash
+    exit 0
 fi
 
 if [ $COMMAND == "artisan" ]; then
     docker-compose $(echo $ARGUMENTS) exec -- doravel php artisan $(echo $OPTIONS)
+    exit 0
 fi
 
-if [ $COMMAND == "up" ]; then
-    docker-compose $(echo $ARGUMENTS) up $(echo $OPTIONS)
-fi
-
-if [ $COMMAND == "start" ]; then
-    docker-compose $(echo $ARGUMENTS) start
-fi
-
-if [ $COMMAND == "restart" ] || [ $COMMAND == "reload" ]; then
+if [ $COMMAND == "reload" ]; then
     docker-compose $(echo $ARGUMENTS) restart -- doravel
+    exit 0
 fi
 
-if [ $COMMAND == "down" ]; then
-    docker-compose $(echo $ARGUMENTS) down $(echo $OPTIONS)
-fi
-
-if [ $COMMAND == "stop" ]; then
-    docker-compose $(echo $ARGUMENTS) stop
-fi
-
-if [ $COMMAND == "ps" ] || [ $COMMAND == "top" ] || [ $COMMAND == "build" ] || [ $COMMAND == "help" ] || [ $COMMAND == "logs" ]; then
-    docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
-fi
+docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
