@@ -52,6 +52,12 @@ if [ $COMMAND == "init" ]; then
     exit 0
 fi
 
+if [ $COMMAND != "" ]; then
+    echo "Running doravel with command $COMMAND..."
+else
+    echo "Running doravel..."
+fi
+
 # compobamos si exite el comando
 
 if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ] && [ $COMMAND != "ssh-keys" ] && [ $COMMAND != "upgrade" ] && [ $COMMAND != "global" ]; then
@@ -74,20 +80,25 @@ if [ $COMMAND == "global" ] && [ -f ./doravel ]; then
     fi
     cp ./doravel ~/bin/doravel
     chmod +x ~/bin/doravel
+
+    exit 0
 fi
 
 if [ $COMMAND == "upgrade" ]; then
     curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel -o ./doravel
-    if [ ! -d ~/bin ]; then
-        mkdir ~/bin
+    if [ ! -d "$HOME/bin" ]; then
+        mkdir "$HOME/bin"
     fi
     cp ./doravel ~/bin/doravel
     chmod +x ~/bin/doravel
     chmod +x ./doravel
-if
+
+    exit 0
+fi
 
 
 if [ $COMMAND == "ssh-keys" ]; then
+    echo "Generating ssh keys..."
     if [ ! -d ./storage/.ssh ]; then
         mkdir ./storage/.ssh
 
@@ -96,10 +107,13 @@ if [ $COMMAND == "ssh-keys" ]; then
         echo '!.id_rsa.pub' >> ./storage/.ssh/.gitignore
     fi
     if [ ! -f ./storage/.ssh/id_rsa ]; then
+        email=$(git config --global user.email)
         ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""
         chmod 600 ./storage/.ssh/id_rsa
     fi
-if
+
+    exit 0
+fi
 
 # comandos que requieren de un .env
 
@@ -275,4 +289,3 @@ fi
 if [ $COMMAND == "ps" ] || [ $COMMAND == "top" ] || [ $COMMAND == "build" ] || [ $COMMAND == "help" ] || [ $COMMAND == "logs" ]; then
     docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
 fi
-
