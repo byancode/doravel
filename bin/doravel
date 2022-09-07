@@ -104,11 +104,22 @@ if [ $COMMAND == "ssh-keys" ]; then
     if [ ! -d ./storage/.ssh ]; then
         mkdir ./storage/.ssh
     fi
-    if [ ! -f ./storage/.ssh/id_rsa ]; then
-        email=$(git config --global user.email)
-        ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""
-        chmod 600 ./storage/.ssh/id_rsa
-    fi
+    email=$(git config --global user.email)
+    ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""
+    chmod 600 ./storage/.ssh/id_rsa
+
+    echo ""
+    echo "##🔑 SSH key generated 🔑##"
+    echo ""
+    cat ./storage/.ssh/id_rsa.pub
+    echo ""
+    echo ""
+    echo "⚠️⚠️ IMPORTANTE ⚠️⚠️"
+    echo "No olvide agregar la clave pública a su repositorio de GitHub!"
+    echo "👇️ Documentacion de DEPLOY KEYS 👇️"
+    echo ""
+    echo "https://docs.github.com/es/developers/overview/managing-deploy-keys#deploy-keys"
+    echo ""
 
     exit 0
 fi
