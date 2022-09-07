@@ -54,7 +54,7 @@ fi
 
 # compobamos si exite el comando
 
-if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ] && [ $COMMAND != "ssh-keys" ] && [ $COMMAND != "self-upgrade" ] || [ $COMMAND != "selfupgrade" ] || [ $COMMAND != "global" ]; then
+if [ $COMMAND != "init" ] && [ $COMMAND != "start" ] && [ $COMMAND != "up" ] && [ $COMMAND != "stop" ] && [ $COMMAND != "down" ] && [ $COMMAND != "restart" ] && [ $COMMAND != "reload" ] && [ $COMMAND != "console" ] && [ $COMMAND != "terminal" ] && [ $COMMAND != "artisan" ] && [ $COMMAND != "fix" ] && [ $COMMAND != "ps" ] && [ $COMMAND != "top" ] && [ $COMMAND != "build" ] && [ $COMMAND != "help" ] && [ $COMMAND != "logs" ] && [ $COMMAND != "ssh-keys" ] && [ $COMMAND != "upgrade" ] && [ $COMMAND != "global" ]; then
     echo "the command $COMMAND is not valid"
     exit 0
 fi
