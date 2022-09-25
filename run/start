@@ -10,15 +10,15 @@ function is_true {
 }
 
 DORAVEL_ENV=${DORAVEL_ENV:-"local"}
-export APP_ENV="$DORAVEL_ENV"
+APP_ENV=${DORAVEL_ENV:-"local"}
 
 if [ ! -f /var/www/.env ]; then
     echo "File /www/.env not found. Exiting..."
     exit 1
 fi
 
-if [ -f /var/www/.env.$DORAVEL_ENV ]; then
-    source /var/www/.env.$DORAVEL_ENV
+if [ -f /var/www/.env.$APP_ENV ]; then
+    source /var/www/.env.$APP_ENV
 else
     source /var/www/.env
 fi
@@ -167,9 +167,8 @@ else
 fi
 echo "SSL configured"
 
-
-composer install --quiet
-npm install
+# composer install --quiet
+# npm install
 
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
