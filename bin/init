@@ -91,10 +91,10 @@ services:
     redis:
         restart: always
         image: redis
-        expose:
-            - 6379
         volumes:
             - data-redis:/data
+        expose:
+            - 6379
         networks:
             - default
 networks:
@@ -117,6 +117,36 @@ fi
 
 if [ "$RESPOSE" == 'y' ]; then
     echo "$DOCKER_COMPOSE" > ./docker-compose.yml
+fi
+
+
+DOCKER_FILE=\
+'FROM byancode/doravel
+
+ENV DORAVEL_SERVICE_SCHEDULE=true
+ENV DORAVEL_SERVICE_OPCACHE=true
+ENV DORAVEL_SERVICE_SOKETI=true
+ENV DORAVEL_SERVICE_DEPLOY=true
+ENV DORAVEL_SERVICE_OCTANE=true
+ENV DORAVEL_SERVICE_NGINX=true
+ENV DORAVEL_SERVICE_FPM=true
+ENV DORAVEL_GIT_EMAIL='$DORAVEL_GIT_EMAIL'
+ENV DORAVEL_GIT_NAME='$DORAVEL_GIT_NAME'
+ENV DORAVEL_ENV=prod
+
+COPY . /var/www
+'
+
+if [ -f ./Dockerfile ]; then
+    read -p '¿Desea sobreescribir Dockerfile? (y/n): ' RESPOSE
+fi
+
+if [ "$RESPOSE" == 'y' ] && [ -f ./Dockerfile.yml ]; then
+    cp ./Dockerfile.yml ./Dockerfile.old.yml
+fi
+
+if [ "$RESPOSE" == 'y' ]; then
+    echo "$DOCKER_FILE" > ./Dockerfile.yml
 fi
 
 curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel > ./doravel

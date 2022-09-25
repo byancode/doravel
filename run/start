@@ -24,6 +24,15 @@ else
 fi
 
 
+if [ -d /var/www/storage/.ssh ]; then
+    cp -R /var/www/storage/.ssh /root/.ssh
+fi
+
+if [ -f /root/.ssh/id_rsa ]; then
+    chmod 600 /root/.ssh/id_rsa
+fi
+
+
 DORAVEL_SERVICE_FPM=${DORAVEL_SERVICE_FPM:-true}
 DORAVEL_SERVICE_NGINX=${DORAVEL_SERVICE_NGINX:-true}
 DORAVEL_SERVICE_DEPLOY=${DORAVEL_SERVICE_DEPLOY:-true}
@@ -161,7 +170,6 @@ echo "SSL configured"
 
 composer install --quiet
 npm install
-npm audit fix
 
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
