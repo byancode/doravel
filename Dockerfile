@@ -92,8 +92,6 @@ COPY ./nginx/sites/     /etc/nginx/sites-available/
 
 RUN mkdir /run/php-fpm
 
-COPY ./www /var/www
-
 EXPOSE 80
 EXPOSE 90
 EXPOSE 443
