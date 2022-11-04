@@ -56,20 +56,16 @@ RUN dnf clean all
 RUN wget https://getcomposer.org/composer-stable.phar -O /usr/local/bin/composer
 RUN chmod +x /usr/local/bin/composer
 
-RUN mkdir -p /var/soketi
-
 ARG NVM_VERSION=0.39.1
 ARG NODE_VERSION="--lts"
 
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
 RUN source /root/.bashrc && \
     nvm install $(echo $NODE_VERSION) && \
-    npm install -g @soketi/soketi && \
     npm install -g yarn
 
 COPY ./config/blacklist.ini /etc/php.d/opcache-default.blacklist
 COPY ./config/supervisord.conf /etc/supervisord.conf
-COPY ./config/soketi.json /var/soketi/config.json
 COPY ./config/opcache.ini /etc/php.d/opcache.ini
 COPY ./config/sancert.cnf /etc/ssl/sancert.cnf
 COPY ./services/ /var/config/
@@ -106,4 +102,4 @@ EXPOSE 6002
 EXPOSE 8000
 EXPOSE 9000
 
-ENTRYPOINT ["/start"]
+CMD ["/start"]

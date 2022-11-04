@@ -9,11 +9,34 @@ function is_true {
     fi
 }
 
+function is_false {
+    if [ "$1" == "false" ] || [ "$1" == "False" ] || [ "$1" == "FALSE" ] || [ "$1" == "0" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 DORAVEL_ENV=${DORAVEL_ENV:-"local"}
 APP_ENV=${DORAVEL_ENV:-"local"}
 
 if [ ! -f /var/www/.env ]; then
-    echo "File /www/.env not found. Exiting..."
+    rm -rf /var/www/*
+fi
+
+# check is /var/www/ empty
+if [ ! "$(ls -A /var/www)" ]; then
+    echo "Installing Laravel..."
+    composer create-project --prefer-dist laravel/laravel /var/www
+    echo "Laravel installed"
+fi
+
+if [ ! -f /var/www/.env ] && [ -f /var/www/.env.example ]; then
+    cp /var/www/.env.example /var/www/.env
+fi
+
+if [ ! -f /var/www/.env ]; then
+    echo "File /var/www/.env not found. Exiting..."
     exit 1
 fi
 
@@ -22,7 +45,6 @@ if [ -f /var/www/.env.$APP_ENV ]; then
 else
     source /var/www/.env
 fi
-
 
 if [ -d /var/www/storage/.ssh ]; then
     cp -R /var/www/storage/.ssh /root/.ssh
@@ -36,7 +58,6 @@ fi
 DORAVEL_SERVICE_FPM=${DORAVEL_SERVICE_FPM:-true}
 DORAVEL_SERVICE_NGINX=${DORAVEL_SERVICE_NGINX:-true}
 DORAVEL_SERVICE_DEPLOY=${DORAVEL_SERVICE_DEPLOY:-true}
-DORAVEL_SERVICE_SOKETI=${DORAVEL_SERVICE_SOKETI:-true}
 DORAVEL_SERVICE_OCTANE=${DORAVEL_SERVICE_OCTANE:-true}
 DORAVEL_SERVICE_OPCACHE=${DORAVEL_SERVICE_OPCACHE:-true}
 DORAVEL_SERVICE_SCHEDULE=${DORAVEL_SERVICE_SCHEDULE:-true}
@@ -95,27 +116,6 @@ else
 fi
 
 
-
-if is_true $DORAVEL_SERVICE_SOKETI; then
-    SOKETI_PATH=$(which soketi);
-    SOKETI_PORT=${SOKETI_PORT:-6002}
-    SOKETI_ID=${SOKETI_ID:-"some-id"}
-    SOKETI_KEY=${SOKETI_KEY:-"some-key"}
-    SOKETI_SECRET=${SOKETI_SECRET:-"some-secret"}
-    SOKETI_WEBHOOK=${SOKETI_WEBHOOK:-"http://localhost:8080"}
-
-    echo "Starting Soketi..."
-    echo $(jq '.debug = '$APP_DEBUG' | .port = '$SOKETI_PORT' | ."appManager.array.apps.0.id" = "'$SOKETI_ID'" | ."appManager.array.apps.0.key" = "'$SOKETI_KEY'" | ."appManager.array.apps.0.secret" = "'$SOKETI_SECRET'" | ."appManager.array.apps.0.webhooks"[0].url = "'$SOKETI_WEBHOOK'"' /var/soketi/config.json) > /var/soketi/config.json
-    echo "Soketi started"
-
-    # defive octane server
-    sed -e 's@__SOKETI__@'$SOKETI_PATH'@' -i /var/config/doravel-soketi.conf
-    echo "Soketi configured"
-fi
-
-
-
-
 if is_true $APP_SSL && is_true $APP_SELF_CERT; then
     echo "Starting SSL certificate..."
 
@@ -148,10 +148,8 @@ echo "Environment configured"
 
 sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/fpm.conf
 sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/site.conf
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/soketi.conf
 sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-fpm.conf
 sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-soketi.conf
 echo "Host configured"
 
 
@@ -159,19 +157,31 @@ echo "Host configured"
 if is_true $APP_SSL ; then \
     rm -f /etc/nginx/sites-available/fpm.conf;
     rm -f /etc/nginx/sites-available/site.conf;
-    rm -f /etc/nginx/sites-available/soketi.conf;
 else
     rm -f /etc/nginx/sites-available/ssl-fpm.conf;
     rm -f /etc/nginx/sites-available/ssl-site.conf;
-    rm -f /etc/nginx/sites-available/ssl-soketi.conf;
 fi
 echo "SSL configured"
 
-# composer install --quiet
-# npm install
+if [ ! -d /var/www/vendor/ ]; then
+    composer install --quiet --working-dir=/var/www
+fi
+
+if [ ! -d /var/www/node_modules/ ]; then
+    npm install --prefix=/var/www
+fi
 
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
+fi
+
+if [ ! -d /var/www/vendor/laravel/octane ]; then
+    composer require laravel/octane byancode/octane-watch --working-dir=/var/www
+    php /var/www/artisan octane:install --server=swoole
+fi
+
+if [ ! -d /var/www/vendor/byancode/octane-watch ]; then
+    composer require byancode/octane-watch --working-dir=/var/www
 fi
 
 chown -R apache:apache ./storage
@@ -194,6 +204,10 @@ fi
 
 if is_true $DORAVEL_SERVICE_OCTANE; then
     cat /var/config/doravel-octane.conf >> /supervisord.conf
+    # set octane server watcher
+    if is_true $APP_DEBUG; then
+        sed -e 's/:start/:watch/' -i /supervisord.conf
+    fi
 else
     rm -f /etc/nginx/sites-available/site.conf
     rm -f /etc/nginx/sites-available/ssl-site.conf
@@ -202,13 +216,6 @@ fi
 if is_true $DORAVEL_SERVICE_DEPLOY; then
     cat /var/config/doravel-deploy.conf >> /supervisord.conf
     /git-pull # creamos conexion ssh para git
-fi
-
-if is_true $DORAVEL_SERVICE_SOKETI; then
-    cat /var/config/doravel-soketi.conf >> /supervisord.conf
-else
-    rm -f /etc/nginx/sites-available/soketi.conf
-    rm -f /etc/nginx/sites-available/ssl-soketi.conf
 fi
 
 if is_true $DORAVEL_SERVICE_NGINX; then
@@ -220,9 +227,5 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
-if [ $# -eq 0 ]; then
-    echo "Starting supervisord..."
-    /usr/bin/supervisord -n -c /supervisord.conf
-else
-    exec "$@"
-fi
+echo "Starting supervisord..."
+/usr/bin/supervisord --nodaemon --configuration /supervisord.conf
