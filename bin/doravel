@@ -347,3 +347,7 @@ if [ $COMMAND == "reload" ]; then
 fi
 
 docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
+
+if [ $COMMAND == "down" ]; then
+    ./doravel fix
+fi

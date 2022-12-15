@@ -227,5 +227,8 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
+
+sed -e 's/$APP_ENV/'$APP_ENV'/' -i /supervisord.conf
+
 echo "Starting supervisord..."
 /usr/bin/supervisord --nodaemon --configuration /supervisord.conf
