@@ -148,7 +148,7 @@ if [ "$RESPOSE" == 'y' ]; then
     echo "$DOCKER_FILE" > ./Dockerfile.yml
 fi
 
-curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel > ./doravel
+curl https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/bin/doravel > ./doravel
 chmod +x ./doravel
 
 
@@ -168,7 +168,7 @@ echo "
 "
 ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
-bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/bin/docker)
+bash <(curl https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/bin/docker)
 
 git config --global user.name  "'$DORAVEL_GIT_NAME'"
 git config --global user.email "'$DORAVEL_GIT_EMAIL'"

@@ -21,7 +21,7 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 > funcionalidades que te brinda DORAVEL
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/init)
+bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/bin/init)
 ```
 
 # 💻 Comandos
@@ -36,5 +36,5 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/in
 
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/docker)
+bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/bin/docker)
 ```

@@ -71,7 +71,7 @@ if [ $COMMAND == "init" ]; then
     read -p "Do you want to initialize doravel? [y/N] " RESPOSE
 
     if [ "$RESPOSE" == "y" ]; then
-        bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/bin/init)
+        bash <(curl https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/bin/init)
     fi
 
     exit 0
@@ -151,7 +151,7 @@ fi
 
 if [ $COMMAND == "upgrade" ]; then
     echo "Upgrading doravel..."
-    curl "https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel" -o ./doravel
+    curl "https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/bin/doravel" -o ./doravel
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
     fi

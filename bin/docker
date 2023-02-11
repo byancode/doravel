@@ -2,7 +2,7 @@
 DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
 DISTRO=${DISTRO//\"/}
 
-bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/docker/$DISTRO)
+bash <(curl https://raw.githubusercontent.com/byancode/doravel/0.1-fedora/docker/$DISTRO)
 
 curl \
 -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
