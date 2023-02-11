@@ -16,11 +16,21 @@ if [ ! -d ./storage ]; then
     exit 0
 fi
 
+if [ ! -d ./storage/.ssh ]; then
+    mkdir ./storage/.ssh
+fi
+
+if [ ! -d ./storage/.doravel ]; then
+    mkdir ./storage/.doravel
+fi
+
 DORAVEL_GIT_URL=$(git config --get remote.origin.url)
 DORAVEL_GIT_NAME=$(git config --get user.name)
 DORAVEL_GIT_EMAIL=$(git config --get user.email)
 DORAVEL_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 DORAVEL_GIT_REPOSITORY=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
+
+# TODO - comprobar si se obtiene el nombre del repositorio, de lo contrario preguntar por el nombre del repositorio
 
 # check url if http
 if [[ $DORAVEL_GIT_URL =~ ^http:// ]]; then
@@ -29,9 +39,6 @@ if [[ $DORAVEL_GIT_URL =~ ^http:// ]]; then
     echo ""
 fi
 
-if [ ! -d ./storage/.ssh ]; then
-    mkdir ./storage/.ssh
-fi
 if [ ! -f ./storage/.ssh/id_rsa ]; then
     ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""
     chmod 600 ./storage/.ssh/id_rsa
@@ -53,58 +60,6 @@ echo ""
 RSA_KEY=$(cat ./storage/.ssh/id_rsa | base64 --wrap=0)
 RSA_PUB=$(cat ./storage/.ssh/id_rsa.pub | base64 --wrap=0)
 
-DOCKER_COMPOSE=\
-'version: "3.1"
-services:
-    doravel:
-        restart: always
-        image: byancode/doravel
-        environment:
-            DORAVEL_GIT_EMAIL: '$DORAVEL_GIT_EMAIL'
-            DORAVEL_GIT_NAME: '$DORAVEL_GIT_NAME'
-            DORAVEL_ENV: ${APP_ENV:-local}
-        volumes:
-            - ./storage/.ssh:/root/.ssh
-            - .:/var/www
-        ports:
-            - 80:80
-            - 443:443
-        networks:
-            - default
-        depends_on:
-            - mysql
-            - redis
-    mysql:
-        restart: always
-        image: mariadb
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-            MYSQL_DATABASE: $DB_DATABASE
-            MYSQL_PASSWORD: $DB_PASSWORD
-            MYSQL_USER: $DB_USERNAME
-        expose:
-            - 3306
-        volumes:
-            - data-database:/var/lib/mysql
-        networks:
-            - default
-    redis:
-        restart: always
-        image: redis
-        volumes:
-            - data-redis:/data
-        expose:
-            - 6379
-        networks:
-            - default
-networks:
-    default:
-        driver: bridge
-volumes:
-    data-database:
-    data-redis:
-'
-
 RESPOSE='y'
 
 if [ -f ./docker-compose.yml ]; then
@@ -116,10 +71,10 @@ if [ "$RESPOSE" == 'y' ] && [ -f ./docker-compose.yml ]; then
 fi
 
 if [ "$RESPOSE" == 'y' ]; then
-    echo "$DOCKER_COMPOSE" > ./docker-compose.yml
+    curl -s https://raw.githubusercontent.com/byancode/doravel/master/files/docker-compose.local.yml > ./docker-compose.local.yml
 fi
 
-
+# TODO - colocar dockerfile en un archivo aparte
 DOCKER_FILE=\
 'FROM byancode/doravel
 
@@ -140,19 +95,19 @@ if [ -f ./Dockerfile ]; then
     read -p '¿Desea sobreescribir Dockerfile? (y/n): ' RESPOSE
 fi
 
-if [ "$RESPOSE" == 'y' ] && [ -f ./Dockerfile.yml ]; then
-    cp ./Dockerfile.yml ./Dockerfile.old.yml
+if [ "$RESPOSE" == 'y' ] && [ -f ./Dockerfile ]; then
+    cp ./Dockerfile ./Dockerfile.old
 fi
 
 if [ "$RESPOSE" == 'y' ]; then
-    echo "$DOCKER_FILE" > ./Dockerfile.yml
+    echo "$DOCKER_FILE" > ./Dockerfile
 fi
 
 curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel > ./doravel
 chmod +x ./doravel
 
 
-
+# TODO - colocar install en un archivo aparte
 echo '#!/bin/bash
 #────────────────────────────────────────────────────────────────┐
 # ─ copiar todo y pegar en la terminal de linux de tu servidor ─ │

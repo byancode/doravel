@@ -1,14 +1,13 @@
 FROM fedora:35
+# TODO - cambiar de fedora a alpine
 
 WORKDIR /var/www
 
-RUN dnf -y update
-RUN dnf -y upgrade --refresh
-RUN dnf -y install dnf-plugins-core
-RUN dnf -y install \
-    http://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm
-
-RUN dnf -y install \
+RUN dnf -y update && \
+    dnf -y upgrade --refresh && \
+    dnf -y install dnf-plugins-core && \
+    dnf -y install http://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm && \
+    dnf -y install \
     supervisor \
     openssl \
     cronie \
@@ -19,20 +18,17 @@ RUN dnf -y install \
     git \
     jq
 
-RUN dnf config-manager --set-enabled remi
-RUN dnf module reset php
-
-ARG PHP_VERSION=8.1
-RUN dnf -y module install php:remi-${PHP_VERSION}
-RUN dnf -y install \
+ARG PHP_VERSION=8.2
+RUN dnf config-manager --set-enabled remi && \
+    dnf module reset php && \
+    dnf -y module install php:remi-${PHP_VERSION} &&\
+    dnf -y install \
     php \
     php-gd \
     php-cli \
     php-zip \
     php-fpm \
     php-intl \
-    php-devel \
-    php-pgsql \
     php-mcrypt \
     php-mysqlnd \
     php-mbstring \
@@ -46,51 +42,41 @@ RUN dnf -y install \
     php-redis \
     php-curl \
     php-pear \
-    php-json
+    php-json && \
+    dnf -y module enable nginx:mainline && \
+    dnf -y install nginx && \
+    dnf clean all
 
-RUN dnf -y module enable nginx:mainline
-RUN dnf -y install nginx
-
-RUN dnf clean all
-
-RUN wget https://getcomposer.org/composer-stable.phar -O /usr/local/bin/composer
-RUN chmod +x /usr/local/bin/composer
-
-ARG NVM_VERSION=0.39.1
+ARG NVM_VERSION=0.39.3
 ARG NODE_VERSION="--lts"
 
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash
-RUN source /root/.bashrc && \
+RUN wget https://getcomposer.org/composer-stable.phar -O /usr/local/bin/composer && \
+    chmod +x /usr/local/bin/composer && \
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash && \
+    source /root/.bashrc && \
     nvm install $(echo $NODE_VERSION) && \
     npm install -g yarn
 
-COPY ./config/blacklist.ini /etc/php.d/opcache-default.blacklist
+COPY ./config/opcache.blacklist /etc/php.d/opcache.blacklist
 COPY ./config/supervisord.conf /etc/supervisord.conf
 COPY ./config/opcache.ini /etc/php.d/opcache.ini
 COPY ./config/sancert.cnf /etc/ssl/sancert.cnf
 COPY ./services/ /var/config/
 
-COPY ./run/git-pull /git-pull
-COPY ./run/deploy   /deploy
-COPY ./run/start    /start
-
-RUN chmod +x /git-pull
-RUN chmod +x /deploy
-RUN chmod +x /start
-
-RUN sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i /etc/php-fpm.d/www.conf
-RUN sed -e 's/listen.acl_users/;listen.acl_users/' -i /etc/php-fpm.d/www.conf
-RUN sed -e 's/listen =.*/listen = 0.0.0.0:9000/' -i /etc/php-fpm.d/www.conf
+COPY ./run /xbin
 
 COPY ./nginx/mime.types /etc/nginx/mime.types
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
-RUN rm -f /etc/nginx/conf.d/php-fpm.conf
-
 COPY ./nginx/conf.d/    /etc/nginx/conf.d/
 COPY ./nginx/sites/     /etc/nginx/sites-available/
 
-RUN mkdir /run/php-fpm
+RUN chmod +x /xbin/* && \
+    sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i /etc/php-fpm.d/www.conf && \
+    sed -e 's/listen.acl_users/;listen.acl_users/' -i /etc/php-fpm.d/www.conf && \
+    sed -e 's/listen =.*/listen = 0.0.0.0:9000/' -i /etc/php-fpm.d/www.conf && \
+    rm -f /etc/nginx/conf.d/php-fpm.conf && \
+    mkdir /run/php-fpm
 
 EXPOSE 80
 EXPOSE 90
@@ -100,4 +86,4 @@ EXPOSE 6002
 EXPOSE 8000
 EXPOSE 9000
 
-CMD ["/start"]
+CMD ["/xbin/start"]

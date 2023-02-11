@@ -1,4 +1,4 @@
-# 🛠️ Doravel
+# 🛠️ Doravel (en desarrollo)
 
 Integrando Doravel en tu proyecto, no necesitas crear imagenes privadas, puedes ejecutar tu proyecto de forma segura mediante tu repositorio git privado
 
@@ -30,11 +30,4 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/in
 ./doravel up --env prod
 ./doravel down --env prod
 ./doravel restart --env prod
-```
-
-# docker install - optional
-
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/docker)
 ```

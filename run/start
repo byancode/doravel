@@ -215,7 +215,7 @@ fi
 
 if is_true $DORAVEL_SERVICE_DEPLOY; then
     cat /var/config/doravel-deploy.conf >> /supervisord.conf
-    /git-pull # creamos conexion ssh para git
+    /xbind/git-pull # creamos conexion ssh para git
 fi
 
 if is_true $DORAVEL_SERVICE_NGINX; then
@@ -227,6 +227,9 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
+if [ -f /var/www/prestart ]; then
+    bash /var/www/prestart
+fi
 
 sed -e 's/$APP_ENV/'$APP_ENV'/' -i /supervisord.conf
 

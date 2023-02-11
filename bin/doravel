@@ -194,6 +194,7 @@ ENV_FILE=".env"
 ENV_NAME="local"
 DCP_NAME="docker-compose"
 
+# TODO - quitar esto
 if [ ! -f "$DCP_NAME.yml" ]; then
     echo "this project does not have a docker-compose.yml file"
     exit 1
@@ -322,7 +323,7 @@ if [ "$ENV_NAME" != "local" ] && [ -f "./$DCP_OVERRIDE.yml" ]; then
 fi
 
 if [ -f "./$DCP_NAME.yml" ]; then
-    ARGUMENTS="$ARGUMENTS --file=$DCP_NAME.yml"
+    ARGUMENTS="--file=$DCP_NAME.yml $ARGUMENTS"
 fi
 
 # get name from this current directory
