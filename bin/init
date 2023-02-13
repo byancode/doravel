@@ -30,9 +30,48 @@ DORAVEL_GIT_EMAIL=$(git config --get user.email)
 DORAVEL_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 DORAVEL_GIT_REPOSITORY=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
 
-# TODO - comprobar si se obtiene el nombre del repositorio, de lo contrario preguntar por el nombre del repositorio
+if [ -z "$DORAVEL_GIT_REPOSITORY" ]; then
+    READ -p "Ingrese el nombre del repositorio: " DORAVEL_GIT_REPOSITORY
+    # validamos con regexp si el nombre del repositorio es correcto
+    if [[ ! $DORAVEL_GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
+        echo "El nombre del repositorio no es correcto"
+        exit 0
+    fi
+fi
 
-# check url if http
+if [ -z "$DORAVEL_GIT_BRANCH" ]; then
+    READ -p "Ingrese el nombre del branch: " DORAVEL_GIT_BRANCH
+    # validamos con regexp si el nombre del repositorio es correcto
+    if [[ ! $DORAVEL_GIT_BRANCH =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "El nombre del branch no es correcto"
+        exit 0
+    fi
+fi
+
+if [ -z "$DORAVEL_GIT_NAME" ]; then
+    read -p "Ingrese su nombre: " DORAVEL_GIT_NAME
+    if [ -z "$DORAVEL_GIT_NAME" ]; then
+        echo "El nombre no puede estar vacio"
+        exit 0
+    fi
+fi
+
+if [ -z "$DORAVEL_GIT_EMAIL" ]; then
+    read -p "Ingrese su email: " DORAVEL_GIT_EMAIL
+    f [[ ! $DORAVEL_GIT_EMAIL =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
+        echo "El email no es correcto"
+        exit 0
+    fi
+fi
+
+if [ -z "$DORAVEL_GIT_URL" ]; then
+    read -p "Ingrese la url del repositorio: " DORAVEL_GIT_URL
+    if [[ ! $DORAVEL_GIT_URL =~ ^http:// ]]; then
+        echo "La url del repositorio no es correcta"
+        exit 0
+    fi
+fi
+
 if [[ $DORAVEL_GIT_URL =~ ^http:// ]]; then
     echo ""
     echo "⚠️ Oops... necesitas que el remote origin de tu proyecto sea con ssh"
@@ -118,7 +157,7 @@ mkdir -p /www && cd /www
 echo "
 ┌────────────────────────────────────────────────────────────────┐
 │                      desarrollado por:                         │
-│             (Byancode S.A.C) byancode@gmail.com                │
+│             (Byancode S.A.C) cesar@byancode.com                │
 └────────────────────────────────────────────────────────────────┘
 "
 ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
