@@ -1,4 +1,5 @@
-#!/bin/bash=
+#!/bin/bash
+
 # check if git is installed
 if ! [ -x "$(command -v git)" ]; then
     echo 'Error: git is not installed.'
@@ -24,55 +25,52 @@ if [ ! -d ./storage/.doravel ]; then
     mkdir ./storage/.doravel
 fi
 
-DORAVEL_GIT_URL=$(git config --get remote.origin.url)
-DORAVEL_GIT_NAME=$(git config --get user.name)
-DORAVEL_GIT_EMAIL=$(git config --get user.email)
-DORAVEL_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-DORAVEL_GIT_REPOSITORY=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
+GIT_URL=$(git config --get remote.origin.url)
+GIT_NAME=$(git config --get user.name)
+GIT_EMAIL=$(git config --get user.email)
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+GIT_REPOSITORY=$(git config --get remote.origin.url | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
 
-if [ -z "$DORAVEL_GIT_REPOSITORY" ]; then
-    READ -p "Ingrese el nombre del repositorio: " DORAVEL_GIT_REPOSITORY
+
+if [ -z "$GIT_REPOSITORY" ] && [ ! -z "$GIT_URL" ]; then
+    GIT_REPOSITORY=$(echo $GIT_URL | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
+fi
+
+if [ -z "$GIT_REPOSITORY" ]; then
+    READ -p "Ingrese el nombre del repositorio: " GIT_REPOSITORY
     # validamos con regexp si el nombre del repositorio es correcto
-    if [[ ! $DORAVEL_GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
+    if [[ ! $GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del repositorio no es correcto"
         exit 0
     fi
 fi
 
-if [ -z "$DORAVEL_GIT_BRANCH" ]; then
-    READ -p "Ingrese el nombre del branch: " DORAVEL_GIT_BRANCH
+if [ -z "$GIT_BRANCH" ]; then
+    READ -p "Ingrese el nombre del branch: " GIT_BRANCH
     # validamos con regexp si el nombre del repositorio es correcto
-    if [[ ! $DORAVEL_GIT_BRANCH =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    if [[ ! $GIT_BRANCH =~ ^[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del branch no es correcto"
         exit 0
     fi
 fi
 
-if [ -z "$DORAVEL_GIT_NAME" ]; then
-    read -p "Ingrese su nombre: " DORAVEL_GIT_NAME
-    if [ -z "$DORAVEL_GIT_NAME" ]; then
+if [ -z "$GIT_NAME" ]; then
+    read -p "Ingrese su nombre: " GIT_NAME
+    if [ -z "$GIT_NAME" ]; then
         echo "El nombre no puede estar vacio"
         exit 0
     fi
 fi
 
-if [ -z "$DORAVEL_GIT_EMAIL" ]; then
-    read -p "Ingrese su email: " DORAVEL_GIT_EMAIL
-    f [[ ! $DORAVEL_GIT_EMAIL =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
+if [ -z "$GIT_EMAIL" ]; then
+    read -p "Ingrese su email: " GIT_EMAIL
+    f [[ ! $GIT_EMAIL =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
         echo "El email no es correcto"
         exit 0
     fi
 fi
 
-if [ -z "$DORAVEL_GIT_URL" ]; then
-    read -p "Ingrese la url del repositorio: " DORAVEL_GIT_URL
-    if [[ ! $DORAVEL_GIT_URL =~ ^http:// ]]; then
-        echo "La url del repositorio no es correcta"
-        exit 0
-    fi
-fi
-
-if [[ $DORAVEL_GIT_URL =~ ^http:// ]]; then
+if [[ $GIT_URL =~ ^http:// ]]; then
     echo ""
     echo "⚠️ Oops... necesitas que el remote origin de tu proyecto sea con ssh"
     echo ""
@@ -99,6 +97,7 @@ echo ""
 RSA_KEY=$(cat ./storage/.ssh/id_rsa | base64 --wrap=0)
 RSA_PUB=$(cat ./storage/.ssh/id_rsa.pub | base64 --wrap=0)
 
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
 RESPOSE='y'
 
 if [ -f ./docker-compose.yml ]; then
@@ -110,25 +109,11 @@ if [ "$RESPOSE" == 'y' ] && [ -f ./docker-compose.yml ]; then
 fi
 
 if [ "$RESPOSE" == 'y' ]; then
-    curl -s https://raw.githubusercontent.com/byancode/doravel/master/files/docker-compose.local.yml > ./docker-compose.local.yml
+    curl -s ${ENDPOINT}/stubs/docker-compose.local.yml > ./docker-compose.local.yml
 fi
 
-# TODO - colocar dockerfile en un archivo aparte
-DOCKER_FILE=\
-'FROM byancode/doravel
 
-ENV DORAVEL_SERVICE_SCHEDULE=true
-ENV DORAVEL_SERVICE_OPCACHE=true
-ENV DORAVEL_SERVICE_DEPLOY=true
-ENV DORAVEL_SERVICE_OCTANE=true
-ENV DORAVEL_SERVICE_NGINX=true
-ENV DORAVEL_SERVICE_FPM=true
-ENV DORAVEL_GIT_EMAIL='$DORAVEL_GIT_EMAIL'
-ENV DORAVEL_GIT_NAME='$DORAVEL_GIT_NAME'
-ENV DORAVEL_ENV=prod
-
-COPY . /var/www
-'
+DOCKER_FILE=$(curl -s ${ENDPOINT}/stubs/Dockerfile)
 
 if [ -f ./Dockerfile ]; then
     read -p '¿Desea sobreescribir Dockerfile? (y/n): ' RESPOSE
@@ -142,50 +127,17 @@ if [ "$RESPOSE" == 'y' ]; then
     echo "$DOCKER_FILE" > ./Dockerfile
 fi
 
-curl https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel > ./doravel
+curl ${ENDPOINT}/bin/doravel > ./doravel
 chmod +x ./doravel
+./doravel global
 
 
-# TODO - colocar install en un archivo aparte
-echo '#!/bin/bash
-#────────────────────────────────────────────────────────────────┐
-# ─ copiar todo y pegar en la terminal de linux de tu servidor ─ │
-#────────────────────────────────────────────────────────────────┘
-
-mkdir -p /www && cd /www
-
-echo "
-┌────────────────────────────────────────────────────────────────┐
-│                      desarrollado por:                         │
-│             (Byancode S.A.C) cesar@byancode.com                │
-└────────────────────────────────────────────────────────────────┘
-"
-ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
-
-bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/bin/docker)
-
-git config --global user.name  "'$DORAVEL_GIT_NAME'"
-git config --global user.email "'$DORAVEL_GIT_EMAIL'"
-
-echo "'$RSA_KEY'" | base64 -d > $HOME/.ssh/id_rsa
-echo "'$RSA_PUB'" | base64 -d > $HOME/.ssh/id_rsa.pub
-
-chmod 600 $HOME/.ssh/id_rsa
-
-LANG=en_US
-
-expect <<END
-    set timeout -1
-    spawn git clone --branch='$DORAVEL_GIT_BRANCH' git@github.com:'$DORAVEL_GIT_REPOSITORY'.git .
-
-    expect "continue connecting\r"
-    send "yes\r"
-
-    expect eof
-END
-
-./doravel up --env production -d
-
-echo "espera unos segundos para que se carguen los servicios"
-echo "🙂: ./doravel up --env production -d"
-' > ./install
+INSTALLER=$(curl -s ${ENDPOINT}/stubs/server.sh)
+INSTALLER=${INSTALLER/__RSA_KEY__/$RSA_KEY}
+INSTALLER=${INSTALLER/__RSA_PUB__/$RSA_PUB}
+INSTALLER=${INSTALLER/__GIT_NAME__/$GIT_NAME}
+INSTALLER=${INSTALLER/__GIT_EMAIL__/$GIT_EMAIL}
+INSTALLER=${INSTALLER/__GIT_BRANCH__/$GIT_BRANCH}
+INSTALLER=${INSTALLER/__GIT_REPOSITORY__/$GIT_REPOSITORY}
+echo $INSTALLER > ./server.sh
+chmod +x ./server.sh

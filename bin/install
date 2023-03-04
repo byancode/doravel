@@ -1,0 +1,31 @@
+#!/bin/bash
+
+
+DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
+DISTRO=${DISTRO//\"/}
+
+# check if curl is installed and if not, install it
+if ! [ -x "$(command -v curl)" ]; then
+    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
+        sudo apt-get update
+        sudo apt-get install curl -y
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+        sudo yum update
+        sudo yum install curl -y
+    fi
+fi
+
+if ! [ -x "$(command -v docker)" ]; then
+    curl https://get.docker.com | bash
+fi
+
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+
+if [ ! -d ~/bin ]; then
+    mkdir ~/bin
+fi
+
+curl $ENDPOINT/doravel -o ~/bin/doravel
+chmod +x ~/bin/doravel
+ln -s ~/bin/doravel ~/bin/dv
+source ~/.bashrc

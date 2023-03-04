@@ -1,15 +1,15 @@
-#!/bin/bash
+#!/bin/sh
 
 function print_help {
     echo 'Modo de uso: doravel [COMMAND] [OPTIONS]
 
 DORAVEL COMMANDS:
+    sh                 Abre el terminal sh de doravel
     init               Inicia un proyecto con doravel
+    bash               Abre el terminal bash|sh de doravel
     reload             Reinicia el contenedor de laravel
-    console            Abre el terminal bash de doravel
-    terminal           Abre el terminal bash de doravel
+    server             Inicia el servidor con doravel
     artisan            Ejecuta un comando artisan
-    fix                Corrige el usuario y grupo
     global             Instala el comando doravel globalmente
     upgrade            Actualiza doravel
     ssh-keys           Genera las llaves ssh para el deploy
@@ -49,6 +49,8 @@ OPTIONS:
 '
 }
 
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+
 if [ "$1" == "" ]; then
     print_help
     exit 0
@@ -59,11 +61,6 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     exit 0
 fi
 
-if [ ! -d "./app" ] || [ ! -f "./.env" ]; then
-    echo "the current directory is not a laravel project"
-    exit 0
-fi
-
 COMMAND="$1"
 
 if [ $COMMAND == "init" ]; then
@@ -71,7 +68,7 @@ if [ $COMMAND == "init" ]; then
     read -p "Do you want to initialize doravel? [y/N] " RESPOSE
 
     if [ "$RESPOSE" == "y" ]; then
-        bash <(curl https://raw.githubusercontent.com/byancode/doravel/main/bin/init)
+        bash <(curl $ENDPOINT/bin/init)
     fi
 
     exit 0
@@ -84,14 +81,14 @@ fi
 
 COMMANDS=(
 # doravel commands
-    "fix"
+    "sh"
     "init"
+    "bash"
     "global"
+    "server"
     "reload"
-    "console"
     "artisan"
     "upgrade"
-    "terminal"
     "ssh-keys"
 # docker-compose commands
     "build"
@@ -131,33 +128,29 @@ fi
 
 # comandos que no requiere de un .env
 
-if [ $COMMAND == "fix" ]; then
-    sudo chown -R $(id -un):$(id -gn) ./storage
-    sudo chown -R $(id -un):$(id -gn) ./bootstrap/cache
-
-    exit 0
-fi
-
-if [ $COMMAND == "global" ] && [ -f ./doravel ]; then
+if [ $COMMAND == "global" ]; then
     echo "Install doravel global..."
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
     fi
-    cp ./doravel ~/bin/doravel
+
+    curl "$ENDPOINT/bin/doravel" -o ~/bin/doravel
     chmod +x ~/bin/doravel
+
+    ln -s ~/bin/doravel ~/bin/dv
 
     exit 0
 fi
 
 if [ $COMMAND == "upgrade" ]; then
     echo "Upgrading doravel..."
-    curl "https://raw.githubusercontent.com/byancode/doravel/main/bin/doravel" -o ./doravel
+
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
     fi
-    cp ./doravel ~/bin/doravel
+
+    curl "$ENDPOINT/bin/doravel" -o ~/bin/doravel
     chmod +x ~/bin/doravel
-    chmod +x ./doravel
 
     exit 0
 fi
@@ -188,17 +181,21 @@ if [ $COMMAND == "ssh-keys" ]; then
     exit 0
 fi
 
+
+if [ ! -d "./app" ] || [ ! -f "./.env" ]; then
+    echo "the current directory is not a laravel project"
+    exit 0
+fi
 # comandos que requieren de un .env
 
 ENV_FILE=".env"
 ENV_NAME="local"
 DCP_NAME="docker-compose"
 
-# TODO - quitar esto
-if [ ! -f "$DCP_NAME.yml" ]; then
-    echo "this project does not have a docker-compose.yml file"
-    exit 1
-fi
+# if [ ! -f "$DCP_NAME.yml" ]; then
+#     echo "this project does not have a docker-compose.yml file"
+#     exit 1
+# fi
 
 OPTIONS=''
 while [ "$#" -gt 0 ]; do
@@ -264,7 +261,7 @@ if ! [[ "$ENV_NAME" =~ ^[a-zA-Z0-9]+$ ]]; then
     exit 0
 fi
 
-if [ ! -f "./$DCP_NAME.yml" ]; then
+if [ -f "./$DCP_NAME.yml" ]; then
     ARGUMENTS="--file=$DCP_NAME.yml"
 else
     ARGUMENTS=""
@@ -332,23 +329,19 @@ PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
 PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
-if [ $COMMAND == "console" ] || [ $COMMAND == "terminal" ]; then
-    docker-compose $(echo $ARGUMENTS) exec -- doravel bash
+if [ $COMMAND == "bash" ] || [ $COMMAND == "sh" ]; then
+    docker-compose $(echo $ARGUMENTS) exec -- app sh
     exit 0
 fi
 
 if [ $COMMAND == "artisan" ]; then
-    docker-compose $(echo $ARGUMENTS) exec -- doravel php artisan $(echo $OPTIONS)
+    docker-compose $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
     exit 0
 fi
 
 if [ $COMMAND == "reload" ]; then
-    docker-compose $(echo $ARGUMENTS) restart -- doravel
+    docker-compose $(echo $ARGUMENTS) restart -- app
     exit 0
 fi
 
 docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
-
-if [ $COMMAND == "down" ]; then
-    ./doravel fix
-fi

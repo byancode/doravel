@@ -1,0 +1,16 @@
+#!/bin/sh
+
+cd /var/www/
+
+LANG=en_GB
+MATCH="unpacking"
+PID=$(cat /var/run/supervisord.pid)
+
+while true; do
+    MESSAGE=$(git pull -v | grep -io "$MATCH")
+    if [ "$MESSAGE" == "$MATCH" ]; then
+        kill -9 $PID
+        break;
+    fi
+    sleep 5
+done
