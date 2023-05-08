@@ -3,7 +3,7 @@
 while true; do
     echo " - downloading PHP Composer";
 
-    curl -o /usr/local/bin/composer --silent https://getcomposer.org/composer-stable.phar;
+    curl -o /usr/local/bin/composer https://getcomposer.org/composer-stable.phar;
 
     if [ ! -f /usr/local/bin/composer ]; then
         echo "Failed to download PHP Composer"

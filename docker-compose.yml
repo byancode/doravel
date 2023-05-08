@@ -1,0 +1,10 @@
+version: '3.1'
+services:
+  doravel:
+    image: byancode/doravel-next
+    ports:
+      - 80:80
+      - 8000:8000
+    volumes:
+      - ./data/scripts/doravel-start:/usr/local/bin/doravel-start
+      - ./www:/var/www

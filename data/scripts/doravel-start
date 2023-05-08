@@ -142,23 +142,30 @@ echo "Timezone configured"
 
 
 
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/octane.conf
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-octane.conf
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/site.conf
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-site.conf
 echo "Environment configured"
 
 
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/octane.conf
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-octane.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/site.conf
+sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
 echo "Host configured"
 
 
 
 if is_true $APP_SSL; then
-    rm -f /etc/nginx/sites-available/octane.conf;
+    rm -f /etc/nginx/sites-available/site.conf;
 else
-    rm -f /etc/nginx/sites-available/ssl-octane.conf;
+    rm -f /etc/nginx/sites-available/ssl-site.conf;
 fi
 echo "SSL configured"
+
+if [ -d /var/www/storage ]; then
+    chmod -R 777 /var/www/storage;
+else
+    mkdir /var/www/storage;
+    chmod -R 777 /var/www/storage;
+fi
 
 if [ ! -d /var/www/vendor/ ]; then
     composer install --quiet --working-dir=/var/www
@@ -196,11 +203,11 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
-if [ -d /var/www/vendor/byancode/octane-watch ]; then
-    if is_true $APP_DEBUG; then
-        sed -e 's/:start/:watch/' -i /supervisord.conf
-    fi
-fi
+# if [ -d /var/www/vendor/byancode/octane-watch ]; then
+#     if is_true $APP_DEBUG; then
+#         sed -e 's/:start/:watch/' -i /supervisord.conf
+#     fi
+# fi
 
 sed -e 's/$APP_ENV/'$APP_ENV'/' -i /supervisord.conf
 
