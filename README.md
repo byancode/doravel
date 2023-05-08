@@ -31,3 +31,9 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/in
 ./doravel down --env prod
 ./doravel restart --env prod
 ```
+
+## Docker run
+```bash
+docker run -p 80:80 byancode/doravel-next
+```
+```

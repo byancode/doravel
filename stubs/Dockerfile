@@ -1,4 +1,4 @@
-FROM byancode/doravel:8.1-swole
+FROM byancode/doravel:8.1
 
 ENV GIT_EMAIL='__GIT_EMAIL__' \
     GIT_NAME='__GIT_NAME__' \

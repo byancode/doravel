@@ -78,7 +78,7 @@ git config --global user.name  "$(echo $GIT_NAME)"
 git config --global user.email "$(echo $GIT_EMAIL)"
 
 
-PHP_INI_FILE="${ETC_PATH}/php/php.ini"
+PHP_INI_FILE="${PHP_INI_DIR}/php.ini"
 
 if [ ! -f $PHP_INI_FILE ]; then
     cp -v "${PHP_INI_FILE}-production" $PHP_INI_FILE
@@ -97,7 +97,7 @@ else
     OPCACHE_ENABLE=0
 fi
 
-OPCACHE_FILE="${ETC_PATH}/php/conf.d/docker-php-ext-opcache.ini"
+OPCACHE_FILE="${PHP_INI_DIR}/conf.d/docker-php-ext-opcache.ini"
 sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
@@ -142,26 +142,20 @@ echo "Timezone configured"
 
 
 
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-fpm.conf
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/fpm.conf
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /var/services/service-octane.conf
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/octane.conf
+sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-octane.conf
 echo "Environment configured"
 
 
-
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/fpm.conf
 sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/octane.conf
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-fpm.conf
 sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-octane.conf
 echo "Host configured"
 
 
 
 if is_true $APP_SSL; then
-    rm -f /etc/nginx/sites-available/fpm.conf;
     rm -f /etc/nginx/sites-available/octane.conf;
 else
-    rm -f /etc/nginx/sites-available/ssl-fpm.conf;
     rm -f /etc/nginx/sites-available/ssl-octane.conf;
 fi
 echo "SSL configured"
@@ -179,50 +173,22 @@ if [ ! -L /var/www/public/storage ]; then
 fi
 
 if [ ! -d /var/www/vendor/laravel/octane ]; then
-    composer require laravel/octane byancode/octane-watch --working-dir=/var/www
+    composer require laravel/octane --working-dir=/var/www --with-all-dependencies
     php /var/www/artisan octane:install --server=swoole
 fi
 
-if [ ! -d /var/www/vendor/byancode/octane-watch ]; then
-    composer require byancode/octane-watch --working-dir=/var/www
-fi
-
-# chown -R apache:apache ./storage
-# chown -R apache:apache ./bootstrap/cache
-echo "Storage and cache directories configured"
-
 # create temporary supervisor configuration
-cat /etc/supervisord.conf > /supervisord.conf
+cat /usr/local/etc/supervisord.conf > /supervisord.conf
 
 if is_true $SERVICE_SCHEDULE; then
     cat /var/services/service-schedule.conf >> /supervisord.conf
 fi
 
-if is_true $SERVICE_FPM; then
-    cat /var/services/service-fpm.conf >> /supervisord.conf
-else
-    rm -f /etc/nginx/sites-available/fpm.conf
-    rm -f /etc/nginx/sites-available/ssl-fpm.conf
-fi
-
-if is_true $SERVICE_OCTANE; then
-    cat /var/services/service-octane.conf >> /supervisord.conf
-    # set octane server watcher
-    if is_true $APP_DEBUG; then
-        sed -e 's/:start/:watch/' -i /supervisord.conf
-    fi
-else
-    rm -f /etc/nginx/sites-available/octane.conf
-    rm -f /etc/nginx/sites-available/ssl-octane.conf
-fi
-
 if is_true $SERVICE_DEPLOY; then
-    cat /var/services/service-deploy.conf >> /supervisord.conf
-    doravel-git-pull
-fi
-
-if is_true $SERVICE_NGINX; then
-    cat /var/services/service-nginx.conf >> /supervisord.conf
+    if [ -d /var/www/.git ]; then
+        cat /var/services/service-deploy.conf >> /supervisord.conf
+        doravel-git-pull
+    fi
 fi
 
 if [ -f /var/www/supervisord.conf ]; then
@@ -230,11 +196,14 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
-if [ -f /var/www/script ]; then
-    sh /var/www/script
+if [ -d /var/www/vendor/byancode/octane-watch ]; then
+    if is_true $APP_DEBUG; then
+        sed -e 's/:start/:watch/' -i /supervisord.conf
+    fi
 fi
 
 sed -e 's/$APP_ENV/'$APP_ENV'/' -i /supervisord.conf
 
 echo "Starting supervisord..."
+
 /usr/bin/supervisord --nodaemon --configuration /supervisord.conf
