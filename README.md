@@ -32,8 +32,28 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/in
 ./doravel restart --env prod
 ```
 
+## Dockerfile
+#### Variables de entorno
+```env
+# PHP
+PHP_OPCACHE_ENABLE=true
+PHP_UPLOAD_MAX_FILESIZE=1G
+PHP_MAX_EXECUTION_TIME=60
+PHP_POST_MAX_SIZE=1G
+PHP_MEMORY_LIMIT=512M
+
+# LARAVEL
+LARAVEL_AUTO_SCHEDULE=true
+
+# NPM
+NPM_AUTO_INSTALL=true
+NPM_AUTO_BUILD=true
+
+# GIT
+GIT_AUTO_PULL=false
+```
+
 ## Docker run
 ```bash
-docker run -p 80:80 byancode/doravel-next
-```
+docker run -p 80:80 byancode/doravel:php
 ```

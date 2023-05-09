@@ -22,7 +22,7 @@ if [ ! -f /var/www/.env ] && [ -f /var/www/.env.example ]; then
     cp /var/www/.env.example /var/www/.env
 fi
 
-if [ ! -f /var/www/.env ]; then
+if [ ! -f /var/www/.env ] && [ ! -d /var/www/app ]; then
     rm -rf /var/www/*
 fi
 
@@ -53,12 +53,12 @@ if [ -f /root/.ssh/id_rsa ]; then
 fi
 
 
-SERVICE_FPM=${SERVICE_FPM:-true}
-SERVICE_NGINX=${SERVICE_NGINX:-true}
-SERVICE_DEPLOY=${SERVICE_DEPLOY:-true}
-SERVICE_OCTANE=${SERVICE_OCTANE:-true}
-SERVICE_OPCACHE=${SERVICE_OPCACHE:-true}
-SERVICE_SCHEDULE=${SERVICE_SCHEDULE:-true}
+
+LARAVEL_AUTO_SCHEDULE=${LARAVEL_AUTO_SCHEDULE:-true}
+PHP_OPCACHE_ENABLE=${PHP_OPCACHE_ENABLE:-true}
+NPM_AUTO_INSTALL=${NPM_AUTO_INSTALL:-true}
+NPM_AUTO_BUILD=${NPM_AUTO_BUILD:-true}
+GIT_AUTO_PULL=${GIT_AUTO_PULL:-true}
 
 
 
@@ -91,7 +91,7 @@ sed -e 's/memory_limit =.*/memory_limit='$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE;
 
 
 
-if is_true $SERVICE_OPCACHE; then
+if is_true $PHP_OPCACHE_ENABLE; then
     OPCACHE_ENABLE=1
 else
     OPCACHE_ENABLE=0
@@ -172,11 +172,29 @@ if [ ! -d /var/www/vendor/ ]; then
 fi
 
 if [ ! -d /var/www/node_modules/ ]; then
-    npm install --prefix=/var/www
+    if [ is_true $NPM_AUTO_INSTALL ] || [ is_true $NPM_AUTO_BUILD ]; then
+        echo "Installing npm packages..."
+        npm install --prefix /var/www
+        echo "npm packages installed"
+    fi
+fi
+
+if [ is_true $NPM_AUTO_BUILD ]; then
+    echo "Building assets..."
+    if [ is_true $APP_DEBUG ]; then
+        npm run dev
+    else
+        npm run build
+    fi
+    echo "Assets built"
 fi
 
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
+fi
+
+if [ ! -L /var/www/public/server.php ]; then
+    ln -s /var/www/public/index.php /var/www/public/server.php
 fi
 
 if [ ! -d /var/www/vendor/laravel/octane ]; then
@@ -187,11 +205,11 @@ fi
 # create temporary supervisor configuration
 cat /usr/local/etc/supervisord.conf > /supervisord.conf
 
-if is_true $SERVICE_SCHEDULE; then
+if is_true $LARAVEL_AUTO_SCHEDULE; then
     cat /var/services/service-schedule.conf >> /supervisord.conf
 fi
 
-if is_true $SERVICE_DEPLOY; then
+if is_true $GIT_AUTO_PULL; then
     if [ -d /var/www/.git ]; then
         cat /var/services/service-deploy.conf >> /supervisord.conf
         doravel-git-pull
@@ -203,11 +221,11 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
-# if [ -d /var/www/vendor/byancode/octane-watch ]; then
-#     if is_true $APP_DEBUG; then
-#         sed -e 's/:start/:watch/' -i /supervisord.conf
-#     fi
-# fi
+if [ -d /var/www/vendor/byancode/octane-watch ]; then
+    if is_true $APP_DEBUG; then
+        sed -e 's/:start/:watch/' -i /supervisord.conf
+    fi
+fi
 
 sed -e 's/$APP_ENV/'$APP_ENV'/' -i /supervisord.conf
 

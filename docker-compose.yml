@@ -1,10 +1,11 @@
 version: '3.1'
 services:
   doravel:
-    image: byancode/doravel-next
+    image: byancode/doravel:php
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      no_cache: true
     ports:
       - 80:80
       - 8000:8000
-    volumes:
-      - ./data/scripts/doravel-start:/usr/local/bin/doravel-start
-      - ./www:/var/www
