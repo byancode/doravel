@@ -1,7 +1,7 @@
 version: '3.1'
 services:
     app:
-        image: byancode/doravel:8.1
+        image: byancode/doravel:php-8.1
         environment:
             GIT_EMAIL: $GIT_EMAIL
             GIT_NAME: $GIT_NAME
