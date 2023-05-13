@@ -27,5 +27,5 @@ fi
 
 curl $ENDPOINT/doravel -o ~/bin/doravel
 chmod +x ~/bin/doravel
-ln -s ~/bin/doravel ~/bin/dv
+ln -sf ~/bin/doravel ~/bin/dv
 source ~/.bashrc
