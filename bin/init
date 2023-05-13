@@ -37,7 +37,7 @@ if [ -z "$GIT_REPOSITORY" ] && [ ! -z "$GIT_URL" ]; then
 fi
 
 if [ -z "$GIT_REPOSITORY" ]; then
-    READ -p "Ingrese el nombre del repositorio: " GIT_REPOSITORY
+    read -p "Ingrese el nombre del repositorio: " GIT_REPOSITORY
     # validamos con regexp si el nombre del repositorio es correcto
     if [[ ! $GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del repositorio no es correcto"
@@ -46,7 +46,7 @@ if [ -z "$GIT_REPOSITORY" ]; then
 fi
 
 if [ -z "$GIT_BRANCH" ]; then
-    READ -p "Ingrese el nombre del branch: " GIT_BRANCH
+    read -p "Ingrese el nombre del branch: " GIT_BRANCH
     # validamos con regexp si el nombre del repositorio es correcto
     if [[ ! $GIT_BRANCH =~ ^[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del branch no es correcto"
