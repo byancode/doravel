@@ -1,4 +1,4 @@
-FROM alpine:3.17
+FROM alpine:3.18
 
 # dependencies required for running "phpize"
 # these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
