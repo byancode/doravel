@@ -5,8 +5,6 @@ services:
             context: .
             dockerfile: Dockerfile
         environment:
-            GIT_EMAIL: $GIT_EMAIL
-            GIT_NAME: $GIT_NAME
             APP_ENV: ${APP_ENV:-local}
         volumes:
             - .:/var/www

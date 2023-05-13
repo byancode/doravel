@@ -330,7 +330,7 @@ PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
 if [ $COMMAND == "bash" ] || [ $COMMAND == "sh" ]; then
-    docker-compose $(echo $ARGUMENTS) exec -- app sh
+    docker-compose $(echo $ARGUMENTS) exec -- app $(echo $COMMAND) $(echo $OPTIONS)
     exit 0
 fi
 
