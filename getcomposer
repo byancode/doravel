@@ -1,15 +1,17 @@
-#!/bin/sh
+#!/bin/bash
+
+rm -f data/php/composer;
 
 while true; do
     echo " - downloading PHP Composer";
 
-    curl -o /usr/local/bin/composer https://getcomposer.org/composer-stable.phar;
+    curl -o data/php/composer https://getcomposer.org/composer-stable.phar;
 
-    if [ ! -f /usr/local/bin/composer ]; then
+    if [ ! -f data/php/composer ]; then
         echo "Failed to download PHP Composer"
         sleep 7
     else
-        chmod +x /usr/local/bin/composer;
+        chmod +x data/php/composer;
         echo "Downloaded success PHP Composer"
         break
     fi

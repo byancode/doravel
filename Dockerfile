@@ -15,7 +15,6 @@ ENV PHPIZE_DEPS \
 
 ENV ETC_PATH=/usr/local/etc
 ENV PHP_INI_DIR=${ETC_PATH}/php
-ENV PHP_FPM_FILE=${ETC_PATH}/php-fpm.d/www.conf.default
 # Apply stack smash protection to functions using local buffers and alloca()
 # Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
 # Enable optimization (-O2)
@@ -31,6 +30,7 @@ ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" \
     PHP_BINARY_FILE="/binaries/php-${PHP_VERSION}.tar.xz"
 
 COPY ./data/php/conf.d/* ${ETC_PATH}/php/conf.d/
+COPY ./data/php/composer /usr/local/bin/composer
 COPY ./data/supervisor/* ${ETC_PATH}/
 COPY ./data/services/* /var/services/
 COPY ./data/scripts/* /usr/local/bin/
@@ -89,6 +89,8 @@ RUN apk add --no-cache \
 		sqlite-dev \
         # install icu-uc icu-io icu-i18n
         icu-dev \
+		zlib-dev \
+		pcre-dev \
 	; \
     \
     rm -vf /usr/include/iconv.h; \
@@ -134,10 +136,11 @@ RUN apk add --no-cache \
 		--enable-ctype \
 		--enable-phar \
 		--enable-pdo \
-		--enable-fpm \
+#		--enable-fpm \
 		--enable-intl \
 		--enable-bcmath \
 		--enable-opcache \
+		--enable-sockets \
 		--enable-fileinfo \
 		--enable-tokenizer \
 		--enable-short-tags \
@@ -174,12 +177,10 @@ RUN apk add --no-cache \
 	)"; \
 	apk add --no-cache $runDeps; \
     \
-    docker-php-composer; \
-    \
     pecl update-channels; \
     \
     docker-pecl-install xdebug --zend;  \
-    docker-pecl-install openswoole; \
+    docker-swoole-install; \
     docker-pecl-install redis; \
 	rm -rf /tmp/pear ~/.pearrc; \
     \
@@ -188,13 +189,6 @@ RUN apk add --no-cache \
         sodium \
     ; \
     apk del --no-network .build-deps; \
-    \
-    if [ -f "${PHP_FPM_FILE}" ]; then \
-        sed -e 's/listen.allowed_clients/;listen.allowed_clients/' -i $PHP_FPM_FILE; \
-        sed -e 's/listen.acl_users/;listen.acl_users/' -i $PHP_FPM_FILE; \
-        sed -e 's/listen =.*/listen = 0.0.0.0:9000/' -i $PHP_FPM_FILE; \
-    fi; \
-    \
     rm -f /usr/src/php.tar.xz; \
 	php --version;
 

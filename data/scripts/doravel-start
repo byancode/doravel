@@ -193,10 +193,6 @@ if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
 fi
 
-if [ ! -L /var/www/public/server.php ]; then
-    ln -s /var/www/public/index.php /var/www/public/server.php
-fi
-
 if [ ! -d /var/www/vendor/laravel/octane ]; then
     composer require laravel/octane --working-dir=/var/www --with-all-dependencies
     php /var/www/artisan octane:install --server=swoole
