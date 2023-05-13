@@ -1,4 +1,4 @@
-# 🛠️ Doravel (en desarrollo)
+# 🛠️ Doravel (Beta)
 
 Integrando Doravel en tu proyecto, no necesitas crear imagenes privadas, puedes ejecutar tu proyecto de forma segura mediante tu repositorio git privado
 
@@ -51,6 +51,22 @@ NPM_AUTO_BUILD=true
 
 # GIT
 GIT_AUTO_PULL=false
+```
+
+## Octane Config
+config/octane.php
+```php
+<?php
+return [
+    # ...
+    'swoole' => [
+        'options' => [
+            'log_file' => storage_path('logs/swoole_http.log'),
+            'package_max_length' => 10 * 1024 * 1024,
+            'upload_max_filesize' => -1,
+        ],
+    ],
+];
 ```
 
 ## Docker run
