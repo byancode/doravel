@@ -18,6 +18,18 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::any('/test', function (Request $request) {
-    return $request->all();
+Route::any('/upload', function (Request $request) {
+    $request->validate([
+        'file' => 'required|file|max:300000000',
+    ]);
+
+    $imageName = time().'.'.$request->file->extension();
+
+    $path = $request->file->storeAs('public', $imageName);
+
+    return response()->json([
+        'success' => true,
+        'path' => $path,
+        'url' => asset('storage/'.$imageName)
+    ]);
 });

@@ -6,4 +6,6 @@ ENV NPM_AUTO_BUILD=false
 COPY ./data/supervisor/supervisord.conf /usr/local/etc/supervisord.conf
 COPY ./data/nginx/sites-available/ /etc/nginx/sites-available/
 COPY ./data/scripts/doravel-start /usr/local/bin/doravel-start
+COPY ./data/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./data/services/* /var/services/
 COPY ./www /var/www

@@ -218,4 +218,22 @@ return [
 
     'max_execution_time' => 30,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Swoole Options
+    |--------------------------------------------------------------------------
+    |
+    | The following options are available for configuration when using the
+    | Swoole server. These options are passed directly to the Swoole
+    | server and are documented at https://www.swoole.co.uk/docs.
+    |
+    */
+    'swoole' => [
+        'options' => [
+            'log_file' => storage_path('logs/swoole_http.log'),
+            'package_max_length' => 10 * 1024 * 1024,
+            'upload_max_filesize' => -1,
+        ],
+    ],
+
 ];

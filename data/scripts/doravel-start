@@ -69,8 +69,8 @@ GIT_EMAIL=${GIT_EMAIL:-"byancode@gmail.com"}
 
 PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-1G}
 PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-60}
-PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-1G}
-PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}
+PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-0}
+PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-"-1"}
 
 
 git config --global user.name  "$(echo $GIT_NAME)"
@@ -139,14 +139,20 @@ ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime
 echo ${APP_TIMEZONE} > /etc/timezone
 echo "Timezone configured"
 
-
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/site.conf
-sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-site.conf
+if [ -f /etc/nginx/sites-available/site.conf ]; then
+    sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/site.conf
+fi
+if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
+    sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-site.conf
+fi
 echo "Environment configured"
 
-
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/site.conf
-sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
+if [ -f /etc/nginx/sites-available/site.conf ]; then
+    sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/site.conf
+fi
+if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
+    sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
+fi
 echo "Host configured"
 
 
@@ -240,7 +246,7 @@ echo "Starting supervisord..."
 
 if [ "$APP_ENV" == "local" ] || is_true $APP_DEBUG; then
     /usr/bin/supervisord --configuration /supervisord.conf
-    /usr/local/bin/php -d variables_order=EGPCS /var/www/artisan --env=$APP_ENV octane:start --server=swoole --port=8000 --watch $(echo $LARAVEL_SERVER_ARGUMENTS)
+    /usr/local/bin/php -c /usr/local/etc/php/php.ini -d variables_order=EGPCS /var/www/artisan --env=$APP_ENV octane:start --server=swoole --host=0.0.0.0 --port=8000 --watch $(echo $LARAVEL_SERVER_ARGUMENTS)
 else
     /usr/bin/supervisord --nodaemon --configuration /supervisord.conf
 fi
