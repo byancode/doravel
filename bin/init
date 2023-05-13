@@ -131,7 +131,6 @@ curl ${ENDPOINT}/bin/doravel > ./doravel
 chmod +x ./doravel
 ./doravel global
 
-
 INSTALLER=$(curl -s ${ENDPOINT}/stubs/server.sh)
 INSTALLER=${INSTALLER/__RSA_KEY__/$RSA_KEY}
 INSTALLER=${INSTALLER/__RSA_PUB__/$RSA_PUB}
@@ -141,3 +140,13 @@ INSTALLER=${INSTALLER/__GIT_BRANCH__/$GIT_BRANCH}
 INSTALLER=${INSTALLER/__GIT_REPOSITORY__/$GIT_REPOSITORY}
 echo $INSTALLER > ./server.sh
 chmod +x ./server.sh
+
+
+if [ ! -d ./vendor ]; then
+    composer install
+fi
+
+if [ ! -d ./vendor/laravel/octane ]; then
+    composer require laravel/octane --with-all-dependencies
+    php artisan octane:install --server=swoole
+fi

@@ -140,7 +140,7 @@ RUN apk add --no-cache \
 		--enable-intl \
 		--enable-bcmath \
 		--enable-opcache \
-		--enable-sockets \
+#		--enable-sockets \
 		--enable-fileinfo \
 		--enable-tokenizer \
 		--enable-short-tags \

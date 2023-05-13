@@ -54,24 +54,23 @@ fi
 
 
 
+# aqui agregaremos los argumentos para el servidor octane
+LARAVEL_SERVER_ARGUMENTS=${LARAVEL_SERVER_ARGUMENTS:-""}
 LARAVEL_AUTO_SCHEDULE=${LARAVEL_AUTO_SCHEDULE:-true}
-PHP_OPCACHE_ENABLE=${PHP_OPCACHE_ENABLE:-true}
+PHP_OPCACHE_ENABLE=${PHP_OPCACHE_ENABLE:-false}
 NPM_AUTO_INSTALL=${NPM_AUTO_INSTALL:-true}
 NPM_AUTO_BUILD=${NPM_AUTO_BUILD:-true}
 GIT_AUTO_PULL=${GIT_AUTO_PULL:-true}
-
 
 
 GIT_NAME=${GIT_NAME:-"Byancode"}
 GIT_EMAIL=${GIT_EMAIL:-"byancode@gmail.com"}
 
 
-
 PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-1G}
 PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-60}
 PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-1G}
 PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}
-
 
 
 git config --global user.name  "$(echo $GIT_NAME)"
@@ -141,7 +140,6 @@ echo ${APP_TIMEZONE} > /etc/timezone
 echo "Timezone configured"
 
 
-
 sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/site.conf
 sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-site.conf
 echo "Environment configured"
@@ -172,16 +170,30 @@ if [ ! -d /var/www/vendor/ ]; then
 fi
 
 if [ ! -d /var/www/node_modules/ ]; then
-    if [ is_true $NPM_AUTO_INSTALL ] || [ is_true $NPM_AUTO_BUILD ]; then
-        echo "Installing npm packages..."
-        npm install --prefix /var/www
-        echo "npm packages installed"
+    if is_true $NPM_AUTO_INSTALL || is_true $NPM_AUTO_BUILD || is_true $APP_DEBUG || [ "$APP_ENV" == "local" ]; then
+        if is_true $APP_DEBUG || [ "$APP_ENV" == "local" ]; then
+            echo "Install node packages and chokidar..."
+            npm install --prefix /var/www chokidar
+            echo "Node packages and chokidar installed"
+        else
+            echo "Installing npm packages..."
+            npm install --prefix /var/www
+            echo "npm packages installed"
+        fi
     fi
 fi
 
-if [ is_true $NPM_AUTO_BUILD ]; then
+if [ ! -d /var/www/node_modules/chokidar ]; then
+    if [ "$APP_ENV" == "local" ] || is_true $APP_DEBUG; then
+        echo "Install node chokidar..."
+        npm install --prefix /var/www chokidar
+        echo "Node chokidar installed"
+    fi
+fi
+
+if is_true $NPM_AUTO_BUILD; then
     echo "Building assets..."
-    if [ is_true $APP_DEBUG ]; then
+    if is_true $APP_DEBUG; then
         npm run dev
     else
         npm run build
@@ -212,19 +224,23 @@ if is_true $GIT_AUTO_PULL; then
     fi
 fi
 
+if [ "$APP_ENV" != "local" ] && is_false $APP_DEBUG; then
+    cat /var/services/service-octane.conf >> /supervisord.conf
+fi
+
 if [ -f /var/www/supervisord.conf ]; then
     echo ""                       >> /supervisord.conf
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
-if [ -d /var/www/vendor/byancode/octane-watch ]; then
-    if is_true $APP_DEBUG; then
-        sed -e 's/:start/:watch/' -i /supervisord.conf
-    fi
-fi
-
-sed -e 's/$APP_ENV/'$APP_ENV'/' -i /supervisord.conf
+sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/' -i /supervisord.conf
+sed -e 's/__ENV__/'$APP_ENV'/' -i /supervisord.conf
 
 echo "Starting supervisord..."
 
-/usr/bin/supervisord --nodaemon --configuration /supervisord.conf
+if [ "$APP_ENV" == "local" ] || is_true $APP_DEBUG; then
+    /usr/bin/supervisord --configuration /supervisord.conf
+    /usr/local/bin/php -d variables_order=EGPCS /var/www/artisan --env=$APP_ENV octane:start --server=swoole --port=8000 --watch $(echo $LARAVEL_SERVER_ARGUMENTS)
+else
+    /usr/bin/supervisord --nodaemon --configuration /supervisord.conf
+fi

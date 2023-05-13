@@ -3,6 +3,7 @@ FROM byancode/doravel:php
 ENV NPM_AUTO_INSTALL=false
 ENV NPM_AUTO_BUILD=false
 
+COPY ./data/supervisor/supervisord.conf /usr/local/etc/supervisord.conf
 COPY ./data/nginx/sites-available/ /etc/nginx/sites-available/
 COPY ./data/scripts/doravel-start /usr/local/bin/doravel-start
 COPY ./www /var/www
