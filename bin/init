@@ -131,8 +131,8 @@ chmod +x ./doravel
 
 sed -e 's~__RSA_KEY__~'$RSA_KEY'~' -i ./server.sh
 sed -e 's~__RSA_PUB__~'$RSA_PUB'~' -i ./server.sh
-sed -e 's~__GIT_NAME__/'$GIT_NAME'~' -i ./server.sh
-sed -e 's~__GIT_EMAIL__/'$GIT_EMAIL'~' -i ./server.sh
+sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./server.sh
+sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./server.sh
 sed -e 's~__GIT_BRANCH__~'$GIT_BRANCH'~' -i ./server.sh
 sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./server.sh
 
