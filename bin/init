@@ -64,7 +64,7 @@ fi
 
 if [ -z "$GIT_EMAIL" ]; then
     read -p "Ingrese su email: " GIT_EMAIL
-    f [[ ! $GIT_EMAIL =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
+    if [[ ! $GIT_EMAIL =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
         echo "El email no es correcto"
         exit 0
     fi
