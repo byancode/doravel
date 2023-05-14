@@ -2,7 +2,7 @@
 
 # VERSIONS=('8.1.18' '8.2.5')
 TAG='php'
-VERSIONS=('8.1.18' '8.2.5')
+VERSIONS=('8.1.19' '8.2.6')
 REPOSITORY='byancode/doravel'
 
 for VERSION in "${VERSIONS[@]}"; do
