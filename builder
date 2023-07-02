@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VERSIONS=('8.1.18' '8.2.5')
+# VERSIONS=('8.1.18' '8.1.19' '8.1.20' '8.2.5' '8.2.6' '8.2.7')
 TAG='php'
 VERSIONS=('8.1.18' '8.1.19' '8.1.20' '8.2.5' '8.2.6' '8.2.7')
 REPOSITORY='byancode/doravel'

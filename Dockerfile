@@ -91,6 +91,7 @@ RUN apk add --no-cache \
         icu-dev \
 		zlib-dev \
 		pcre-dev \
+		gd-dev \
 	; \
     \
     rm -vf /usr/include/iconv.h; \
@@ -131,12 +132,17 @@ RUN apk add --no-cache \
 		--with-curl \
 		--with-zlib \
 		--with-zip \
+		# GD
+		--with-avif \
+		--with-webp \
+		--with-jpeg \
 # https://github.com/docker-library/php/pull/1259
 		--enable-session \
 		--enable-phpdbg \
 		--enable-ctype \
 		--enable-phar \
 		--enable-pdo \
+		--enable-gd \
 #		--enable-fpm \
 		--enable-intl \
 		--enable-bcmath \
@@ -180,7 +186,7 @@ RUN apk add --no-cache \
     \
     pecl update-channels; \
     \
-    docker-pecl-install xdebug --zend;  \
+    # docker-pecl-install xdebug --zend;  \
     docker-swoole-install; \
     docker-pecl-install redis; \
 	rm -rf /tmp/pear ~/.pearrc; \
