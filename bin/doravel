@@ -329,19 +329,25 @@ PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
 PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
+if ! [ -x "$(command -v docker-compose)" ]; then
+    PROGRAM="docker compose"
+else
+    PROGRAM="docker-compose"
+fi
+
 if [ $COMMAND == "bash" ] || [ $COMMAND == "sh" ]; then
-    docker-compose $(echo $ARGUMENTS) exec -- app $(echo $COMMAND) $(echo $OPTIONS)
+    $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $COMMAND) $(echo $OPTIONS)
     exit 0
 fi
 
 if [ $COMMAND == "artisan" ]; then
-    docker-compose $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
+    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
     exit 0
 fi
 
 if [ $COMMAND == "reload" ]; then
-    docker-compose $(echo $ARGUMENTS) restart -- app
+    $PROGRAM $(echo $ARGUMENTS) restart -- app
     exit 0
 fi
 
-docker-compose $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
+$PROGRAM $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
