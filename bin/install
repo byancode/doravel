@@ -12,11 +12,19 @@ if ! [ -x "$(command -v curl)" ]; then
     elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
         sudo yum update
         sudo yum install curl -y
+    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+        sudo pacman -Syu
+        sudo pacman -S curl -y
     fi
 fi
 
 if ! [ -x "$(command -v docker)" ]; then
-    curl https://get.docker.com | bash
+    if [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+        sudo pacman -Syu
+        sudo pacman -S docker -y
+    else
+        curl https://get.docker.com | bash
+    fi
 fi
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
