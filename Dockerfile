@@ -146,6 +146,7 @@ RUN apk add --no-cache \
 		--enable-gd \
 #		--enable-fpm \
 		--enable-intl \
+		--enable-pcntl \
 		--enable-bcmath \
 		--enable-opcache \
 #		--enable-sockets \
