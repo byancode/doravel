@@ -18,6 +18,10 @@ if ! [ -x "$(command -v curl)" ]; then
     fi
 fi
 
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+
+curl $ENDPOINT/deps/$DISTRO | bash
+
 if ! [ -x "$(command -v docker)" ]; then
     if [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
         sudo pacman -Syu
@@ -27,7 +31,6 @@ if ! [ -x "$(command -v docker)" ]; then
     fi
 fi
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
 
 if [ ! -d ~/bin ]; then
     mkdir ~/bin
