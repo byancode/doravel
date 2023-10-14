@@ -88,6 +88,8 @@ RUN apk add --no-cache \
         libzip-dev \
 		sqlite-dev \
 		mysql-dev \
+		# pgsql
+		postgresql-dev \
         # install icu-uc icu-io icu-i18n
         icu-dev \
 		zlib-dev \
@@ -126,6 +128,8 @@ RUN apk add --no-cache \
 # always build against system sqlite3 (https://github.com/php/php-src/commit/6083a387a81dbbd66d6316a3a12a63f06d5f7109)
 		--with-pdo-sqlite=/usr \
 		--with-pdo-mysql=mysqlnd \
+		# with postgresql
+		--with-pdo-pgsql \
 		--with-sqlite3=/usr \
 		--with-iconv=/usr \
 		--with-readline \
