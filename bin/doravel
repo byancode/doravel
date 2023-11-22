@@ -160,7 +160,7 @@ if [ $COMMAND == "global" ] || [ $COMMAND == "upgrade" ]; then
 
     ln -sf ~/bin/doravel ~/bin/dv
 
-    ech "Doravel installed 😃"
+    echo "Doravel installed 😃"
     exit 0
 fi
 
