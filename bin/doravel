@@ -133,6 +133,7 @@ fi
 if [ $COMMAND == "fix" ]; then
     chowm -R $(id -un):$(id -gn) ./bootstrap/cache
     chowm -R $(id -un):$(id -gn) ./storage
+    echo "Permissions fixed 😃"
     exit 0
 fi
 
@@ -159,6 +160,7 @@ if [ $COMMAND == "global" ] || [ $COMMAND == "upgrade" ]; then
 
     ln -sf ~/bin/doravel ~/bin/dv
 
+    ech "Doravel installed 😃"
     exit 0
 fi
 
