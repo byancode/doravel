@@ -131,8 +131,8 @@ fi
 # comandos que no requiere de un .env
 
 if [ $COMMAND == "fix" ]; then
-    chowm -R $(id -un):$(id -gn) ./bootstrap/cache
-    chowm -R $(id -un):$(id -gn) ./storage
+    sudo chowm -R $(id -un):$(id -gn) ./bootstrap/cache
+    sudo chowm -R $(id -un):$(id -gn) ./storage
     echo "Permissions fixed 😃"
     exit 0
 fi
