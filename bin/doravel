@@ -348,6 +348,11 @@ if [ $COMMAND == "bash" ]; then
     exit 0
 fi
 
+if [ $COMMAND == "sh" ]; then
+    $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $COMMAND) $(echo $OPTIONS)
+    exit 0
+fi
+
 if [ $COMMAND == "artisan" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
     exit 0
