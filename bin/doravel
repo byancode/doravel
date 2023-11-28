@@ -343,12 +343,7 @@ else
     PROGRAM="docker-compose"
 fi
 
-if [ $COMMAND == "bash" ]; then
-    $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $COMMAND) $(echo $OPTIONS)
-    exit 0
-fi
-
-if [ $COMMAND == "sh" ]; then
+if [ $COMMAND == "bash" ] || [ $COMMAND == "sh" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $COMMAND) $(echo $OPTIONS)
     exit 0
 fi
