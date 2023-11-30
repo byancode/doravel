@@ -1,12 +1,13 @@
 #!/bin/bash
 
+DIR_PATH=$(realpath $(dirname "$0"))
 COMMAND=$1
 
 if [ -z "$COMMAND" ]; then
-    ./doravel --help
+    $DIR_PATH/doravel --help
     exit 1
 fi
 
 shift
 
-./doravel $COMMAND --prod $@
+$DIR_PATH/doravel $COMMAND --prod $@
