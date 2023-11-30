@@ -13,7 +13,8 @@ DORAVEL COMMANDS:
     server             Inicia el servidor con doravel
     artisan            Ejecuta un comando artisan
     global             Instala el comando doravel globalmente
-    upgrade            Actualiza doravel
+    upgrade            Actualiza doravel a la ultima version globalmente
+    update             Actualiza doravel a la ultima version localmente
     ssh-keys           Genera las llaves ssh para el deploy
 
 DOCKER-COMPOSE COMMANDS:
@@ -89,6 +90,7 @@ COMMANDS=(
     "test"
     "init"
     "bash"
+    "update"
     "global"
     "server"
     "reload"
@@ -132,12 +134,8 @@ if [ $COMMAND == "fix" ]; then
     exit 0
 fi
 
-if [ $COMMAND == "global" ] || [ $COMMAND == "upgrade" ]; then
-    if [ $COMMAND == "upgrade" ]; then
-        echo "Upgrading doravel..."
-    else
-        echo "Installing doravel global..."
-    fi
+if [ $COMMAND == "upgrade" ]; then
+    echo "Upgrading doravel..."
 
     if [ ! -d ~/bin ]; then
         mkdir ~/bin
@@ -155,6 +153,37 @@ if [ $COMMAND == "global" ] || [ $COMMAND == "upgrade" ]; then
 
     ln -sf ~/bin/doravel ~/bin/dv
 
+    if [ -f ./doravel ]; then
+        cp -f ~/bin/doravel ./doravel
+    fi
+
+    echo "Doravel installed 😃"
+    exit 0
+fi
+
+if [ $COMMAND == "update" ]; then
+    if [ ! -f ./doravel ]; then
+        echo "the current directory is not a laravel project"
+        exit 0
+    fi
+
+    echo "Updating doravel..."
+    curl "$ENDPOINT/bin/doravel" -o doravel
+    chmod +x ./doravel
+
+    echo "Doravel updated 😃"
+    exit 0
+fi
+
+if [ $COMMAND == "global" ]; then
+    if [ ! -f ./doravel ]; then
+        echo "the current directory is not a laravel project"
+        exit 0
+    fi
+    echo "Installing doravel globally..."
+    cp -f ./doravel ~/bin/doravel
+    chmod +x ~/bin/doravel
+    ln -sf ~/bin/doravel ~/bin/dv
     echo "Doravel installed 😃"
     exit 0
 fi
