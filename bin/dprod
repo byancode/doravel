@@ -9,9 +9,4 @@ fi
 
 shift
 
-if [ "$COMMAND" = "test" ]; then
-    ./doravel artisan --prod test $@
-    exit 1
-fi
-
 ./doravel $COMMAND --prod $@

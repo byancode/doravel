@@ -147,15 +147,6 @@ if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
 fi
 echo "Environment configured"
 
-if [ -f /etc/nginx/sites-available/site.conf ]; then
-    sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/site.conf
-fi
-if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
-    sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/nginx/sites-available/ssl-site.conf
-fi
-echo "Host configured"
-
-
 
 if is_true $APP_SSL; then
     rm -f /etc/nginx/sites-available/site.conf;
@@ -163,6 +154,22 @@ else
     rm -f /etc/nginx/sites-available/ssl-site.conf;
 fi
 echo "SSL configured"
+
+
+HOST_NAMES=${APP_HOST:-"localhost"}
+
+if is_true $APP_DEBUG; then
+    HOST_NAMES=$HOST_NAMES" localhost"
+fi
+
+if [ -f /etc/nginx/sites-available/site.conf ]; then
+    sed -e 's/__APP_HOST__/'$HOST_NAMES'/' -i /etc/nginx/sites-available/site.conf
+fi
+if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
+    sed -e 's/__APP_HOST__/'$HOST_NAMES'/' -i /etc/nginx/sites-available/ssl-site.conf
+fi
+echo "Host configured"
+
 
 if [ -d /var/www/storage ]; then
     chmod -R 777 /var/www/storage;

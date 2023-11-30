@@ -26,11 +26,15 @@ ENV PHP_CPPFLAGS="$PHP_CFLAGS"
 ENV PHP_LDFLAGS="-Wl,-O1 -pie"
 
 ARG PHP_VERSION=8.2.2
+ARG REDIS_VERSION=6.0.2
+ARG SWOOLE_VERSION=5.1.1
+
 ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" \
     PHP_BINARY_FILE="/binaries/php-${PHP_VERSION}.tar.xz"
 
 COPY ./data/php/conf.d/* ${ETC_PATH}/php/conf.d/
 COPY ./data/php/composer /usr/local/bin/composer
+COPY ./data/php/extensions/* /tmp/
 COPY ./data/supervisor/* ${ETC_PATH}/
 COPY ./data/services/* /var/services/
 COPY ./data/scripts/* /usr/local/bin/
@@ -111,15 +115,15 @@ RUN apk add --no-cache \
 		--build="$gnuArch" \
 		--with-config-file-path="$PHP_INI_DIR" \
 		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-# make sure invalid --configure-flags are fatal errors instead of just warnings
+# asegurarse de que las --configure-flags inválidas sean errores fatales en lugar de solo advertencias
 		--enable-option-checking=fatal \
 # https://github.com/docker-library/php/issues/439
 		--with-mhash \
 # https://github.com/docker-library/php/issues/822
 		--with-pic \
-# --enable-mbstring is included here because otherwise there's no way to get pecl to use it properly (see https://github.com/docker-library/php/issues/195)
+# --enable-mbstring se incluye aquí porque de lo contrario no hay forma de que pecl lo use correctamente (ver https://github.com/docker-library/php/issues/195)
 		--enable-mbstring \
-# --enable-mysqlnd is included here because it's harder to compile after the fact than extensions are (since it's a plugin for several extensions, not an extension in itself)
+# --enable-mysqlnd se incluye aquí porque es más difícil compilarlo después que las extensiones (ya que es un complemento para varias extensiones, no una extensión en sí misma)
 		# --enable-mysqlnd \
 # https://wiki.php.net/rfc/argon2_password_hash
 		--with-password-argon2 \
@@ -190,11 +194,8 @@ RUN apk add --no-cache \
 	)"; \
 	apk add --no-cache $runDeps; \
     \
-    pecl update-channels; \
-    \
-    # docker-pecl-install xdebug --zend;  \
-    docker-swoole-install; \
-    docker-pecl-install redis; \
+    docker-pecl-build swoole ${SWOOLE_VERSION}; \
+    docker-pecl-build redis ${REDIS_VERSION}; \
 	rm -rf /tmp/pear ~/.pearrc; \
     \
     docker-php-ext-enable \
@@ -202,8 +203,7 @@ RUN apk add --no-cache \
         sodium \
     ; \
     apk del --no-network .build-deps; \
-    rm -f /usr/src/php.tar.xz; \
-	php --version;
+    rm -f /usr/src/php.tar.xz;
 
 WORKDIR /var/www
 

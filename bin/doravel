@@ -6,6 +6,7 @@ function print_help {
 DORAVEL COMMANDS:
     sh                 Abre el terminal sh de doravel
     fix                Corrige los permisos de los archivos
+    test               Inicia el entorno de pruebas
     init               Inicia un proyecto con doravel
     bash               Abre el terminal bash|sh de doravel
     reload             Reinicia el contenedor de laravel
@@ -82,8 +83,10 @@ fi
 
 COMMANDS=(
 # doravel commands
+    "a"
     "sh"
     "fix"
+    "test"
     "init"
     "bash"
     "global"
@@ -119,15 +122,7 @@ COMMANDS=(
     "up"
     "version"
 )
-
-# compobamos si exite el comando
-if [[ " ${COMMANDS[*]} " =~ " ${COMMAND} " ]]; then
-    echo "Running doravel with command $COMMAND..."
-else
-    echo "the command $COMMAND is not valid"
-    exit 0
-fi
-
+sh
 # comandos que no requiere de un .env
 
 if [ $COMMAND == "fix" ]; then
@@ -348,7 +343,12 @@ if [ $COMMAND == "bash" ] || [ $COMMAND == "sh" ]; then
     exit 0
 fi
 
-if [ $COMMAND == "artisan" ]; then
+if [ $COMMAND == "test" ]; then
+    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan test $(echo $OPTIONS)
+    exit 0
+fi
+
+if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
     exit 0
 fi
