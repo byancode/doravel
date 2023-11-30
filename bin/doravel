@@ -124,7 +124,7 @@ COMMANDS=(
     "up"
     "version"
 )
-sh
+
 # comandos que no requiere de un .env
 
 if [ $COMMAND == "fix" ]; then
@@ -181,9 +181,11 @@ if [ $COMMAND == "global" ]; then
         exit 0
     fi
     echo "Installing doravel globally..."
+
     cp -f ./doravel ~/bin/doravel
     chmod +x ~/bin/doravel
     ln -sf ~/bin/doravel ~/bin/dv
+
     echo "Doravel installed 😃"
     exit 0
 fi
