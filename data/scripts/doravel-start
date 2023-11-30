@@ -156,17 +156,11 @@ fi
 echo "SSL configured"
 
 
-HOST_NAMES=${APP_HOST:-"localhost"}
-
-if is_true $APP_DEBUG; then
-    HOST_NAMES=$HOST_NAMES" localhost"
-fi
-
 if [ -f /etc/nginx/sites-available/site.conf ]; then
-    sed -e 's/__APP_HOST__/'$HOST_NAMES'/' -i /etc/nginx/sites-available/site.conf
+    sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/nginx/sites-available/site.conf
 fi
 if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
-    sed -e 's/__APP_HOST__/'$HOST_NAMES'/' -i /etc/nginx/sites-available/ssl-site.conf
+    sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/nginx/sites-available/ssl-site.conf
 fi
 echo "Host configured"
 
