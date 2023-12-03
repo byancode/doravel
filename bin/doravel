@@ -6,12 +6,15 @@ function print_help {
 DORAVEL COMMANDS:
     sh                 Abre el terminal sh de doravel
     fix                Corrige los permisos de los archivos
+    cmd                ejecuta un comando en el contenedor de laravel
     test               Inicia el entorno de pruebas
     init               Inicia un proyecto con doravel
     bash               Abre el terminal bash|sh de doravel
+    tinker             Abre el terminal tinker de laravel
     reload             Reinicia el contenedor de laravel
     server             Inicia el servidor con doravel
     artisan            Ejecuta un comando artisan
+    composer           Ejecuta un comando composer
     global             Instala el comando doravel globalmente
     upgrade            Actualiza doravel a la ultima version globalmente
     update             Actualiza doravel a la ultima version localmente
@@ -85,17 +88,21 @@ fi
 COMMANDS=(
 # doravel commands
     "a"
+    "c"
     "sh"
     "fix"
+    "cmd"
     "test"
     "init"
     "bash"
+    "tinker"
     "update"
     "global"
     "server"
     "reload"
     "artisan"
     "upgrade"
+    "composer"
     "ssh-keys"
 # docker-compose commands
     "build"
@@ -379,8 +386,23 @@ if [ $COMMAND == "test" ]; then
     exit 0
 fi
 
+if [ $COMMAND == "tinker" ]; then
+    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan tinker $(echo $OPTIONS)
+    exit 0
+fi
+
 if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
+    exit 0
+fi
+
+if [ $COMMAND == "c" ] || [ $COMMAND == "composer" ]; then
+    $PROGRAM $(echo $ARGUMENTS) exec -- app composer $(echo $OPTIONS)
+    exit 0
+fi
+
+if [ $COMMAND == "cmd" ]; then
+    $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $OPTIONS)
     exit 0
 fi
 
