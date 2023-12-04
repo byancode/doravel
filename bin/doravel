@@ -92,6 +92,7 @@ COMMANDS=(
     "a" # artisan
     "c" # composer
     "s" # supervisor
+    "l" # logging
     "sh"
     "fix"
     "cmd"
@@ -420,8 +421,9 @@ if [ $COMMAND == "cmd" ]; then
     exit 0
 fi
 
-if [ $COMMAND == "logging" ]; then
+if [ $COMMAND == "s" ] || [ $COMMAND == "logging" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app tail -f storage/logs/laravel.log
+    exit 0
 fi
 
 if [ $COMMAND == "reload" ]; then
