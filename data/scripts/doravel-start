@@ -122,8 +122,8 @@ if is_true $APP_SSL && is_true $APP_SELF_CERT; then
     echo "Starting SSL certificate..."
 
     APP_IP=$(/bin/hostname -I | /usr/bin/awk '{print $1}')
-    sed -e 's/__APP_HOST__/'$APP_HOST'/' -i /etc/ssl/sancert.cnf
-    sed -e 's/__APP_IP__/'$APP_IP'/' -i /etc/ssl/sancert.cnf
+    sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/ssl/sancert.cnf
+    sed -e 's/__APP_IP__/'$APP_IP'/g' -i /etc/ssl/sancert.cnf
 
     openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
     openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
@@ -140,10 +140,10 @@ echo ${APP_TIMEZONE} > /etc/timezone
 echo "Timezone configured"
 
 if [ -f /etc/nginx/sites-available/site.conf ]; then
-    sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/site.conf
+    sed -e 's/__APP_ENV__/'$APP_ENV'/g' -i /etc/nginx/sites-available/site.conf
 fi
 if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
-    sed -e 's/__APP_ENV__/'$APP_ENV'/' -i /etc/nginx/sites-available/ssl-site.conf
+    sed -e 's/__APP_ENV__/'$APP_ENV'/g' -i /etc/nginx/sites-available/ssl-site.conf
 fi
 echo "Environment configured"
 
@@ -240,8 +240,9 @@ if [ -f /var/www/supervisord.conf ]; then
     cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
-sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/' -i /supervisord.conf
-sed -e 's/__ENV__/'$APP_ENV'/' -i /supervisord.conf
+sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/g' -i /supervisord.conf
+sed -e 's/__ENV__/'$APP_ENV'/g' -i /supervisord.conf
+sed -e 's/$APP_ENV/'$APP_ENV'/g' -i /supervisord.conf
 
 echo "Starting supervisord..."
 
