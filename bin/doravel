@@ -9,12 +9,13 @@ DORAVEL COMMANDS:
     cmd                ejecuta un comando en el contenedor de laravel
     test               Inicia el entorno de pruebas
     init               Inicia un proyecto con doravel
-    bash               Abre el terminal bash|sh de doravel
     tinker             Abre el terminal tinker de laravel
     reload             Reinicia el contenedor de laravel
     server             Inicia el servidor con doravel
     artisan            Ejecuta un comando artisan
     composer           Ejecuta un comando composer
+    supervisor         Ejecuta un comando supervisorctl
+    logging            Muestra los logs de laravel
     global             Instala el comando doravel globalmente
     upgrade            Actualiza doravel a la ultima version globalmente
     update             Actualiza doravel a la ultima version localmente
@@ -87,8 +88,9 @@ fi
 
 COMMANDS=(
 # doravel commands
-    "a"
-    "c"
+    "a" # artisan
+    "c" # composer
+    "s" # supervisor
     "sh"
     "fix"
     "cmd"
@@ -101,9 +103,11 @@ COMMANDS=(
     "server"
     "reload"
     "artisan"
+    "logging"
     "upgrade"
     "composer"
     "ssh-keys"
+    "supervisor"
 # docker-compose commands
     "build"
     "config"
@@ -401,9 +405,22 @@ if [ $COMMAND == "c" ] || [ $COMMAND == "composer" ]; then
     exit 0
 fi
 
+if [ $COMMAND == "s" ] || [ $COMMAND == "supervisor" ]; then
+    if [ "$OPTIONS" == "" ]; then
+        $OPTIONS="status"
+    fi
+
+    $PROGRAM $(echo $ARGUMENTS) exec -- app supervisorctl --configuration=/supervisord.conf $(echo $OPTIONS)
+    exit 0
+fi
+
 if [ $COMMAND == "cmd" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $OPTIONS)
     exit 0
+fi
+
+if [ $COMMAND == "logging" ]; then
+    $PROGRAM $(echo $ARGUMENTS) exec -- app tail -f storage/logs/laravel.log
 fi
 
 if [ $COMMAND == "reload" ]; then
