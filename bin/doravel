@@ -420,7 +420,7 @@ if [ $COMMAND == "cmd" ]; then
     exit 0
 fi
 
-if [ $COMMAND == "s" ] || [ $COMMAND == "logging" ]; then
+if [ $COMMAND == "l" ] || [ $COMMAND == "logging" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app tail -f storage/logs/laravel.log
     exit 0
 fi
