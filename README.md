@@ -71,5 +71,5 @@ return [
 
 ## Docker run
 ```bash
-docker run -p 80:80 byancode/doravel:php
+docker run -p 80:80 byancode/doravel:php-8.2
 ```

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 function print_help {
-    echo 'Modo de uso: doravel [COMMAND] [OPTIONS]
+    VERSION="0.1.5"
+    echo 'Modo de uso: doravel '$VERSION' [COMMAND] [OPTIONS]
 
 DORAVEL COMMANDS:
     sh                 Abre el terminal sh de doravel
