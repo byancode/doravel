@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:edge
 
 # dependencies required for running "phpize"
 # these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
@@ -95,6 +95,7 @@ RUN apk add --no-cache \
 		# pgsql
 		postgresql-dev \
         # install icu-uc icu-io icu-i18n
+		icu-data-full \
         icu-dev \
 		zlib-dev \
 		pcre-dev \
