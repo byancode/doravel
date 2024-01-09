@@ -20,7 +20,7 @@ services:
             - redis
         links:
             - minio
-            - mailhog
+            - mailpit
             - meilisearch
     mysql:
         restart: on-failure
