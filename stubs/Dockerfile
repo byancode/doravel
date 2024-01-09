@@ -1,8 +1,6 @@
 FROM byancode/doravel:php-8.1
 
-ENV GIT_EMAIL='__GIT_EMAIL__' \
-    GIT_NAME='__GIT_NAME__' \
-    GIT_AUTO_PULL=false \
+ENV GIT_AUTO_PULL=false \
     # Laravel
     LARAVEL_AUTO_SCHEDULE=true \
     # PHP

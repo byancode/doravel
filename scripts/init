@@ -30,17 +30,40 @@ askOverrideFile() {
     fi
 }
 
+touch ./supervisord.conf
 askOverrideFile .env .env
-askOverrideFile .env .env.prod
-askOverrideFile .env .env.main
-
-askOverrideFile docker-compose.yml docker-compose.yml
-askOverrideFile docker-compose.yml docker-compose.prod.yml
-askOverrideFile docker-compose.yml docker-compose.main.yml
-
 askOverrideFile Dockerfile Dockerfile
-askOverrideFile Dockerfile Dockerfile.prod
-askOverrideFile Dockerfile Dockerfile.main
+askOverrideFile docker-compose.yml docker-compose.local.yml
+
+if ! [ -f ./.env.prod ]; then
+    read -p "¿Desea agregar un entorno de produccion? (y/n): " RESPONSE
+    if [ "$RESPONSE" == 'y' ]; then
+        touch ./supervisord.prod.conf
+        askOverrideFile .env.prod .env.prod
+        askOverrideFile Dockerfile Dockerfile.prod
+        askOverrideFile docker-compose.yml docker-compose.prod.yml
+    fi
+fi
+
+if ! [ -f ./.env.main ]; then
+    read -p "¿Desea agregar un entorno master? (y/n): " RESPONSE
+    if [ "$RESPONSE" == 'y' ]; then
+        touch ./supervisord.main.conf
+        askOverrideFile .env.main .env.main
+        askOverrideFile Dockerfile Dockerfile.main
+        askOverrideFile docker-compose.yml docker-compose.main.yml
+    fi
+fi
+
+if ! [ -f ./.env.test ]; then
+    read -p "¿Desea agregar un entorno de testing? (y/n): " RESPONSE
+    if [ "$RESPONSE" == 'y' ]; then
+        touch ./supervisord.test.conf
+        askOverrideFile .env.test .env.test
+        askOverrideFile Dockerfile Dockerfile.test
+        askOverrideFile docker-compose.yml docker-compose.test.yml
+    fi
+fi
 
 curl -O ${ENDPOINT}/bin/doravel
 chmod +x ./doravel
