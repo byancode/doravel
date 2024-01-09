@@ -446,17 +446,20 @@ if [ $COMMAND == "tinker" ]; then
 fi
 
 if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
-    # confirmar accion si es PROD o MAIN
     if [ "$ENV_NAME" == "prod" ] || [ "$ENV_NAME" == "main" ]; then
-        # mensaje con emojis de advertencia donde muestra el comando a ejecutar
+        echo ""
         echo "📣 WARNING ---------------------"
-        echo "👉 php artisan $OPTIONS"
+        echo ""
+        echo "❗ php artisan $OPTIONS"
+        echo ""
         echo "📣 -----------------------------"
-        read -p "Are you sure you want to run artisan in production? [confirm] " RESPOSE
-        if [ "$RESPOSE" != "confirm" ]; then
+        echo ""
+        read -p "Are you sure you want to run this command in production? write: [i agree with this action] " RESPOSE
+        if [ "$RESPOSE" != "i agree with this action" ]; then
             echo "action canceled"
             exit 0
         fi
+
     fi
     $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
     exit 0
