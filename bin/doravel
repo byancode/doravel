@@ -448,7 +448,7 @@ fi
 if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
     if [ "$ENV_NAME" == "prod" ] || [ "$ENV_NAME" == "main" ]; then
         echo ""
-        echo "📣 WARNING ---------------------"
+        echo "📣 WARNING YOU ARE IN {{ PRODUCTION }} MODE"
         echo ""
         echo "❗ php artisan $OPTIONS"
         echo ""
