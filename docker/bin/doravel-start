@@ -107,6 +107,7 @@ APP_URL=${APP_URL:-"http://localhost"}
 APP_HOST=$(php -r "echo parse_url('$APP_URL', PHP_URL_HOST);")
 APP_TIMEZONE=${APP_TIMEZONE:-"UTC"}
 APP_SELF_CERT=${APP_SELF_CERT:-true}
+SERVER_NAME=${SERVER_NAME:-$APP_HOST}
 
 
 
@@ -155,12 +156,11 @@ else
 fi
 echo "SSL configured"
 
-
 if [ -f /etc/nginx/sites-available/site.conf ]; then
-    sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/nginx/sites-available/site.conf
+    sed -e 's/__SERVER_NAME__/'$SERVER_NAME'/g' -i /etc/nginx/sites-available/site.conf
 fi
 if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
-    sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/nginx/sites-available/ssl-site.conf
+    sed -e 's/__SERVER_NAME__/'$SERVER_NAME'/g' -i /etc/nginx/sites-available/ssl-site.conf
 fi
 echo "Host configured"
 
@@ -238,6 +238,11 @@ fi
 if [ -f /var/www/supervisord.conf ]; then
     echo ""                       >> /supervisord.conf
     cat /var/www/supervisord.conf >> /supervisord.conf
+fi
+
+if [ -f "/var/www/supervisord.${APP_ENV}.conf" ]; then
+    echo ""                                    >> /supervisord.conf
+    cat "/var/www/supervisord.${APP_ENV}.conf" >> /supervisord.conf
 fi
 
 sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/g' -i /supervisord.conf

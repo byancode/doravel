@@ -1,6 +1,7 @@
 version: '3.1'
 services:
     app:
+        restart: on-failure
         build:
             context: .
             dockerfile: Dockerfile
@@ -9,8 +10,8 @@ services:
         volumes:
             - .:/var/www
         ports:
-            - 80:80
-            - 443:443
+            - ${APP_PORT:-80}:80
+            - ${APP_SSL_PORT:-443}:443
         networks:
             - default
         depends_on:
@@ -23,21 +24,22 @@ services:
             - mailhog
             - meilisearch
     mysql:
-        image: mariadb
+        restart: on-failure
+        image: mysql:8
         environment:
-            MYSQL_TCP_PORT: 3307
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
-            MYSQL_DATABASE: $DB_DATABASE
-            MYSQL_PASSWORD: $DB_PASSWORD
-            MYSQL_USER: $DB_USERNAME
-            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+            MYSQL_TCP_PORT: ${DB_PORT:-3306}
+            MYSQL_DATABASE: ${DB_DATABASE:-doravel}
+            MYSQL_USER: ${DB_USERNAME:-doravel}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
         expose:
-            - 3307
+            - ${DB_PORT:-3306}
         volumes:
-            - data-mariadb:/var/lib/mysql
+            - data-mysql:/var/lib/mysql
         networks:
             - default
     redis:
+        restart: on-failure
         image: redis
         volumes:
             - data-redis:/data
@@ -46,6 +48,7 @@ services:
         networks:
             - default
     minio:
+        restart: on-failure
         image: minio/minio
         expose:
             - 9000
@@ -63,15 +66,15 @@ services:
             test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
             retries: 3
             timeout: 5s
-    mailhog:
-        image: mailhog/mailhog
+    mailpit:
+        restart: on-failure
+        image: axllent/mailpit
         expose:
             - 1025
         ports:
-            - ${MAILHOG_DASHBOARD_PORT:-8025}:8025
-        networks:
-            - default
+            - "${MAILPIT_DASHBOARD_PORT:-8025}:8025"
     meilisearch:
+        restart: on-failure
         image: getmeili/meilisearch
         expose:
             - 7700
@@ -86,16 +89,18 @@ services:
             retries: 3
             timeout: 5s
     memcached:
+        restart: on-failure
         image: memcached:alpine
         expose:
             - 11211
         networks:
             - default
     soketi:
+        restart: on-failure
         image: quay.io/soketi/soketi:latest-16-alpine
         environment:
             SOKETI_DEBUG: 1
-            SOKETI_METRICS_SERVER_PORT: 9601
+            SOKETI_METRICS_SERVER_PORT: ${SOKETI_METRICS_SERVER_PORT:-9601}
         expose:
             - 6001
         ports:
@@ -103,12 +108,25 @@ services:
             - ${SOKETI_METRICS_SERVER_PORT:-9601}:9601
         networks:
             - default
+    phpmyadmin:
+        restart: on-failure
+        image: phpmyadmin/phpmyadmin
+        environment:
+            PMA_HOST: ${DB_HOST:-mysql}
+            PMA_PORT: ${DB_PORT:-3306}
+            PMA_USER: ${DB_USERNAME:-root}
+            PMA_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+        ports:
+            - ${PHPMYADMIN_PORT:-8080}:80
+        networks:
+            - default
+        depends_on:
+            - mysql
 networks:
     default:
         driver: bridge
 volumes:
     data-meilisearch:
-    data-mariadb:
     data-mysql:
     data-redis:
     data-minio:

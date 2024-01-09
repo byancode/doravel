@@ -1,0 +1,79 @@
+#!/bin/bash
+
+DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
+DISTRO=${DISTRO//\"/}
+
+if ! [ -x "$(command -v curl)" ]; then
+    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
+        sudo apt-get update
+        sudo apt-get install -y curl
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+        sudo yum update
+        sudo yum install curl -y
+    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+        sudo pacman -Syu
+        sudo pacman -S curl -y
+    fi
+fi
+if ! [ -x "$(command -v unzip)" ]; then
+    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
+        sudo apt-get update
+        sudo apt-get install -y unzip
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+        sudo yum update
+        sudo yum install unzip -y
+    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+        sudo pacman -Syu
+        sudo pacman -S unzip
+    fi
+fi
+if ! [ -x "$(command -v php)" ]; then
+    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository ppa:ondrej/php
+        sudo apt-get update
+        sudo apt-get install -y php8.2 php8.2-curl php8.2-xml php8.2-xmlrpc php8.2-zip php8.2-dev php8.2-intl php8.2-mbstring php8.2-bcmath php8.2-gd php8.2-mysql php8.2-pgsql php8.2-sqlite3 php8.2-redis php8.2-memcached php8.2-imagick php8.2-xdebug
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+        sudo yum update
+        sudo yum install php php-curl php-xml php-xmlrpc php-dev php-zip php-swoole php-intl php-mbstring php-bcmath php-gd php-mysql php-pgsql php-sqlite3 php-redis php-memcached php-imagick php-xdebug -y
+    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+        echo "PHP is not installed"
+        exit 1
+    fi
+fi
+if ! [ -x "$(command -v composer)" ] && [ -x "$(command -v php)" ]; then
+    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+    php composer-setup.php
+    php -r "unlink('composer-setup.php');"
+    sudo mv composer.phar /usr/local/bin/composer
+fi
+
+if ! [ -x "$(command -v docker)" ]; then
+    if [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+        echo "Docker is not installed"
+        exit 1
+    else
+        curl https://get.docker.com | bash
+    fi
+fi
+
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+
+if [ ! -d ~/bin ]; then
+    mkdir ~/bin
+fi
+
+curl -s $ENDPOINT/bin/doravel -o ~/bin/doravel
+curl -s $ENDPOINT/bin/dlocal -o ~/bin/dlocal
+curl -s $ENDPOINT/bin/dtest -o ~/bin/dtest
+curl -s $ENDPOINT/bin/dprod -o ~/bin/dprod
+curl -s $ENDPOINT/bin/dmain -o ~/bin/dmain
+
+chmod +x ~/bin/d*
+
+if [ -f ~/bin/doravel ]; then
+    ln -sf ~/bin/doravel ~/bin/dv
+fi
+
+source ~/.bashrc

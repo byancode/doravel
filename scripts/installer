@@ -12,17 +12,8 @@ if ! [ -x "$(command -v ssh-keygen)" ]; then
     exit 0
 fi
 
-if [ ! -d ./storage ]; then
-    echo "this not is a doravel project"
-    exit 0
-fi
-
 if [ ! -d ./storage/.ssh ]; then
     mkdir ./storage/.ssh
-fi
-
-if [ ! -d ./storage/.doravel ]; then
-    mkdir ./storage/.doravel
 fi
 
 GIT_URL=$(git config --get remote.origin.url)
@@ -97,49 +88,20 @@ RSA_KEY=$(cat ./storage/.ssh/id_rsa | base64 --wrap=0)
 RSA_PUB=$(cat ./storage/.ssh/id_rsa.pub | base64 --wrap=0)
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
-RESPOSE='y'
 
-if [ -f ./docker-compose.yml ]; then
-    read -p '¿Desea sobreescribir el archivo docker-compose.yml? (y/n): ' RESPOSE
-fi
+curl -O ${ENDPOINT}/stubs/server
 
-if [ "$RESPOSE" == 'y' ] && [ -f ./docker-compose.yml ]; then
-    cp ./docker-compose.yml ./docker-compose.old.yml
-fi
-
-if [ "$RESPOSE" == 'y' ]; then
-    curl -s ${ENDPOINT}/stubs/docker-compose.local.yml > ./docker-compose.local.yml
-fi
-
-if [ -f ./Dockerfile ]; then
-    read -p '¿Desea sobreescribir Dockerfile? (y/n): ' RESPOSE
-fi
-
-if [ "$RESPOSE" == 'y' ] && [ -f ./Dockerfile ]; then
-    cp ./Dockerfile ./Dockerfile.old
-fi
-
-if [ "$RESPOSE" == 'y' ]; then
-    curl -O ${ENDPOINT}/stubs/Dockerfile
-fi
-
-curl -O ${ENDPOINT}/stubs/server.sh
-curl -O ${ENDPOINT}/bin/doravel
-
-chmod +x ./doravel
-./doravel global
-
-sed -e 's~__RSA_KEY__~'$RSA_KEY'~' -i ./server.sh
-sed -e 's~__RSA_PUB__~'$RSA_PUB'~' -i ./server.sh
-sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./server.sh
-sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./server.sh
-sed -e 's~__GIT_BRANCH__~'$GIT_BRANCH'~' -i ./server.sh
-sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./server.sh
+sed -e 's~__RSA_KEY__~'$RSA_KEY'~' -i ./server
+sed -e 's~__RSA_PUB__~'$RSA_PUB'~' -i ./server
+sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./server
+sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./server
+sed -e 's~__GIT_BRANCH__~'$GIT_BRANCH'~' -i ./server
+sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./server
 
 sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile
 sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile
 
-chmod +x ./server.sh
+chmod +x ./server
 
 
 if [ ! -d ./vendor ]; then

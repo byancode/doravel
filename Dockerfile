@@ -32,16 +32,14 @@ ARG SWOOLE_VERSION=5.1.1
 ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" \
     PHP_BINARY_FILE="/binaries/php-${PHP_VERSION}.tar.xz"
 
-COPY ./data/php/conf.d/* ${ETC_PATH}/php/conf.d/
-COPY ./data/php/composer /usr/local/bin/composer
-COPY ./data/php/extensions/* /tmp/
-COPY ./data/supervisor/* ${ETC_PATH}/
-COPY ./data/services/* /var/services/
-COPY ./data/scripts/* /usr/local/bin/
-COPY ./data/docker/* /usr/local/bin/
-COPY ./data/php/binaries/ /binaries/
-COPY ./data/nginx/ /etc/nginx/
-COPY ./data/ssl/* /etc/ssl/
+COPY ./docker/php/conf.d/* ${ETC_PATH}/php/conf.d/
+COPY ./docker/php/extensions/* /tmp/
+COPY ./docker/supervisor/* ${ETC_PATH}/
+COPY ./docker/services/* /var/services/
+COPY ./docker/bin/* /usr/local/bin/
+COPY ./docker/php/binaries/ /binaries/
+COPY ./docker/nginx/ /etc/nginx/
+COPY ./docker/ssl/* /etc/ssl/
 
 
 RUN apk add --no-cache \

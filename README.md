@@ -5,23 +5,20 @@ Integrando Doravel en tu proyecto, no necesitas crear imagenes privadas, puedes 
 ---
 
 **¿ que es doravel ?**
-Es una imagen con todo lo necesario para tener laravel funcionando junto con un mecanismo para omitir varios procedimientos a la hora de instalar en el servidor ( *fedora* | *ubuntu* | *centos* )
+Es una imagen con todo lo necesario para tener laravel funcionando junto con un mecanismo para omitir varios procedimientos a la hora de instalar en el servidor ( *fedora* | *ubuntu* | *centos* | *wsl* )
 
 # 😄 Beneficios
-- [x] trabaja con varios entonos en el mismo proyecto
-- [x] configura php, mysql y demas desde los archivos .env
-- [x] auto configuracion de nginx
+- [x] trabaja con varios entornos en el mismo proyecto
+- [x] configura php, mysql y demás desde los archivos .env
+- [x] auto configuración de nginx
 - [x] actualiza tu repositorio git cada 5 segundos
 - [x] ejecuta tus comandos laravel con supervisord
 
 
-# 👣 Paso 1
-> copia y pega en la terminal de tu projecto laravel
-> con eso podras obtener el instalador junto a las
-> funcionalidades que te brinda DORAVEL
-
+# 📦 Instalación
+> copia y pega en consola de tu computadora
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/bin/init)
+bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/scripts/install)
 ```
 
 # 💻 Comandos

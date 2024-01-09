@@ -1,0 +1,55 @@
+#!/bin/bash
+
+if [ ! -d ./storage ] || [ ! -d ./bootstrap ] || [ ! -d ./resources ] || [ ! -d ./routes ] || [ ! -d ./app ]; then
+    echo "this not is a doravel project"
+    exit 0
+fi
+
+
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+
+askOverrideFile() {
+    INPUT=$1
+    OUTPUT=$2
+
+    if [ -z "$OUTPUT" ]; then
+        OUTPUT=$INPUT
+    fi
+
+    RESPONSE='y'
+    if [ -f ./$OUTPUT ]; then
+        read -p "¿Desea sobreescribir $OUTPUT? (y/n): " RESPONSE
+    fi
+    if [ "$RESPONSE" == 'y' ] && [ -f ./$OUTPUT ]; then
+        TIMESPAMP=$(date +%s)
+        mkdir ./.doravel
+        cp ./$OUTPUT ./.doravel/backup_${TIMESPAMP}_${OUTPUT}
+    fi
+    if [ "$RESPONSE" == 'y' ]; then
+        curl -s ${ENDPOINT}/stubs/$INPUT > ./$OUTPUT
+    fi
+}
+
+askOverrideFile .env .env
+askOverrideFile .env .env.prod
+askOverrideFile .env .env.main
+
+askOverrideFile docker-compose.yml docker-compose.yml
+askOverrideFile docker-compose.yml docker-compose.prod.yml
+askOverrideFile docker-compose.yml docker-compose.main.yml
+
+askOverrideFile Dockerfile Dockerfile
+askOverrideFile Dockerfile Dockerfile.prod
+askOverrideFile Dockerfile Dockerfile.main
+
+curl -O ${ENDPOINT}/bin/doravel
+chmod +x ./doravel
+
+if [ ! -d ./vendor ]; then
+    composer install
+fi
+
+if [ ! -d ./vendor/laravel/octane ]; then
+    composer require laravel/octane --with-all-dependencies
+    php artisan octane:install --server=swoole
+fi
