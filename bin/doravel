@@ -4,6 +4,7 @@ function print_help {
     echo 'Modo de uso: doravel [COMMAND] [OPTIONS]
 
 DORAVEL COMMANDS:
+    x                  Ejecuta un comando en la imagen de doravel
     sh                 Abre el terminal sh de doravel
     fix                Corrige los permisos de los archivos
     cmd                ejecuta un comando en el contenedor de laravel
@@ -79,6 +80,7 @@ fi
 
 COMMANDS=(
 # doravel commands
+    "x" # image byancode/doravel
     "a" # artisan
     "c" # composer
     "s" # supervisor
@@ -426,6 +428,8 @@ PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
 PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
+IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
+
 if ! [ -x "$(command -v docker-compose)" ]; then
     PROGRAM="docker compose"
 else
@@ -463,7 +467,7 @@ if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
         fi
 
     fi
-    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
+    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php artisan --env=$ENV_NAME $(echo $OPTIONS)
     exit 0
 fi
 
@@ -483,6 +487,11 @@ fi
 
 if [ $COMMAND == "cmd" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app $(echo $OPTIONS)
+    exit 0
+fi
+
+if [ $COMMAND == "x" ]; then
+    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) $(echo $OPTIONS)
     exit 0
 fi
 
