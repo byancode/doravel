@@ -27,11 +27,11 @@ services:
         restart: on-failure
         image: mysql:8
         environment:
-            MYSQL_TCP_PORT: ${DB_PORT:-3306}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
             MYSQL_DATABASE: ${DB_DATABASE:-doravel}
             MYSQL_USER: ${DB_USERNAME:-doravel}
             MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+            MYSQL_TCP_PORT: ${DB_PORT:-3306}
         expose:
             - ${DB_PORT:-3306}
         volumes:

@@ -65,6 +65,10 @@ if ! [ -f ./.env.test ]; then
     fi
 fi
 
+if [ -f ./doravel ]; then
+    rm -f ./doravel
+fi
+
 curl -O ${ENDPOINT}/bin/doravel
 chmod +x ./doravel
 
