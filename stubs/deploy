@@ -19,8 +19,8 @@ ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
 DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
 DISTRO=${DISTRO//\"/}
 
-curl $ENDPOINT/deps/$DISTRO | bash
-curl https://get.docker.com | bash
+bash <(curl -s $ENDPOINT/scripts/install)
+curl -s $ENDPOINT/deps/$DISTRO | bash
 
 git config --global user.name  "__GIT_NAME__"
 git config --global user.email "__GIT_EMAIL__"
@@ -42,8 +42,8 @@ expect <<END
     expect eof
 END
 
-./doravel global
-./doravel up --env production -d
+read -p "¿Desea iniciar el proyecto? (y/n): " RESPONSE
 
-echo "espera unos segundos para que se carguen los servicios"
-echo "🙂: ./doravel up --env production -d"
+if [ "$RESPONSE" == 'y' ]; then
+    ./doravel up --env production -d
+fi

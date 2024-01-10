@@ -40,7 +40,7 @@ if ! [ -f ./.env.prod ]; then
     if [ "$RESPONSE" == 'y' ]; then
         touch ./supervisord.prod.conf
         askOverrideFile .env.prod .env.prod
-        askOverrideFile Dockerfile Dockerfile.prod
+        askOverrideFile Dockerfile.prod Dockerfile.prod
         askOverrideFile docker-compose.yml docker-compose.prod.yml
     fi
 fi
@@ -50,7 +50,7 @@ if ! [ -f ./.env.main ]; then
     if [ "$RESPONSE" == 'y' ]; then
         touch ./supervisord.main.conf
         askOverrideFile .env.main .env.main
-        askOverrideFile Dockerfile Dockerfile.main
+        askOverrideFile Dockerfile.main Dockerfile.main
         askOverrideFile docker-compose.yml docker-compose.main.yml
     fi
 fi
@@ -60,7 +60,7 @@ if ! [ -f ./.env.test ]; then
     if [ "$RESPONSE" == 'y' ]; then
         touch ./supervisord.test.conf
         askOverrideFile .env.test .env.test
-        askOverrideFile Dockerfile Dockerfile.test
+        askOverrideFile Dockerfile.test Dockerfile.test
         askOverrideFile docker-compose.yml docker-compose.test.yml
     fi
 fi

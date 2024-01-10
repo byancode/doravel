@@ -15,6 +15,6 @@ ENV GIT_EMAIL='__GIT_EMAIL__' \
     NPM_AUTO_INSTALL=false \
     NPM_AUTO_BUILD=false \
     # Env
-    APP_ENV=local
+    APP_ENV=main
 
 COPY . /var/www

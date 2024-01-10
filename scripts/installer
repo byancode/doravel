@@ -1,20 +1,8 @@
 #!/bin/bash
 
-# check if git is installed
-if ! [ -x "$(command -v git)" ]; then
-    echo 'Error: git is not installed.'
-    exit 0
-fi
 
-# check if ssh-keygen is installed
-if ! [ -x "$(command -v ssh-keygen)" ]; then
-    echo 'Error: ssh-keygen is not installed.'
-    exit 0
-fi
-
-if [ ! -d ./storage/.ssh ]; then
-    mkdir ./storage/.ssh
-fi
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+bash <(curl -s $ENDPOINT/scripts/install)
 
 GIT_URL=$(git config --get remote.origin.url)
 GIT_NAME=$(git config --get user.name)
@@ -31,7 +19,7 @@ if [ -z "$GIT_REPOSITORY" ]; then
     # validamos con regexp si el nombre del repositorio es correcto
     if [[ ! $GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del repositorio no es correcto"
-        exit 0
+        exit 1
     fi
 fi
 
@@ -40,7 +28,7 @@ if [ -z "$GIT_BRANCH" ]; then
     # validamos con regexp si el nombre del repositorio es correcto
     if [[ ! $GIT_BRANCH =~ ^[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del branch no es correcto"
-        exit 0
+        exit 1
     fi
 fi
 
@@ -48,7 +36,7 @@ if [ -z "$GIT_NAME" ]; then
     read -p "Ingrese su nombre: " GIT_NAME
     if [ -z "$GIT_NAME" ]; then
         echo "El nombre no puede estar vacio"
-        exit 0
+        exit 1
     fi
 fi
 
@@ -56,7 +44,7 @@ if [ -z "$GIT_EMAIL" ]; then
     read -p "Ingrese su email: " GIT_EMAIL
     if [[ ! $GIT_EMAIL =~ ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
         echo "El email no es correcto"
-        exit 0
+        exit 1
     fi
 fi
 
@@ -64,6 +52,7 @@ if [[ $GIT_URL =~ ^http:// ]]; then
     echo ""
     echo "⚠️ Oops... necesitas que el remote origin de tu proyecto sea con ssh"
     echo ""
+    exit 1
 fi
 
 if [ ! -f ./storage/.ssh/id_rsa ]; then
@@ -87,28 +76,43 @@ echo ""
 RSA_KEY=$(cat ./storage/.ssh/id_rsa | base64 --wrap=0)
 RSA_PUB=$(cat ./storage/.ssh/id_rsa.pub | base64 --wrap=0)
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+curl -O ${ENDPOINT}/stubs/deploy
 
-curl -O ${ENDPOINT}/stubs/server
+sed -e 's~__RSA_KEY__~'$RSA_KEY'~' -i ./deploy
+sed -e 's~__RSA_PUB__~'$RSA_PUB'~' -i ./deploy
+sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./deploy
+sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./deploy
+sed -e 's~__GIT_BRANCH__~'$GIT_BRANCH'~' -i ./deploy
+sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./deploy
 
-sed -e 's~__RSA_KEY__~'$RSA_KEY'~' -i ./server
-sed -e 's~__RSA_PUB__~'$RSA_PUB'~' -i ./server
-sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./server
-sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./server
-sed -e 's~__GIT_BRANCH__~'$GIT_BRANCH'~' -i ./server
-sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./server
+chmod +x ./deploy
+
+bash <(curl -s $ENDPOINT/scripts/init)
 
 sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile
 sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile
 
-chmod +x ./server
-
-
-if [ ! -d ./vendor ]; then
-    composer install
+if [ -f ./Dockerfile.main ]; then
+    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.main
+    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.main
 fi
 
-if [ ! -d ./vendor/laravel/octane ]; then
-    composer require laravel/octane --with-all-dependencies
-    php artisan octane:install --server=swoole
+if [ -f ./Dockerfile.prod ]; then
+    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.prod
+    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.prod
+fi
+
+if [ -f ./Dockerfile.test ]; then
+    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.test
+    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.test
+fi
+
+if [ -f ./Dockerfile.dev ]; then
+    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.dev
+    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.dev
+fi
+
+if [ -f ./Dockerfile.local ]; then
+    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.local
+    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.local
 fi

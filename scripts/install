@@ -23,6 +23,15 @@ if ! [ -x "$(command -v curl)" ]; then
         sudo dnf install curl -y
     fi
 fi
+if ! [ -x "$(command -v git)" ]; then
+    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
+        sudo apt-get install -y git
+    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+        sudo yum install git -y
+    elif [ "$DISTRO" == "fedora" ]; then
+        sudo dnf install git -y
+    fi
+fi
 if ! [ -x "$(command -v unzip)" ]; then
     if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
         sudo apt-get install -y unzip
@@ -92,7 +101,6 @@ if ! [ -x "$(command -v composer)" ] && [ -x "$(command -v php)" ]; then
         sudo mv composer.phar /usr/local/bin/composer
     fi
 fi
-
 if ! [ -x "$(command -v docker)" ]; then
     read -p "¿Desea instalar docker? (y/n): " RESPONSE
     if [ "$RESPONSE" != 'y' ]; then
