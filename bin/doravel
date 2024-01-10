@@ -194,11 +194,11 @@ if [ $COMMAND == "upgrade" ]; then
         mkdir ~/bin
     fi
 
-    curl "$ENDPOINT/bin/doravel" -o ~/bin/doravel
-    curl "$ENDPOINT/bin/dlocal" -o ~/bin/dlocal
-    curl "$ENDPOINT/bin/dtest" -o ~/bin/dtest
-    curl "$ENDPOINT/bin/dprod" -o ~/bin/dprod
-    curl "$ENDPOINT/bin/dmain" -o ~/bin/dmain
+    curl -s "$ENDPOINT/bin/doravel" -o ~/bin/doravel
+    curl -s "$ENDPOINT/bin/dlocal" -o ~/bin/dlocal
+    curl -s "$ENDPOINT/bin/dtest" -o ~/bin/dtest
+    curl -s "$ENDPOINT/bin/dprod" -o ~/bin/dprod
+    curl -s "$ENDPOINT/bin/dmain" -o ~/bin/dmain
 
     chmod +x ~/bin/doravel
     chmod +x ~/bin/dlocal

@@ -3,46 +3,92 @@
 DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
 DISTRO=${DISTRO//\"/}
 
+if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
+    sudo apt-get update
+elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+    sudo yum update
+elif [ "$DISTRO" == "fedora" ]; then
+    sudo dnf update
+else
+    echo "Distro not supported"
+    exit 1
+fi
+
 if ! [ -x "$(command -v curl)" ]; then
     if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-        sudo apt-get update
         sudo apt-get install -y curl
     elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
-        sudo yum update
         sudo yum install curl -y
-    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
-        sudo pacman -Syu
-        sudo pacman -S curl -y
+    elif [ "$DISTRO" == "fedora" ]; then
+        sudo dnf install curl -y
     fi
 fi
 if ! [ -x "$(command -v unzip)" ]; then
     if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-        sudo apt-get update
         sudo apt-get install -y unzip
     elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
-        sudo yum update
         sudo yum install unzip -y
-    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
-        sudo pacman -Syu
-        sudo pacman -S unzip
+    elif [ "$DISTRO" == "fedora" ]; then
+        sudo dnf install unzip -y
     fi
 fi
 if ! [ -x "$(command -v php)" ]; then
     if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-        sudo apt-get update
+        read -p "¿Desea instalar php? (y/n): " RESPONSE
+        if [ "$RESPONSE" != 'y' ]; then
+            echo "PHP is not installed"
+            exit 1
+        fi
+        read -p "¿Que version de php desea instalar? (8.1/8.2/8.3): " PHP_VERSION
+        if [ "$PHP_VERSION" != '8.1' ] && [ "$PHP_VERSION" != '8.2' ] && [ "$PHP_VERSION" != '8.3' ]; then
+            echo "La version de php no es correcta"
+            exit 1
+        fi
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository ppa:ondrej/php
         sudo apt-get update
-        sudo apt-get install -y php8.2 php8.2-curl php8.2-xml php8.2-xmlrpc php8.2-zip php8.2-dev php8.2-intl php8.2-mbstring php8.2-bcmath php8.2-gd php8.2-mysql php8.2-pgsql php8.2-sqlite3 php8.2-redis php8.2-memcached php8.2-imagick php8.2-xdebug
+        sudo apt-get install -y php${PHP_VERSION} php${PHP_VERSION}-curl php${PHP_VERSION}-xml php${PHP_VERSION}-xmlrpc php${PHP_VERSION}-zip php${PHP_VERSION}-dev php${PHP_VERSION}-intl php${PHP_VERSION}-mbstring php${PHP_VERSION}-bcmath php${PHP_VERSION}-gd php${PHP_VERSION}-mysql php${PHP_VERSION}-pgsql php${PHP_VERSION}-sqlite3 php${PHP_VERSION}-redis php${PHP_VERSION}-memcached php${PHP_VERSION}-imagick php${PHP_VERSION}-xdebug
     elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
+        read -p "¿Desea instalar php? (y/n): " RESPONSE
+        if [ "$RESPONSE" != 'y' ]; then
+            echo "PHP is not installed"
+            exit 1
+        fi
+        read -p "¿Que version de php desea instalar? (8.1/8.2/8.3): " PHP_VERSION
+        if [ "$PHP_VERSION" != '8.1' ] && [ "$PHP_VERSION" != '8.2' ] && [ "$PHP_VERSION" != '8.3' ]; then
+            echo "La version de php no es correcta"
+            exit 1
+        fi
+        sudo yum install epel-release -y
+        sudo yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+        sudo yum install yum-utils -y
+        sudo yum-config-manager --enable remi-php${PHP_VERSION}
         sudo yum update
         sudo yum install php php-curl php-xml php-xmlrpc php-dev php-zip php-swoole php-intl php-mbstring php-bcmath php-gd php-mysql php-pgsql php-sqlite3 php-redis php-memcached php-imagick php-xdebug -y
-    elif [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
-        echo "PHP is not installed"
-        exit 1
+    elif [ "$DISTRO" == "fedora" ]; then
+        read -p "¿Desea instalar php? (y/n): " RESPONSE
+        if [ "$RESPONSE" != 'y' ]; then
+            echo "PHP is not installed"
+            exit 1
+        fi
+        read -p "¿Que version de php desea instalar? (8.1/8.2/8.3): " PHP_VERSION
+        if [ "$PHP_VERSION" != '8.1' ] && [ "$PHP_VERSION" != '8.2' ] && [ "$PHP_VERSION" != '8.3' ]; then
+            echo "La version de php no es correcta"
+            exit 1
+        fi
+        sudo dnf install https://rpms.remirepo.net/fedora/remi-release-$(rpm -E %fedora).rpm -y
+        sudo dnf install dnf-utils -y
+        sudo dnf module enable php:remi-${PHP_VERSION} -y
+        sudo dnf update -y
+        sudo dnf install php php-curl php-xml php-xmlrpc php-dev php-zip php-swoole php-intl php-mbstring php-bcmath php-gd php-mysql php-pgsql php-sqlite3 php-redis php-memcached php-imagick php-xdebug -y
     fi
 fi
 if ! [ -x "$(command -v composer)" ] && [ -x "$(command -v php)" ]; then
+    read -p "¿Desea instalar composer? (y/n): " RESPONSE
+    if [ "$RESPONSE" != 'y' ]; then
+        echo "Composer is not installed"
+        exit 1
+    fi
     php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     php composer-setup.php
     php -r "unlink('composer-setup.php');"
@@ -50,12 +96,12 @@ if ! [ -x "$(command -v composer)" ] && [ -x "$(command -v php)" ]; then
 fi
 
 if ! [ -x "$(command -v docker)" ]; then
-    if [ "$DISTRO" == "arch" ] || [ "$DISTRO" == "arcolinux" ]; then
+    read -p "¿Desea instalar docker? (y/n): " RESPONSE
+    if [ "$RESPONSE" != 'y' ]; then
         echo "Docker is not installed"
         exit 1
-    else
-        curl https://get.docker.com | bash
     fi
+    curl https://get.docker.com | bash
 fi
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
