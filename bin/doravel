@@ -13,10 +13,10 @@ DORAVEL COMMANDS:
     init               Inicia un proyecto con doravel
     tinker             Abre el terminal tinker de laravel
     reload             Reinicia el contenedor de laravel
-    server             Inicia el servidor con doravel
     install            Instala doravel globalmente
     artisan            Ejecuta un comando artisan
     composer           Ejecuta un comando composer
+    installer          Crea un instalador de doravel
     supervisor         Ejecuta un comando supervisorctl
     logging            Muestra los logs de laravel
     global             Instala el comando doravel globalmente
@@ -95,7 +95,6 @@ COMMANDS=(
     "tinker"
     "update"
     "global"
-    "server"
     "reload"
     "install"
     "artisan"
@@ -103,6 +102,7 @@ COMMANDS=(
     "upgrade"
     "composer"
     "ssh-keys"
+    "installer"
     "supervisor"
 # docker-compose commands
     "build"
@@ -159,6 +159,12 @@ if [ $COMMAND == "install" ]; then
     if [ ! -d "./vendor" ]; then
         composer install
     fi
+    exit 0
+fi
+
+if [ $COMMAND == "installer" ]; then
+    echo "Creating doravel installer..."
+    bash <(curl $ENDPOINT/scripts/installer)
     exit 0
 fi
 
