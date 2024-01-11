@@ -2,7 +2,7 @@
 
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
-bash <(curl -s $ENDPOINT/scripts/install)
+curl -s $ENDPOINT/scripts/install | bash && source ~/.bashrc
 
 GIT_URL=$(git config --get remote.origin.url)
 GIT_NAME=$(git config --get user.name)
@@ -87,7 +87,7 @@ sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./deploy
 
 chmod +x ./deploy
 
-bash <(curl -s $ENDPOINT/scripts/init)
+curl -s $ENDPOINT/scripts/init | bash && source ~/.bashrc
 
 sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile
 sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile
