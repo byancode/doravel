@@ -18,7 +18,7 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 # 📦 Instalación
 > copia y pega en consola de tu computadora
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/scripts/install)
+bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/scripts/install) && source ~/.bashrc
 ```
 
 # 💻 Comandos
