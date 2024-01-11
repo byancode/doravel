@@ -220,6 +220,12 @@ if [ $COMMAND == "upgrade" ]; then
         cp -f ~/bin/doravel ./doravel
     fi
 
+    if ! grep -q "export PATH=\$PATH:\$HOME/bin" ~/.bashrc; then
+        echo "" >> ~/.bashrc
+        echo "export PATH=\$PATH:\$HOME/bin" >> ~/.bashrc
+        echo "" >> ~/.bashrc
+    fi
+
     echo "Doravel installed 😃"
     exit 0
 fi
@@ -233,6 +239,12 @@ if [ $COMMAND == "update" ]; then
     echo "Updating doravel..."
     curl "$ENDPOINT/bin/doravel" -o doravel
     chmod +x ./doravel
+
+    if ! grep -q "export PATH=\$PATH:\$HOME/bin" ~/.bashrc; then
+        echo "" >> ~/.bashrc
+        echo "export PATH=\$PATH:\$HOME/bin" >> ~/.bashrc
+        echo "" >> ~/.bashrc
+    fi
 
     echo "Doravel updated 😃"
     exit 0
