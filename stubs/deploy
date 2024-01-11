@@ -32,15 +32,7 @@ chmod 600 $HOME/.ssh/id_rsa
 
 LANG=en_US
 
-expect <<END
-    set timeout -1
-    spawn git clone --branch=__GIT_BRANCH__ git@github.com:__GIT_REPOSITORY__.git .
-
-    expect "continue connecting\r"
-    send "yes\r"
-
-    expect eof
-END
+git clone --branch=__GIT_BRANCH__ git@github.com:__GIT_REPOSITORY__.git .
 
 read -p "¿Desea iniciar el proyecto? (y/n): " RESPONSE
 
