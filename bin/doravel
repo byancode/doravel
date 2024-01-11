@@ -226,6 +226,8 @@ if [ $COMMAND == "upgrade" ]; then
         echo "" >> ~/.bashrc
     fi
 
+    source ~/.bashrc
+
     echo "Doravel installed 😃"
     exit 0
 fi
@@ -245,6 +247,8 @@ if [ $COMMAND == "update" ]; then
         echo "export PATH=\$PATH:\$HOME/bin" >> ~/.bashrc
         echo "" >> ~/.bashrc
     fi
+
+    source ~/.bashrc
 
     echo "Doravel updated 😃"
     exit 0
@@ -270,6 +274,8 @@ if [ $COMMAND == "global" ]; then
         echo "export PATH=\$PATH:\$HOME/bin" >> ~/.bashrc
         echo "" >> ~/.bashrc
     fi
+
+    source ~/.bashrc
 
     echo "Doravel installed 😃"
     exit 0
