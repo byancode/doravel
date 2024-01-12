@@ -498,7 +498,12 @@ if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
         fi
 
     fi
-    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php artisan --env=$ENV_NAME $(echo $OPTIONS)
+
+    if ! $PROGRAM $(echo $ARGUMENTS) ps --services --status running | grep -q "app"; then
+        docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php artisan --env=$ENV_NAME $(echo $OPTIONS)
+        exit 0
+    fi
+    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
     exit 0
 fi
 
