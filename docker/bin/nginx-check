@@ -2,9 +2,11 @@
 
 URL="http://localhost"
 
-if curl -s -o /dev/null -w "%{http_code}" $URL | grep 502; then
-    supervisorctl --configuration=/supervisord.conf restart nginx
-    exit 1
-else
-    exit 0
-fi
+while true; do
+    sleep 1
+
+    if curl -s -o /dev/null -w "%{http_code}" $URL | grep -q 502; then
+        pgrep nginx | xargs kill -9
+        sleep 2
+    fi
+done
