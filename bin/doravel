@@ -6,6 +6,7 @@ function print_help {
 DORAVEL COMMANDS:
     x                  Ejecuta un comando en la imagen de doravel
     sh                 Abre el terminal sh de doravel
+    php                Ejecuta un comando php en el contenedor de laravel
     fix                Corrige los permisos de los archivos
     cmd                ejecuta un comando en el contenedor de laravel
     new                Crea un nuevo proyecto de laravel
@@ -86,6 +87,7 @@ COMMANDS=(
     "s" # supervisor
     "l" # logging
     "sh"
+    "php"
     "fix"
     "cmd"
     "new"
@@ -503,7 +505,16 @@ if [ $COMMAND == "a" ] || [ $COMMAND == "artisan" ]; then
         docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php artisan --env=$ENV_NAME $(echo $OPTIONS)
         exit 0
     fi
-    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan $(echo $OPTIONS)
+    $PROGRAM $(echo $ARGUMENTS) exec -- app php artisan --env=$ENV_NAME $(echo $OPTIONS)
+    exit 0
+fi
+
+if [ $COMMAND == "php" ]; then
+    if ! $PROGRAM $(echo $ARGUMENTS) ps --services --status running | grep -q "app"; then
+        docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php $(echo $OPTIONS)
+        exit 0
+    fi
+    $PROGRAM $(echo $ARGUMENTS) exec -- app php $(echo $OPTIONS)
     exit 0
 fi
 
