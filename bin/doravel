@@ -9,6 +9,7 @@ DORAVEL COMMANDS:
     php                Ejecuta un comando php en el contenedor de laravel
     fix                Corrige los permisos de los archivos
     cmd                ejecuta un comando en el contenedor de laravel
+    add                Agrega un nuevo entorno de docker-compose
     new                Crea un nuevo proyecto de laravel
     test               Inicia el entorno de pruebas
     init               Inicia un proyecto con doravel
@@ -63,6 +64,28 @@ OPTIONS:
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
 
+askOverrideFile() {
+    INPUT=$1
+    OUTPUT=$2
+
+    if [ -z "$OUTPUT" ]; then
+        OUTPUT=$INPUT
+    fi
+
+    RESPONSE='y'
+    if [ -f ./$OUTPUT ]; then
+        read -p "¿Desea sobreescribir $OUTPUT? (y/n): " RESPONSE
+    fi
+    if [ "$RESPONSE" == 'y' ] && [ -f ./$OUTPUT ]; then
+        TIMESPAMP=$(date +%s)
+        mkdir ./.doravel
+        cp ./$OUTPUT ./.doravel/backup_${TIMESPAMP}_${OUTPUT}
+    fi
+    if [ "$RESPONSE" == 'y' ]; then
+        curl -s ${ENDPOINT}/stubs/$INPUT > ./$OUTPUT
+    fi
+}
+
 if [ "$1" == "" ]; then
     print_help
     exit 0
@@ -91,6 +114,7 @@ COMMANDS=(
     "fix"
     "cmd"
     "new"
+    "add"
     "test"
     "init"
     "bash"
@@ -178,6 +202,37 @@ if [ $COMMAND == "fix" ]; then
     sudo chown -R $(id -un):$(id -gn) ./bootstrap/cache
     sudo chown -R $(id -un):$(id -gn) ./storage
     echo "Permissions fixed 😃"
+    exit 0
+fi
+
+if [ $COMMAND == "add" ]; then
+    if [ -z "$2" ]; then
+        echo "You must specify the name of the new environment"
+        exit 0
+    fi
+
+    if ! [[ "$2" =~ ^[a-zA-Z0-9]+$ ]]; then
+        echo "the environment name $2 is not valid"
+        exit 0
+    fi
+
+    echo "Adding new environment..."
+    touch ./supervisord.$2.conf
+    askOverrideFile .env .env.$2
+    askOverrideFile Dockerfile Dockerfile.$2
+    askOverrideFile docker-compose.yml docker-compose.$2.yml
+
+    if [ -f ./.env.$2 ]; then
+        sed -i "s/APP_ENV=local/APP_ENV=$2/g" ./.env.$2
+    fi
+
+    curl -s ${ENDPOINT}/stubs/denv -o ~/bin/.d$2
+    sed -i "s/__ENV__/$2/g" ~/bin/.d$2
+
+    chmod +x ~/bin/.d$2
+
+    echo "Environment added 😃"
+
     exit 0
 fi
 
@@ -543,7 +598,7 @@ if [ $COMMAND == "x" ]; then
 fi
 
 if [ $COMMAND == "l" ] || [ $COMMAND == "logging" ]; then
-    $PROGRAM $(echo $ARGUMENTS) exec -- app tail -n 50 -F storage/logs/laravel.log
+    $PROGRAM $(echo $ARGUMENTS) exec -- app tail -n 250 -F storage/logs/laravel.log
     exit 0
 fi
 
