@@ -236,7 +236,7 @@ if [ "$APP_ENV" != "local" ] && is_false $APP_DEBUG; then
     cat /var/services/service-octane.conf >> /supervisord.conf
 fi
 
-echo "" >> /supervisord.conf
+echo "" > /supervisord.conf
 
 if is_false $ONLY_ENV_SUPERVISOR; then
     if [ -f /var/www/supervisord.conf ]; then
