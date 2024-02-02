@@ -25,6 +25,7 @@ DORAVEL COMMANDS:
     upgrade            Actualiza doravel a la ultima version globalmente
     update             Actualiza doravel a la ultima version localmente
     ssh-keys           Genera las llaves ssh para el deploy
+    rm-env             Elimina un entorno de doravel
 
 DOCKER-COMPOSE COMMANDS:
     build       Build or rebuild services
@@ -118,6 +119,7 @@ COMMANDS=(
     "test"
     "init"
     "bash"
+    "rm-env"
     "tinker"
     "update"
     "global"
@@ -216,22 +218,104 @@ if [ $COMMAND == "add" ]; then
         exit 0
     fi
 
-    echo "Adding new environment..."
-    touch ./supervisord.$2.conf
-    askOverrideFile .env .env.$2
-    askOverrideFile Dockerfile Dockerfile.$2
-    askOverrideFile docker-compose.yml docker-compose.$2.yml
+    # get all .env.* files and extract the name environment
+    ENVIRONMENTS=$(ls -1 .env.* 2>/dev/null | sed 's/\.env\.//g' | tr '\n' ' ')
+    # add local environment
+    ENVIRONMENTS="$ENVIRONMENTS local"
 
-    if [ -f ./.env.$2 ]; then
-        sed -i "s/APP_ENV=local/APP_ENV=$2/g" ./.env.$2
-    fi
+    CHOICES=$(echo $ENVIRONMENTS)
+    CHOICES="$CHOICES *"
 
-    curl -s ${ENDPOINT}/stubs/denv -o ~/bin/.d$2
-    sed -i "s/__ENV__/$2/g" ~/bin/.d$2
+    echo "Create [$2] from envoriment existing:"
+    select FROM_ENV in $ENVIRONMENTS "*"; do
+        if [ "$FROM_ENV" == "*" ]; then
+            echo "Creating new environment..."
+            touch ./supervisord.$2.conf
+            askOverrideFile .env .env.$2
+            askOverrideFile Dockerfile Dockerfile.$2
+            askOverrideFile docker-compose.yml docker-compose.$2.yml
+            break
+        elif [ -f ./.env.$FROM_ENV ]; then
+            echo "Creating new environment from $FROM_ENV..."
+            if [ "$FROM_ENV" == "local" ]; then
+                if [ -f ./supervisord.$FROM_ENV.conf ]; then
+                    cp ./supervisord.$FROM_ENV.conf ./supervisord.$2.conf
+                else
+                    addOverrideFile supervisord.conf supervisord.$2.conf
+                fi
+                if [ -f ./.env.$FROM_ENV ]; then
+                    cp ./.env.$FROM_ENV ./.env.$2
+                else
+                    askOverrideFile .env .env.$2
+                fi
+                if [ -f ./Dockerfile.$FROM_ENV ]; then
+                    cp ./Dockerfile.$FROM_ENV Dockerfile.$2
+                else
+                    askOverrideFile Dockerfile Dockerfile.$2
+                fi
+                if [ -f ./docker-compose.$FROM_ENV.yml ]; then
+                    cp ./docker-compose.$FROM_ENV.yml docker-compose.$2.yml
+                else
+                    askOverrideFile docker-compose.yml docker-compose.$2.yml
+                fi
+            else
+                cp ./supervisord.$FROM_ENV.conf ./supervisord.$2.conf
+                cp ./.env.$FROM_ENV ./.env.$2
+                cp ./Dockerfile.$FROM_ENV Dockerfile.$2
+                cp ./docker-compose.$FROM_ENV.yml docker-compose.$2.yml
+            fi
 
-    chmod +x ~/bin/.d$2
+            sed -i "s@-$FROM_ENV@-$2@" ./docker-compose.$2.yml
+            sed -i "s@\.$FROM_ENV@\.$2@" ./docker-compose.$2.yml
+            break
+        fi
+    done
+
+    sed -i "s/APP_ENV=.*/APP_ENV=$2/" ./.env.$2
+    sed -i "s/APP_ENV=.*/APP_ENV=$2/" ./Dockerfile.$2
+
+    curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$2
+    sed -i "s/__ENV__/$2/g" ~/bin/d$2
+
+    chmod +x ~/bin/d$2
 
     echo "Environment added 😃"
+
+    exit 0
+fi
+
+if [ $COMMAND == "rm-env" ]; then
+    if [ -z "$2" ]; then
+        echo "You must specify the name of the environment to remove"
+        exit 0
+    fi
+
+    if ! [[ "$2" =~ ^[a-zA-Z0-9]+$ ]]; then
+        echo "the environment name $2 is not valid"
+        exit 0
+    fi
+
+    echo "The following files will be removed:"
+    echo "- ./supervisord.$2.conf"
+    echo "- ./.env.$2"
+    echo "- ./Dockerfile.$2"
+    echo "- ./docker-compose.$2.yml"
+    echo "- ~/bin/.d$2"
+    echo ""
+    read -p "write [continue] to remove the environment $2: " RESPOSE
+
+    if [ "$RESPOSE" != "continue" ]; then
+        echo "action canceled"
+        exit 0
+    fi
+
+    echo "Removing environment..."
+    rm -f ./supervisord.$2.conf
+    rm -f ./.env.$2
+    rm -f ./Dockerfile.$2
+    rm -f ./docker-compose.$2.yml
+    rm -f ~/bin/.d$2
+    echo "Environment removed 😃"
 
     exit 0
 fi

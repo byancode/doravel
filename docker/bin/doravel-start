@@ -57,6 +57,7 @@ fi
 # aqui agregaremos los argumentos para el servidor octane
 LARAVEL_SERVER_ARGUMENTS=${LARAVEL_SERVER_ARGUMENTS:-""}
 LARAVEL_AUTO_SCHEDULE=${LARAVEL_AUTO_SCHEDULE:-true}
+ONLY_ENV_SUPERVISOR=${ONLY_ENV_SUPERVISOR:-false}
 PHP_OPCACHE_ENABLE=${PHP_OPCACHE_ENABLE:-false}
 NPM_AUTO_INSTALL=${NPM_AUTO_INSTALL:-true}
 NPM_AUTO_BUILD=${NPM_AUTO_BUILD:-true}
@@ -235,9 +236,12 @@ if [ "$APP_ENV" != "local" ] && is_false $APP_DEBUG; then
     cat /var/services/service-octane.conf >> /supervisord.conf
 fi
 
-if [ -f /var/www/supervisord.conf ]; then
-    echo ""                       >> /supervisord.conf
-    cat /var/www/supervisord.conf >> /supervisord.conf
+echo "" >> /supervisord.conf
+
+if is_false $ONLY_ENV_SUPERVISOR; then
+    if [ -f /var/www/supervisord.conf ]; then
+        cat /var/www/supervisord.conf >> /supervisord.conf
+    fi
 fi
 
 if [ -f "/var/www/supervisord.${APP_ENV}.conf" ]; then
@@ -246,8 +250,8 @@ if [ -f "/var/www/supervisord.${APP_ENV}.conf" ]; then
 fi
 
 sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/g' -i /supervisord.conf
-sed -e 's/__ENV__/'$APP_ENV'/g' -i /supervisord.conf
 sed -e 's/$APP_ENV/'$APP_ENV'/g' -i /supervisord.conf
+sed -e 's/__ENV__/'$APP_ENV'/g' -i /supervisord.conf
 
 echo "Starting supervisord..."
 
