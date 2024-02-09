@@ -300,7 +300,7 @@ if [ $COMMAND == "rm-env" ]; then
     echo "- ./.env.$2"
     echo "- ./Dockerfile.$2"
     echo "- ./docker-compose.$2.yml"
-    echo "- ~/bin/.d$2"
+    echo "- ~/bin/d$2"
     echo ""
     read -p "write [continue] to remove the environment $2: " RESPOSE
 
@@ -314,7 +314,7 @@ if [ $COMMAND == "rm-env" ]; then
     rm -f ./.env.$2
     rm -f ./Dockerfile.$2
     rm -f ./docker-compose.$2.yml
-    rm -f ~/bin/.d$2
+    rm -f ~/bin/d$2
     echo "Environment removed 😃"
 
     exit 0
