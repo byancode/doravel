@@ -77,6 +77,7 @@ if [ ! -d ./vendor ]; then
 fi
 
 if [ ! -d ./vendor/laravel/octane ]; then
-    composer require laravel/octane --with-all-dependencies
-    php artisan octane:install --server=swoole
+    IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
+    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) composer require laravel/octane --with-all-dependencies
+    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php artisan octane:install --server=swoole
 fi

@@ -26,6 +26,7 @@ DORAVEL COMMANDS:
     update             Actualiza doravel a la ultima version localmente
     ssh-keys           Genera las llaves ssh para el deploy
     rm-env             Elimina un entorno de doravel
+    new-program        Agrega un nuevo programa a supervisor
 
 DOCKER-COMPOSE COMMANDS:
     build       Build or rebuild services
@@ -87,6 +88,10 @@ askOverrideFile() {
     fi
 }
 
+create_slug() {
+    echo $1 | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-//g' | sed 's/-$//g'
+}
+
 if [ "$1" == "" ]; then
     print_help
     exit 0
@@ -132,6 +137,7 @@ COMMANDS=(
     "ssh-keys"
     "installer"
     "supervisor"
+    "new-program"
 # docker-compose commands
     "build"
     "config"
@@ -185,7 +191,8 @@ if [ $COMMAND == "install" ]; then
         exit 0
     fi
     if [ ! -d "./vendor" ]; then
-        composer install
+        IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
+        docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) composer install
     fi
     exit 0
 fi
@@ -329,7 +336,7 @@ if [ $COMMAND == "new" ]; then
     shift
     shift
     echo "Creating new laravel project..."
-    composer create-project laravel/laravel $DIRECTORY
+    docker run --rm -it -v $(pwd):/app byancode/doravel:php-8.1 composer create-project laravel/laravel $DIRECTORY
     cd $DIRECTORY
     doravel init
     echo "Laravel project created 😃"
@@ -345,15 +352,9 @@ if [ $COMMAND == "upgrade" ]; then
 
     curl -s "$ENDPOINT/bin/doravel" -o ~/bin/doravel
     curl -s "$ENDPOINT/bin/dlocal" -o ~/bin/dlocal
-    curl -s "$ENDPOINT/bin/dtest" -o ~/bin/dtest
-    curl -s "$ENDPOINT/bin/dprod" -o ~/bin/dprod
-    curl -s "$ENDPOINT/bin/dmain" -o ~/bin/dmain
 
     chmod +x ~/bin/doravel
     chmod +x ~/bin/dlocal
-    chmod +x ~/bin/dtest
-    chmod +x ~/bin/dprod
-    chmod +x ~/bin/dmain
 
     ln -sf ~/bin/doravel ~/bin/dv
 
@@ -582,6 +583,42 @@ fi
 if [ ! -f "./$ENV_FILE" ]; then
     ENV_NAME="local"
     ENV_FILE=".env"
+fi
+
+
+if [ $COMMAND == "new-program" ]; then
+    read -p "Enter the name of the new program: " PROGRAM_NAME;
+    PROGRAM_NAME=$(create_slug "$PROGRAM_NAME")
+
+    if [ -z "$PROGRAM_NAME" ]; then
+        echo "You must specify the name of the new program"
+        exit 0
+    fi
+
+    echo "Creating new program ($PROGRAM_NAME)..."
+
+    if [ -f "./supervisord.$ENV_NAME.conf" ]; then
+        SUPERVISOR_FILE="./supervisord.$ENV_NAME.conf"
+    else
+        SUPERVISOR_FILE="./supervisord.conf"
+    fi
+
+    echo "
+[program:$PROGRAM_NAME]
+command=/usr/local/bin/php /var/www/artisan --env=$ENV_NAME about
+stdout_logfile=/var/log/%(program_name)-stdout.log
+stderr_logfile=/var/log/%(program_name)-stderr.log
+redirect_stderr=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+autostart=true
+priority=301
+numprocs=1
+" >> $SUPERVISOR_FILE
+
+    echo "Program added 😃"
+    exit 0
 fi
 
 DCP_OVERRIDE="docker-compose.override"
