@@ -30,38 +30,50 @@ askOverrideFile() {
     fi
 }
 
+ENV_NAME=local
 touch ./supervisord.conf
 askOverrideFile .env .env
 askOverrideFile Dockerfile Dockerfile
-askOverrideFile docker-compose.yml docker-compose.local.yml
+askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
+sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
 
 if ! [ -f ./.env.prod ]; then
     read -p "¿Desea agregar un entorno de produccion? (y/n): " RESPONSE
     if [ "$RESPONSE" == 'y' ]; then
-        touch ./supervisord.prod.conf
-        askOverrideFile .env.prod .env.prod
-        askOverrideFile Dockerfile.prod Dockerfile.prod
-        askOverrideFile docker-compose.yml docker-compose.prod.yml
+        ENV_NAME=prod
+        touch ./supervisord.$ENV_NAME.conf
+        askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
+        askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
+        askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+        curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
+        sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
 fi
 
 if ! [ -f ./.env.main ]; then
     read -p "¿Desea agregar un entorno master? (y/n): " RESPONSE
     if [ "$RESPONSE" == 'y' ]; then
-        touch ./supervisord.main.conf
-        askOverrideFile .env.main .env.main
-        askOverrideFile Dockerfile.main Dockerfile.main
-        askOverrideFile docker-compose.yml docker-compose.main.yml
+        ENV_NAME=main
+        touch ./supervisord.$ENV_NAME.conf
+        askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
+        askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
+        askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+        curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
+        sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
 fi
 
 if ! [ -f ./.env.test ]; then
     read -p "¿Desea agregar un entorno de testing? (y/n): " RESPONSE
     if [ "$RESPONSE" == 'y' ]; then
-        touch ./supervisord.test.conf
-        askOverrideFile .env.test .env.test
-        askOverrideFile Dockerfile.test Dockerfile.test
-        askOverrideFile docker-compose.yml docker-compose.test.yml
+        ENV_NAME=test
+        touch ./supervisord.$ENV_NAME.conf
+        askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
+        askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
+        askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+        curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
+        sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
 fi
 

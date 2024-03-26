@@ -548,8 +548,8 @@ if [ "$ENV_NAME" == "" ]; then
     ENV_NAME="local"
 fi
 
-if [ $COMMAND == "timestamp" ]; then
-    write_timestamp $ENV_FILE
+if [ "$COMMAND" == "timestamp" ]; then
+    write_timestamp "$ENV_FILE"
     exit 0
 fi
 
@@ -785,7 +785,7 @@ if [ $COMMAND == "reload" ]; then
 fi
 
 if [ $COMMAND == "build" ]; then
-    write_timestamp $ENV_FILE
+    write_timestamp "$ENV_FILE"
 fi
 
 $PROGRAM $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)
