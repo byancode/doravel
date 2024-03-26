@@ -39,9 +39,11 @@ if [ ! -f /var/www/.env ]; then
 fi
 
 if [ -f /var/www/.env.$APP_ENV ]; then
-    source /var/www/.env.$APP_ENV
+    ENV_FILE=/var/www/.env.$APP_ENV
+    source $ENV_FILE
 else
-    source /var/www/.env
+    ENV_FILE=/var/www/.env
+    source $ENV_FILE
 fi
 
 if [ -d /var/www/storage/.ssh ]; then
@@ -51,7 +53,6 @@ fi
 if [ -f /root/.ssh/id_rsa ]; then
     chmod 600 /root/.ssh/id_rsa
 fi
-
 
 
 # aqui agregaremos los argumentos para el servidor octane
@@ -84,10 +85,10 @@ if [ ! -f $PHP_INI_FILE ]; then
     cp -v "${PHP_INI_FILE}-production" $PHP_INI_FILE
 fi
 
-sed -e 's/upload_max_filesize =.*/upload_max_filesize='$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE;
-sed -e 's/max_execution_time =.*/max_execution_time='$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE;
-sed -e 's/post_max_size =.*/post_max_size='$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE;
-sed -e 's/memory_limit =.*/memory_limit='$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE;
+# check if key exists on .env file
+if [ -z "$APP_KEY" ]; then
+    php /var/www/artisan key:generate
+fi
 
 
 
@@ -252,6 +253,11 @@ fi
 sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/g' -i /supervisord.conf
 sed -e 's/$APP_ENV/'$APP_ENV'/g' -i /supervisord.conf
 sed -e 's/__ENV__/'$APP_ENV'/g' -i /supervisord.conf
+
+# check if key exists on .env file
+if [ -z "$APP_KEY" ]; then
+    /usr/local/bin/php /var/www/artisan --env=$APP_ENV key:generate
+fi
 
 echo "Starting supervisord..."
 

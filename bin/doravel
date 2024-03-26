@@ -13,6 +13,7 @@ DORAVEL COMMANDS:
     new                Crea un nuevo proyecto de laravel
     test               Inicia el entorno de pruebas
     init               Inicia un proyecto con doravel
+    ports              Muestra los puertos de los servicios
     tinker             Abre el terminal tinker de laravel
     reload             Reinicia el contenedor de laravel
     install            Instala doravel globalmente
@@ -20,6 +21,7 @@ DORAVEL COMMANDS:
     composer           Ejecuta un comando composer
     installer          Crea un instalador de doravel
     supervisor         Ejecuta un comando supervisorctl
+    timestamp          Estable el timestamp en el archivo .env
     logging            Muestra los logs de laravel
     global             Instala el comando doravel globalmente
     upgrade            Actualiza doravel a la ultima version globalmente
@@ -92,6 +94,19 @@ create_slug() {
     echo $1 | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-//g' | sed 's/-$//g'
 }
 
+write_timestamp() {
+    $ENV_FILE=$1
+
+    if [ ! -f "./$ENV_FILE" ]; then
+        echo "the $ENV_FILE file does not exist"
+        exit 0
+    fi
+    # UTC timestamp
+    TIMESPAMP=$(date -u +%Y-%m-%d\T%H:%M:%S)
+    sed -i "s/DOCKER_IMAGE_UPDATED_AT=.*/DOCKER_IMAGE_UPDATED_AT=$TIMESPAMP/" ./$ENV_FILE
+    echo "Timestamp set to local 😃"
+}
+
 if [ "$1" == "" ]; then
     print_help
     exit 0
@@ -124,6 +139,7 @@ COMMANDS=(
     "test"
     "init"
     "bash"
+    "ports"
     "rm-env"
     "tinker"
     "update"
@@ -280,6 +296,7 @@ if [ $COMMAND == "add" ]; then
 
     sed -i "s/APP_ENV=.*/APP_ENV=$2/" ./.env.$2
     sed -i "s/APP_ENV=.*/APP_ENV=$2/" ./Dockerfile.$2
+    sed -i "s/^name:.*/name: $2/" ./docker-compose.$2.yml
 
     curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$2
     sed -i "s/__ENV__/$2/g" ~/bin/d$2
@@ -336,7 +353,10 @@ if [ $COMMAND == "new" ]; then
     shift
     shift
     echo "Creating new laravel project..."
-    docker run --rm -it -v $(pwd):/app byancode/doravel:php-8.1 composer create-project laravel/laravel $DIRECTORY
+    docker run --rm -it \
+        --workdir /app \
+        --volume $(pwd):/app byancode/doravel:php-8.2 \
+        composer create-project laravel/laravel $DIRECTORY;
     cd $DIRECTORY
     doravel init
     echo "Laravel project created 😃"
@@ -528,6 +548,11 @@ if [ "$ENV_NAME" == "" ]; then
     ENV_NAME="local"
 fi
 
+if [ $COMMAND == "timestamp" ]; then
+    write_timestamp $ENV_FILE
+    exit 0
+fi
+
 if ! [[ "$ENV_NAME" =~ ^[a-zA-Z0-9]+$ ]]; then
     echo "the environment name $ENV_NAME is not valid"
     exit 0
@@ -637,6 +662,11 @@ PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
 PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 ARGUMENTS="$ARGUMENTS --project-name=$PROJECT_NAME --env-file=$ENV_FILE"
 
+if [ ! -f "./Dockerfile" ]; then
+    echo "the Dockerfile does not exist"
+    exit 0
+fi
+
 IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
 
 if ! [ -x "$(command -v docker-compose)" ]; then
@@ -718,6 +748,32 @@ if [ $COMMAND == "x" ]; then
     exit 0
 fi
 
+if [ $COMMAND == "ports" ]; then
+    if ! [ -x "$(command -v jq)" ]; then
+        echo "jq is not installed"
+        exit 0
+    fi
+
+    REMOTE_IP=$(curl -s https://checkip.amazonaws.com/)
+    LOCAL_IP=$(hostname -I | cut -d" " -f1)
+
+    LINES=$($PROGRAM $(echo $ARGUMENTS) ps --format json | jq '.Service + "|" + .Ports')
+    while IFS= read -r LINE; do
+        SERVICE=$(echo $LINE | cut -d"|" -f1 | cut -d'"' -f2)
+        PORT=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
+
+        if [ "$PORT" == "" ]; then
+            continue
+        fi
+
+        echo -e "\n$SERVICE"
+        echo -e "  🌐  http://$REMOTE_IP:$PORT"
+        echo -e "  🏠  http://$LOCAL_IP:$PORT"
+        echo -e "  💻  http://localhost:$PORT"
+    done <<< "$LINES"
+    exit 0
+fi
+
 if [ $COMMAND == "l" ] || [ $COMMAND == "logging" ]; then
     $PROGRAM $(echo $ARGUMENTS) exec -- app tail -n 250 -F storage/logs/laravel.log
     exit 0
@@ -726,6 +782,10 @@ fi
 if [ $COMMAND == "reload" ]; then
     $PROGRAM $(echo $ARGUMENTS) restart -- app
     exit 0
+fi
+
+if [ $COMMAND == "build" ]; then
+    write_timestamp $ENV_FILE
 fi
 
 $PROGRAM $(echo $ARGUMENTS) $(echo $COMMAND) $(echo $OPTIONS)

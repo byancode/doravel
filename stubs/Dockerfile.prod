@@ -1,4 +1,4 @@
-FROM byancode/doravel:php-8.1
+FROM byancode/doravel:php-8.2
 
 ENV GIT_EMAIL='__GIT_EMAIL__' \
     GIT_NAME='__GIT_NAME__' \

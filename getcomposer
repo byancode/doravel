@@ -5,13 +5,13 @@ rm -f data/php/composer;
 while true; do
     echo " - downloading PHP Composer";
 
-    curl -o data/php/composer https://getcomposer.org/composer-stable.phar;
+    curl -o docker/bin/composer https://getcomposer.org/composer-stable.phar;
 
-    if [ ! -f data/php/composer ]; then
+    if [ ! -f docker/bin/composer ]; then
         echo "Failed to download PHP Composer"
         sleep 7
     else
-        chmod +x data/php/composer;
+        chmod +x docker/bin/composer;
         echo "Downloaded success PHP Composer"
         break
     fi
