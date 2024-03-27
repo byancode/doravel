@@ -237,7 +237,7 @@ if [ "$APP_ENV" != "local" ] && is_false $APP_DEBUG; then
     cat /var/services/service-octane.conf >> /supervisord.conf
 fi
 
-echo "" > /supervisord.conf
+echo "" >> /supervisord.conf
 
 if is_false $ONLY_ENV_SUPERVISOR; then
     if [ -f /var/www/supervisord.conf ]; then
@@ -262,6 +262,7 @@ fi
 echo "Starting supervisord..."
 
 if [ "$APP_ENV" == "local" ] || is_true $APP_DEBUG; then
+    cat /var/services/service-vite.conf >> /supervisord.conf
     /usr/bin/supervisord --configuration /supervisord.conf
     /usr/local/bin/php -c /usr/local/etc/php/php.ini -d variables_order=EGPCS /var/www/artisan --env=$APP_ENV octane:start --server=swoole --host=0.0.0.0 --port=8000 --watch $(echo $LARAVEL_SERVER_ARGUMENTS)
 else

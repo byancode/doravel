@@ -760,16 +760,19 @@ if [ $COMMAND == "ports" ]; then
     LINES=$($PROGRAM $(echo $ARGUMENTS) ps --format json | jq '.Service + "|" + .Ports')
     while IFS= read -r LINE; do
         SERVICE=$(echo $LINE | cut -d"|" -f1 | cut -d'"' -f2)
-        PORT=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
+        PORTS=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
 
-        if [ "$PORT" == "" ]; then
+        if [ "$PORTS" == "" ]; then
             continue
         fi
 
-        echo -e "\n$SERVICE"
-        echo -e "  🌐  http://$REMOTE_IP:$PORT"
-        echo -e "  🏠  http://$LOCAL_IP:$PORT"
-        echo -e "  💻  http://localhost:$PORT"
+        for PORT in $PORTS; do
+            echo -e "\n$SERVICE"
+            echo -e "  🌐  http://$REMOTE_IP:$PORT"
+            echo -e "  🏠  http://$LOCAL_IP:$PORT"
+            echo -e "  💻  http://localhost:$PORT"
+            echo -e "---"
+        done
     done <<< "$LINES"
     exit 0
 fi

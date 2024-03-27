@@ -45,7 +45,7 @@ if ! [ -f ./.env.prod ]; then
         touch ./supervisord.$ENV_NAME.conf
         askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
         askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
-        askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+        askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
         curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
         sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
@@ -58,7 +58,7 @@ if ! [ -f ./.env.main ]; then
         touch ./supervisord.$ENV_NAME.conf
         askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
         askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
-        askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+        askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
         curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
         sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
@@ -71,7 +71,7 @@ if ! [ -f ./.env.test ]; then
         touch ./supervisord.$ENV_NAME.conf
         askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
         askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
-        askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+        askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
         curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
         sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
