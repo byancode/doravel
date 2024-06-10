@@ -1,0 +1,16 @@
+#!/bin/sh
+
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+
+if [ ! -f /var/www/vendor/laravel/octane ]; then
+    /usr/local/bin/composer require laravel/octane --working-dir=/var/www --with-all-dependencies
+    /usr/local/bin/artisan octane:install --server=swoole
+    echo "Octane installed"
+fi
+
+if [ -f /var/www/config/octane.php ] && ! /bin/grep -q "upload_max_filesize" /var/www/config/octane.php; then
+    /bin/sed -i "s/^\];//g" /var/www/config/octane.php
+    /usr/bin/curl -sL $ENDPOINT/stubs/octane.stub >> /var/www/config/octane.php
+    echo "Octane already installed"
+fi
+

@@ -4,14 +4,15 @@ FROM alpine:edge
 # these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
 ENV PHPIZE_DEPS \
 		autoconf \
-		dpkg-dev dpkg \
-		file \
-		g++ \
-		gcc \
 		libc-dev \
-		make \
+		dpkg-dev \
 		pkgconf \
-		re2c
+		dpkg \
+		file \
+		make \
+		re2c \
+		g++ \
+		gcc
 
 ENV ETC_PATH=/usr/local/etc
 ENV PHP_INI_DIR=${ETC_PATH}/php
@@ -26,6 +27,8 @@ ENV PHP_CPPFLAGS="$PHP_CFLAGS"
 ENV PHP_LDFLAGS="-Wl,-O1 -pie"
 
 ARG PHP_VERSION=8.2.2
+ARG SSH2_VERSION=1.4.1
+ARG NODE_VERSION=22.2.0
 ARG REDIS_VERSION=6.0.2
 ARG SWOOLE_VERSION=5.1.1
 
@@ -44,19 +47,27 @@ COPY ./docker/ssl/* /etc/ssl/
 
 RUN apk add --no-cache \
 		ca-certificates \
+		inotify-tools \
         supervisor \
 		openssl \
-        nodejs \
         expect \
         nginx \
+		bash \
 		curl \
-        npm \
         git \
 		tar \
 		xz \
         jq \
     ; \
     \
+	apk add --no-cache --virtual .fnm-deps libstdc++ libgcc; \
+	export SHELL="/bin/ash"; \
+    curl -fsSL https://vanaware.github.io/fnm-alpine/install.sh | sh; \
+	\
+	/root/.local/share/fnm/fnm install $NODE_VERSION; \
+	/root/.local/share/fnm/fnm default $NODE_VERSION; \
+	\
+	apk del --no-network .fnm-deps; \
     set -eux; \
     mkdir -p "$PHP_INI_DIR/conf.d"; \
     \
@@ -139,6 +150,7 @@ RUN apk add --no-cache \
 		--with-openssl \
 		--with-curl \
 		--with-zlib \
+		--with-bz2=/usr \
 		--with-zip \
 		# GD
 		--with-avif \
@@ -152,8 +164,11 @@ RUN apk add --no-cache \
 		--enable-pdo \
 		--enable-gd \
 #		--enable-fpm \
+		--enable-ftp \
+		--enable-exif \
 		--enable-intl \
 		--enable-pcntl \
+		--enable-shmop \
 		--enable-bcmath \
 		--enable-opcache \
 		--enable-sockets \
@@ -195,6 +210,7 @@ RUN apk add --no-cache \
     \
     docker-pecl-build swoole ${SWOOLE_VERSION}; \
     docker-pecl-build redis ${REDIS_VERSION}; \
+    docker-pecl-build ssh2 ${SSH2_VERSION}; \
 	rm -rf /tmp/pear ~/.pearrc; \
     \
     docker-php-ext-enable \
@@ -212,3 +228,5 @@ EXPOSE 5173
 EXPOSE 8000
 
 CMD ["doravel-start"]
+
+ENTRYPOINT ["/bin/ash", "-l", "-c"]

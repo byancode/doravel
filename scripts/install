@@ -1,53 +1,50 @@
 #!/bin/bash
 
-DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
-DISTRO=${DISTRO//\"/}
+PACKAGES="curl git unzip jq";
+MANAGER="";
 
-if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-    sudo apt-get update
-elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
-    sudo yum update
-elif [ "$DISTRO" == "fedora" ]; then
-    sudo dnf update
+if [ -x "$(command -v sudo)" ]; then
+    MANAGER="sudo";
+fi
+
+if [ -x "$(command -v apt)" ]; then
+    MANAGER="$MANAGER apt";
+    $MANAGER update;
+    $MANAGER install -y $PACKAGES;
+elif [ -x "$(command -v dnf)" ]; then
+    MANAGER="$MANAGER dnf";
+    $MANAGER update;
+    $MANAGER install -y $PACKAGES;
+elif [ -x "$(command -v yum)" ]; then
+    MANAGER="$MANAGER yum";
+    $MANAGER update;
+    $MANAGER install -y $PACKAGES;
+elif [ -x "$(command -v apk)" ]; then
+    MANAGER="$MANAGER apk";
+    $MANAGER update;
+    $MANAGER add $PACKAGES;
+elif [ -x "$(command -v pacman)" ]; then
+    MANAGER="$MANAGER pacman";
+    $MANAGER -Sy;
+    $MANAGER -S $PACKAGES;
 else
     echo "Distro not supported"
     exit 1
 fi
 
-if ! [ -x "$(command -v curl)" ]; then
-    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-        sudo apt-get install -y curl
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
-        sudo yum install curl -y
-    elif [ "$DISTRO" == "fedora" ]; then
-        sudo dnf install curl -y
-    fi
+if [ -x "$(command -v sh)" ]; then
+    INTERPRETER="sh"
+elif [ -x "$(command -v bash)" ]; then
+    INTERPRETER="bash"
 fi
-if ! [ -x "$(command -v git)" ]; then
-    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-        sudo apt-get install -y git
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
-        sudo yum install git -y
-    elif [ "$DISTRO" == "fedora" ]; then
-        sudo dnf install git -y
-    fi
-fi
-if ! [ -x "$(command -v unzip)" ]; then
-    if  [ "$DISTRO" == "ubuntu" ] || [ "$DISTRO" == "debian" ]; then
-        sudo apt-get install -y unzip
-    elif [ "$DISTRO" == "centos" ] || [ "$DISTRO" == "rhel" ]; then
-        sudo yum install unzip -y
-    elif [ "$DISTRO" == "fedora" ]; then
-        sudo dnf install unzip -y
-    fi
-fi
-if ! [ -x "$(command -v docker)" ]; then
+
+if ! [ -x "$(command -v docker)" ] && [ -x "$INTERPRETER" ]; then
     read -p "¿Desea instalar docker? (y/n): " RESPONSE
     if [ "$RESPONSE" != 'y' ]; then
         echo "Docker is not installed"
         exit 1
     fi
-    curl https://get.docker.com | bash
+    curl https://get.docker.com | $INTERPRETER
 fi
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"

@@ -51,19 +51,6 @@ if ! [ -f ./.env.prod ]; then
     fi
 fi
 
-if ! [ -f ./.env.main ]; then
-    read -p "¿Desea agregar un entorno master? (y/n): " RESPONSE
-    if [ "$RESPONSE" == 'y' ]; then
-        ENV_NAME=main
-        touch ./supervisord.$ENV_NAME.conf
-        askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
-        askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
-        askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
-        curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
-        sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
-    fi
-fi
-
 if ! [ -f ./.env.test ]; then
     read -p "¿Desea agregar un entorno de testing? (y/n): " RESPONSE
     if [ "$RESPONSE" == 'y' ]; then
@@ -77,19 +64,10 @@ if ! [ -f ./.env.test ]; then
     fi
 fi
 
-if [ -f ./doravel ]; then
-    rm -f ./doravel
-fi
-
 curl -O ${ENDPOINT}/bin/doravel
 chmod +x ./doravel
 
-if [ ! -d ./vendor ]; then
-    composer install
-fi
-
-if [ ! -d ./vendor/laravel/octane ]; then
+if [ ! -d ./vendor ] || [ ! -d ./vendor/laravel/octane ]; then
     IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
-    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) composer require laravel/octane --with-all-dependencies
-    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) php artisan octane:install --server=swoole
+    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) doravel-initialize
 fi

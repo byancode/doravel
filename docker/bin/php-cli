@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/local/bin/php -c /usr/local/etc/php/php.ini -d variables_order=EGPCS $@

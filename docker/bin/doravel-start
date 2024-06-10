@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ -f /root/.profile ]; then
+    source /root/.profile
+fi
+
 function is_true {
     if [ "$1" == "true" ] || [ "$1" == "True" ] || [ "$1" == "TRUE" ] || [ "$1" == "1" ]; then
         return 0
@@ -56,13 +60,12 @@ fi
 
 
 # aqui agregaremos los argumentos para el servidor octane
-LARAVEL_SERVER_ARGUMENTS=${LARAVEL_SERVER_ARGUMENTS:-""}
 LARAVEL_AUTO_SCHEDULE=${LARAVEL_AUTO_SCHEDULE:-true}
 ONLY_ENV_SUPERVISOR=${ONLY_ENV_SUPERVISOR:-false}
 PHP_OPCACHE_ENABLE=${PHP_OPCACHE_ENABLE:-false}
 NPM_AUTO_INSTALL=${NPM_AUTO_INSTALL:-true}
 NPM_AUTO_BUILD=${NPM_AUTO_BUILD:-true}
-GIT_AUTO_PULL=${GIT_AUTO_PULL:-true}
+VITE_ENABLE=${VITE_ENABLE:-false}
 
 
 GIT_NAME=${GIT_NAME:-"Byancode"}
@@ -103,7 +106,6 @@ sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 
 
-
 APP_DEBUG=${APP_DEBUG:-true}
 APP_URL=${APP_URL:-"http://localhost"}
 APP_HOST=$(php -r "echo parse_url('$APP_URL', PHP_URL_HOST);")
@@ -128,11 +130,11 @@ if is_true $APP_SSL && is_true $APP_SELF_CERT; then
     sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/ssl/sancert.cnf
     sed -e 's/__APP_IP__/'$APP_IP'/g' -i /etc/ssl/sancert.cnf
 
-    openssl dhparam -out /etc/ssl/certs/laravel.pem 2048
+    openssl dhparam -out /etc/ssl/certs/doravel.pem 2048
     openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
     -subj "/C=PE/ST=Lima/O=Byancode S.A.C/CN="${APP_HOST} \
-    -out /etc/ssl/certs/laravel.crt \
-    -keyout /etc/ssl/certs/laravel.key
+    -out /etc/ssl/certs/doravel.crt \
+    -keyout /etc/ssl/certs/doravel.key
     echo "SSL certificate generated"
 fi
 
@@ -151,9 +153,7 @@ fi
 echo "Environment configured"
 
 
-if is_true $APP_SSL; then
-    rm -f /etc/nginx/sites-available/site.conf;
-else
+if is_false $APP_SSL; then
     rm -f /etc/nginx/sites-available/ssl-site.conf;
 fi
 echo "SSL configured"
@@ -178,35 +178,15 @@ if [ ! -d /var/www/vendor/ ]; then
     composer install --quiet --working-dir=/var/www
 fi
 
-if [ ! -d /var/www/node_modules/ ]; then
-    if is_true $NPM_AUTO_INSTALL || is_true $NPM_AUTO_BUILD || is_true $APP_DEBUG || [ "$APP_ENV" == "local" ]; then
-        if is_true $APP_DEBUG || [ "$APP_ENV" == "local" ]; then
-            echo "Install node packages and chokidar..."
-            npm install --prefix /var/www chokidar
-            echo "Node packages and chokidar installed"
-        else
-            echo "Installing npm packages..."
-            npm install --prefix /var/www
-            echo "npm packages installed"
-        fi
-    fi
-fi
-
-if [ ! -d /var/www/node_modules/chokidar ]; then
-    if [ "$APP_ENV" == "local" ] || is_true $APP_DEBUG; then
-        echo "Install node chokidar..."
-        npm install --prefix /var/www chokidar
-        echo "Node chokidar installed"
-    fi
+if [ ! -d /var/www/node_modules/ ] && is_true $NPM_AUTO_INSTALL; then
+    echo "Installing npm packages..."
+    npm install --prefix /var/www
+    echo "npm packages installed"
 fi
 
 if is_true $NPM_AUTO_BUILD; then
     echo "Building assets..."
-    if is_true $APP_DEBUG; then
-        npm run dev
-    else
-        npm run build
-    fi
+    npm run build
     echo "Assets built"
 fi
 
@@ -214,35 +194,26 @@ if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link
 fi
 
-if [ ! -d /var/www/vendor/laravel/octane ]; then
-    composer require laravel/octane --working-dir=/var/www --with-all-dependencies
-    php /var/www/artisan octane:install --server=swoole
+cat /usr/local/etc/supervisord.conf > /supervisord.conf
+
+if [ -d /var/www/vendor/laravel/octane ]; then
+    cat /var/services/service-octane.conf >> /supervisord.conf
+else
+    cat /var/services/service-server.conf >> /supervisord.conf
 fi
 
-# create temporary supervisor configuration
-cat /usr/local/etc/supervisord.conf > /supervisord.conf
+if is_true $APP_DEBUG; then
+    cat /var/services/service-watcher.conf >> /supervisord.conf
+fi
 
 if is_true $LARAVEL_AUTO_SCHEDULE; then
     cat /var/services/service-schedule.conf >> /supervisord.conf
 fi
 
-if is_true $GIT_AUTO_PULL; then
-    if [ -d /var/www/.git ]; then
-        cat /var/services/service-deploy.conf >> /supervisord.conf
-        doravel-git-pull
-    fi
-fi
-
-if [ "$APP_ENV" != "local" ] && is_false $APP_DEBUG; then
-    cat /var/services/service-octane.conf >> /supervisord.conf
-fi
-
 echo "" >> /supervisord.conf
 
-if is_false $ONLY_ENV_SUPERVISOR; then
-    if [ -f /var/www/supervisord.conf ]; then
-        cat /var/www/supervisord.conf >> /supervisord.conf
-    fi
+if [ -f /var/www/supervisord.conf ] && is_false $ONLY_ENV_SUPERVISOR; then
+    cat /var/www/supervisord.conf >> /supervisord.conf
 fi
 
 if [ -f "/var/www/supervisord.${APP_ENV}.conf" ]; then
@@ -250,21 +221,17 @@ if [ -f "/var/www/supervisord.${APP_ENV}.conf" ]; then
     cat "/var/www/supervisord.${APP_ENV}.conf" >> /supervisord.conf
 fi
 
-sed -e 's/__ARGS__/'$LARAVEL_SERVER_ARGUMENTS'/g' -i /supervisord.conf
 sed -e 's/$APP_ENV/'$APP_ENV'/g' -i /supervisord.conf
 sed -e 's/__ENV__/'$APP_ENV'/g' -i /supervisord.conf
 
-# check if key exists on .env file
 if [ -z "$APP_KEY" ]; then
     /usr/local/bin/php /var/www/artisan --env=$APP_ENV key:generate
 fi
 
 echo "Starting supervisord..."
 
-if [ "$APP_ENV" == "local" ] || is_true $APP_DEBUG; then
+if is_true $APP_DEBUG || is_true $VITE_ENABLE; then
     cat /var/services/service-vite.conf >> /supervisord.conf
-    /usr/bin/supervisord --configuration /supervisord.conf
-    /usr/local/bin/php -c /usr/local/etc/php/php.ini -d variables_order=EGPCS /var/www/artisan --env=$APP_ENV octane:start --server=swoole --host=0.0.0.0 --port=8000 --watch $(echo $LARAVEL_SERVER_ARGUMENTS)
-else
-    /usr/bin/supervisord --nodaemon --configuration /supervisord.conf
 fi
+
+/usr/bin/supervisord --nodaemon --configuration /supervisord.conf

@@ -1,0 +1,63 @@
+#!/bin/sh
+
+DIRECTORY_PATH="/var/www"
+UNWATCH_FILE="$DIRECTORY_PATH/.unwatch"
+TEMP_FILE="/tmp/unwatch_temp.$$"
+
+# Inicializa los patrones de exclusión
+echo "/var/www/.git" > $TEMP_FILE
+echo "/var/www/vendor" >> $TEMP_FILE
+echo "/var/www/storage" >> $TEMP_FILE
+echo "/var/www/node_modules" >> $TEMP_FILE
+echo "/var/www/.unwatch" >> $TEMP_FILE
+
+# Función para limpiar los procesos de PHP
+cleanup() {
+    /bin/pgrep -f 'artisan.*(serve|octane\:start)' | /usr/bin/xargs /bin/kill -15;
+    /bin/rm -f $TEMP_FILE;
+}
+
+# sigint y sigterm
+trap cleanup INT TERM
+
+if [ -f "$UNWATCH_FILE" ]; then
+    FILE_CONTENT=$(/bin/cat "$UNWATCH_FILE"; echo)
+    echo "$FILE_CONTENT" | while IFS= read -r line; do
+        # Ignora líneas vacías y comentarios
+        case "$line" in
+            \#*|"" ) continue ;;
+        esac
+        # Escapar comillas simples en la línea
+        line=$(echo "$line" | /bin/sed "s/'/\\\\'/g")
+        # agrega en el string line el path DIRECTORY_PATH si no lo tiene
+        if [ "${line:0:1}" != "/" ]; then
+            line="$DIRECTORY_PATH/$line"
+        fi
+        # si empieza con / pero no con DIRECTORY_PATH, lo agrega
+        if [ "${line:0:${#DIRECTORY_PATH}}" != "$DIRECTORY_PATH" ]; then
+            line="$DIRECTORY_PATH$line"
+        fi
+        echo "$line" >> $TEMP_FILE
+    done
+fi
+
+# Construye la lista de exclusiones para el comando find
+EXCLUDE_FIND_ARGS=""
+while IFS= read -r pattern; do
+    EXCLUDE_FIND_ARGS="$EXCLUDE_FIND_ARGS -ipath '$pattern' -prune -o"
+done < "$TEMP_FILE"
+
+
+# Ejecuta find para obtener todos los archivos y excluye los patrones especificados
+WATCHED_FILES=$(eval "/usr/bin/find '$DIRECTORY_PATH' $EXCLUDE_FIND_ARGS -print")
+
+# Limpia el archivo temporal
+/bin/rm -f $TEMP_FILE
+
+# Construye el comando inotifywait con los archivos a observar
+COMMAND="/usr/bin/inotifywait -m -e modify,create,delete $WATCHED_FILES"
+
+# Ejecuta el comando inotifywait y limpia los procesos PHP al recibir eventos
+eval $COMMAND | while read -r event; do
+    cleanup;
+done

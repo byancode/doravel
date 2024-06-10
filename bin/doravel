@@ -390,6 +390,11 @@ if [ $COMMAND == "upgrade" ]; then
 
     source ~/.bashrc
 
+    docker images \
+        --filter "reference=byancode/doravel:ph*" \
+        --format "{{.Repository}}:{{.Tag}}" \
+    | xargs -L1 docker pull
+
     echo "Doravel installed 😃"
     exit 0
 fi
@@ -767,7 +772,7 @@ if [ $COMMAND == "ports" ]; then
         fi
 
         for PORT in $PORTS; do
-            echo -e "\n$SERVICE"
+            echo -e "\n$SERVICE:"
             echo -e "  🌐  http://$REMOTE_IP:$PORT"
             echo -e "  🏠  http://$LOCAL_IP:$PORT"
             echo -e "  💻  http://localhost:$PORT"

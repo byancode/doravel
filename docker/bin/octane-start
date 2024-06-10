@@ -1,0 +1,14 @@
+#!/bin/sh
+
+cleanup() {
+    /usr/local/bin/artisan octane:stop;
+}
+
+trap cleanup INT TERM
+
+while true; do
+    if  /usr/local/bin/artisan octane:status | /bin/grep -q running; then
+        /usr/local/bin/artisan octane:stop
+    fi
+    /usr/local/bin/artisan octane:start $@
+done

@@ -92,11 +92,6 @@ curl -s $ENDPOINT/scripts/init | bash && source ~/.bashrc
 sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile
 sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile
 
-if [ -f ./Dockerfile.main ]; then
-    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.main
-    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.main
-fi
-
 if [ -f ./Dockerfile.prod ]; then
     sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.prod
     sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.prod
