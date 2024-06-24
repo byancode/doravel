@@ -29,6 +29,7 @@ DORAVEL COMMANDS:
     ssh-keys           Genera las llaves ssh para el deploy
     rm-env             Elimina un entorno de doravel
     new-program        Agrega un nuevo programa a supervisor
+    new-package        crea un nuevo paquete de laravel
 
 DOCKER-COMPOSE COMMANDS:
     build       Build or rebuild services
@@ -154,6 +155,7 @@ COMMANDS=(
     "installer"
     "supervisor"
     "new-program"
+    "new-package"
 # docker-compose commands
     "build"
     "config"
@@ -360,6 +362,29 @@ if [ $COMMAND == "new" ]; then
     cd $DIRECTORY
     doravel init
     echo "Laravel project created 😃"
+    exit 0
+fi
+
+if [ $COMMAND == "new-package" ]; then
+    if [ "$2" == "" ]; then
+        read -p "Enter the name of the new package: " PACKAGE_NAME
+    else
+        PACKAGE_NAME="$2"
+    fi
+    shift
+    shift
+
+    if [ ! -d "./$PACKAGE_NAME" ]; then
+        echo "Creating new laravel package..."
+        git clone https://github.com/spatie/package-skeleton-laravel.git ./$PACKAGE_NAME;
+    fi
+
+    if [ -f "./$PACKAGE_NAME/configure.php" ]; then
+        cd ./$PACKAGE_NAME;
+        php ./configure.php;
+    fi
+
+    echo "Laravel package created 😃";
     exit 0
 fi
 
