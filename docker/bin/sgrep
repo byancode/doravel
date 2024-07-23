@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SUB_COMMAND=$1
+shift
+
+s $(echo $SUB_COMMAND) $(s status | grep $@ | awk '{print $1}')
