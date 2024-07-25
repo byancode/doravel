@@ -38,13 +38,18 @@ elif [ -x "$(command -v bash)" ]; then
     INTERPRETER="bash"
 fi
 
-if ! [ -x "$(command -v docker)" ] && [ -x "$INTERPRETER" ]; then
+if ! [ -x "$(command -v docker)" ]; then
     read -p "¿Desea instalar docker? (y/n): " RESPONSE
     if [ "$RESPONSE" != 'y' ]; then
         echo "Docker is not installed"
         exit 1
     fi
-    curl https://get.docker.com | $INTERPRETER
+    if [ -x "$INTERPRETER" ]; then
+        curl https://get.docker.com | "$INTERPRETER"
+    else
+        echo "El intérprete no es ejecutable"
+        exit 1
+    fi
 fi
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
