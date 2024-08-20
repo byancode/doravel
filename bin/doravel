@@ -96,7 +96,7 @@ create_slug() {
 }
 
 write_timestamp() {
-    $ENV_FILE=$1
+    ENV_FILE=$1
 
     if [ ! -f "./$ENV_FILE" ]; then
         echo "the $ENV_FILE file does not exist"
