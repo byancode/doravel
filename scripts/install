@@ -45,7 +45,7 @@ if ! [ -x "$(command -v docker)" ]; then
         exit 1
     fi
     if [ -x "$INTERPRETER" ]; then
-        curl https://get.docker.com | "$INTERPRETER"
+        curl https://get.docker.com | $(echo $INTERPRETER)
     else
         echo "El intérprete no es ejecutable"
         exit 1

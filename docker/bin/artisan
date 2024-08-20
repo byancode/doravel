@@ -8,4 +8,4 @@ elif [ -f /var/www/.env ]; then
     source /var/www/.env
 fi
 
-/usr/local/bin/php-cli /var/www/artisan --env=$APP_ENV $@
+/usr/local/bin/php-cli /var/www/artisan --env="$APP_ENV" $@
