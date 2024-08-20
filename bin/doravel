@@ -357,8 +357,9 @@ if [ $COMMAND == "new" ]; then
     echo "Creating new laravel project..."
     docker run --rm -it \
         --workdir /app \
-        --volume $(pwd):/app byancode/doravel:php-8.2 \
-        composer create-project laravel/laravel $DIRECTORY;
+        --volume $(pwd):/app \
+        byancode/doravel:php-8.2 \
+        composer create-project laravel/laravel $(echo $DIRECTORY);
     cd $DIRECTORY
     doravel init
     echo "Laravel project created 😃"
