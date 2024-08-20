@@ -94,16 +94,22 @@ if [ -z "$APP_KEY" ]; then
 fi
 
 
-
 if is_true $PHP_OPCACHE_ENABLE; then
     OPCACHE_ENABLE=1
 else
     OPCACHE_ENABLE=0
 fi
 
+
 OPCACHE_FILE="${PHP_INI_DIR}/conf.d/docker-php-ext-opcache.ini"
 sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+sed -e 's/opcache.enable =.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
 sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+sed -e 's/opcache.enable_cli =.*/opcache.enable_cli = '$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+sed -e 's/upload_max_filesize =.*/upload_max_filesize = '$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE
+sed -e 's/max_execution_time =.*/max_execution_time = '$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE
+sed -e 's/post_max_size =.*/post_max_size = '$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE
+sed -e 's/memory_limit =.*/memory_limit = '$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE
 
 
 APP_DEBUG=${APP_DEBUG:-true}

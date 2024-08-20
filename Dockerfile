@@ -1,4 +1,4 @@
-FROM alpine:edge
+FROM alpine:3.20
 
 # dependencies required for running "phpize"
 # these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
@@ -89,10 +89,17 @@ RUN apk add --no-cache \
 	apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
 		argon2-dev \
+		build-base \
 		coreutils \
 		curl-dev \
+		libpng-dev \
+		libxslt-dev \
 		openssl-dev \
+		libedit-dev \
+		bzip2-dev \
+		libjpeg-turbo-dev \
 		gnu-libiconv-dev \
+		postgresql-dev \
 		libsodium-dev \
 		libxml2-dev \
 		linux-headers \
@@ -100,15 +107,15 @@ RUN apk add --no-cache \
 		readline-dev \
         libzip-dev \
 		sqlite-dev \
-		mysql-dev \
-		# pgsql
-		postgresql-dev \
-        # install icu-uc icu-io icu-i18n
 		icu-data-full \
+		mysql-dev \
         icu-dev \
 		zlib-dev \
 		pcre-dev \
 		gd-dev \
+		re2c \
+		bison \
+		g++ \
 	; \
     \
     rm -vf /usr/include/iconv.h; \
@@ -134,15 +141,13 @@ RUN apk add --no-cache \
 # --enable-mbstring se incluye aquí porque de lo contrario no hay forma de que pecl lo use correctamente (ver https://github.com/docker-library/php/issues/195)
 		--enable-mbstring \
 # --enable-mysqlnd se incluye aquí porque es más difícil compilarlo después que las extensiones (ya que es un complemento para varias extensiones, no una extensión en sí misma)
-		# --enable-mysqlnd \
-# https://wiki.php.net/rfc/argon2_password_hash
+		--enable-mysqlnd \
 		--with-password-argon2 \
 # https://wiki.php.net/rfc/libsodium
 		--with-sodium=shared \
 # always build against system sqlite3 (https://github.com/php/php-src/commit/6083a387a81dbbd66d6316a3a12a63f06d5f7109)
 		--with-pdo-sqlite=/usr \
 		--with-pdo-mysql=mysqlnd \
-		# with postgresql
 		--with-pdo-pgsql \
 		--with-sqlite3=/usr \
 		--with-iconv=/usr \
@@ -152,11 +157,9 @@ RUN apk add --no-cache \
 		--with-zlib \
 		--with-bz2=/usr \
 		--with-zip \
-		# GD
 		--with-avif \
 		--with-webp \
 		--with-jpeg \
-# https://github.com/docker-library/php/pull/1259
 		--enable-session \
 		--enable-phpdbg \
 		--enable-ctype \
@@ -177,7 +180,6 @@ RUN apk add --no-cache \
 		--enable-short-tags \
 		--enable-opcache-jit \
 		--enable-phpdbg-readline \
-# in PHP 7.4+, the pecl/pear installers are officially deprecated (requiring an explicit "--with-pear")
 		--with-pear \
 # bundled pcre does not support JIT on s390x
 # https://manpages.debian.org/bullseye/libpcre3-dev/pcrejit.3.en.html#AVAILABILITY_OF_JIT_SUPPORT
@@ -195,7 +197,6 @@ RUN apk add --no-cache \
 		' -- '{}' + \
 	; \
 	make clean; \
-# https://github.com/docker-library/php/issues/692 (copy default example "php.ini" files somewhere easily discoverable)
 	cp -v php.ini-* "$PHP_INI_DIR/"; \
     cp -v php.ini-production "$PHP_INI_DIR/php.ini"; \
     cd /; \
