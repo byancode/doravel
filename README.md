@@ -14,7 +14,6 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 - [x] actualiza tu repositorio git cada 5 segundos
 - [x] ejecuta tus comandos laravel con supervisord
 
-
 # 📦 Instalación
 > copia y pega en consola de tu computadora
 ```bash

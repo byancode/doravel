@@ -9,8 +9,7 @@
         "package.json": "package-lock.json",
         "composer.json": "composer.lock",
         "supervisord.conf": "supervisord.*.conf",
-        "docker-compose.yaml": "docker-compose.*.yaml",
-        "docker-compose.local.yml": "docker-compose.*.yml",
-        "docker-compose.local.yaml": "docker-compose.*.yaml"
+        "docker-compose.y*ml": "docker-compose.*.yml,docker-compose.*.yaml",
+        "docker-compose.local.y*ml": "docker-compose.*.yml,docker-compose.*.yaml"
     }
 }
