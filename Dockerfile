@@ -1,18 +1,5 @@
 FROM alpine:3.20
 
-
-ENV PHPIZE_DEPS \
-		autoconf \
-		libc-dev \
-		dpkg-dev \
-		pkgconf \
-		dpkg \
-		file \
-		make \
-		re2c \
-		g++ \
-		gcc
-
 ENV ETC_PATH=/usr/local/etc
 ENV PHP_INI_DIR=${ETC_PATH}/php
 
@@ -51,6 +38,7 @@ RUN apk add --no-cache \
         supervisor \
 		openssl \
         expect \
+		docker \
         nginx \
 		bash \
 		curl \
@@ -87,7 +75,6 @@ RUN apk add --no-cache \
     \
     set -eux; \
 	apk add --no-cache --virtual .build-deps \
-		$PHPIZE_DEPS \
 		argon2-dev \
 		build-base \
 		coreutils \
@@ -112,10 +99,18 @@ RUN apk add --no-cache \
         icu-dev \
 		zlib-dev \
 		pcre-dev \
+		autoconf \
+		libc-dev \
+		dpkg-dev \
+		pkgconf \
 		gd-dev \
-		re2c \
 		bison \
+		dpkg \
+		file \
+		make \
+		re2c \
 		g++ \
+		gcc \
 	; \
     \
     rm -vf /usr/include/iconv.h; \
