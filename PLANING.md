@@ -6,6 +6,7 @@
 ./doravel local test
 ./doravel local down
 ./doravel local ports [list|shuffle]
+./doravel local [artisan|composer|tinker|npm|node|php]
 ./doravel local timestamp
 # TAIL
 ./doravel local tail # selecciona uno de los archivos de log
