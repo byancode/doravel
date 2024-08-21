@@ -4,6 +4,7 @@
     "explorer.fileNesting.patterns": {
         ".env": ".env.*",
         "artisan": "doravel",
+        ".gitignore": ".gitignore,.gitattributes",
         "Dockerfile": "Dockerfile.*",
         "package.json": "package-lock.json",
         "composer.json": "composer.lock",
