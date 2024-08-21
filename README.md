@@ -11,7 +11,6 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 - [x] trabaja con varios entornos en el mismo proyecto
 - [x] configura php, mysql y demás desde los archivos .env
 - [x] auto configuración de nginx
-- [x] actualiza tu repositorio git cada 5 segundos
 - [x] ejecuta tus comandos laravel con supervisord
 
 # 📦 Instalación
@@ -44,9 +43,6 @@ LARAVEL_AUTO_SCHEDULE=true
 # NPM
 NPM_AUTO_INSTALL=true
 NPM_AUTO_BUILD=true
-
-# GIT
-GIT_AUTO_PULL=false
 ```
 
 ## Octane Config

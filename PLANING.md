@@ -11,11 +11,14 @@
 ./doravel local tail # selecciona uno de los archivos de log
 # PACKAGE
 ./doravel package create name
-./doravel package rm name
+./doravel package test
+./doravel package init
+# PROJECT
+./doravel project create name
+./doravel project init
 # DORAVEL
 ./doravel upgrade
 ./doravel update
-./doravel init
 ./doravel x bash
 # SUPERVISOR
 ./doravel local supervisor start
