@@ -18,7 +18,6 @@ services:
         depends_on:
             - memcached
             - postgres
-            - soketi
             - redis
     redis:
         restart: on-failure
@@ -75,19 +74,6 @@ services:
         image: memcached:alpine
         expose:
             - 11211
-        networks:
-            - default
-    soketi:
-        restart: on-failure
-        image: quay.io/soketi/soketi:latest-16-alpine
-        environment:
-            SOKETI_DEBUG: 1
-            SOKETI_METRICS_SERVER_PORT: ${SOKETI_METRICS_SERVER_PORT:-9601}
-        expose:
-            - 6001
-        ports:
-            - ${SOKETI_PORT:-6001}:6001
-            - ${SOKETI_METRICS_SERVER_PORT:-9601}:9601
         networks:
             - default
     postgres:
