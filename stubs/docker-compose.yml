@@ -91,7 +91,7 @@ services:
         networks:
             - default
     postgres:
-        image: postgis/postgis:16-3.4
+        image: postgres
         environment:
             POSTGRES_DB: $DB_DATABASE
             POSTGRES_USER: $DB_USERNAME
