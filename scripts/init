@@ -35,8 +35,6 @@ touch ./supervisord.conf
 askOverrideFile .env .env
 askOverrideFile Dockerfile Dockerfile
 askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
-curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
-sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
 
 if ! [ -f ./.env.prod ]; then
     read -p "¿Desea agregar un entorno de produccion? (y/n): " RESPONSE
@@ -46,8 +44,6 @@ if ! [ -f ./.env.prod ]; then
         askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
         askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
         askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
-        curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
-        sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
 fi
 
@@ -59,8 +55,6 @@ if ! [ -f ./.env.test ]; then
         askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
         askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
         askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
-        curl -s ${ENDPOINT}/stubs/denv -o ~/bin/d$ENV_NAME
-        sed -i "s/__ENV__/$ENV_NAME/g" ~/bin/d$ENV_NAME
     fi
 fi
 

@@ -1,7 +1,6 @@
 FROM alpine:3.20
 
-# dependencies required for running "phpize"
-# these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
+
 ENV PHPIZE_DEPS \
 		autoconf \
 		libc-dev \
@@ -16,6 +15,7 @@ ENV PHPIZE_DEPS \
 
 ENV ETC_PATH=/usr/local/etc
 ENV PHP_INI_DIR=${ETC_PATH}/php
+
 # Apply stack smash protection to functions using local buffers and alloca()
 # Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
 # Enable optimization (-O2)
@@ -132,20 +132,13 @@ RUN apk add --no-cache \
 		--build="$gnuArch" \
 		--with-config-file-path="$PHP_INI_DIR" \
 		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-# asegurarse de que las --configure-flags inválidas sean errores fatales en lugar de solo advertencias
 		--enable-option-checking=fatal \
-# https://github.com/docker-library/php/issues/439
 		--with-mhash \
-# https://github.com/docker-library/php/issues/822
 		--with-pic \
-# --enable-mbstring se incluye aquí porque de lo contrario no hay forma de que pecl lo use correctamente (ver https://github.com/docker-library/php/issues/195)
 		--enable-mbstring \
-# --enable-mysqlnd se incluye aquí porque es más difícil compilarlo después que las extensiones (ya que es un complemento para varias extensiones, no una extensión en sí misma)
 		--enable-mysqlnd \
 		--with-password-argon2 \
-# https://wiki.php.net/rfc/libsodium
 		--with-sodium=shared \
-# always build against system sqlite3 (https://github.com/php/php-src/commit/6083a387a81dbbd66d6316a3a12a63f06d5f7109)
 		--with-pdo-sqlite=/usr \
 		--with-pdo-mysql=mysqlnd \
 		--with-pdo-pgsql \

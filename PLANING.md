@@ -5,7 +5,7 @@
 ./doravel local [bash|ash|sh]
 ./doravel local test
 ./doravel local down
-./doravel local ports
+./doravel local ports [list|shuffle]
 ./doravel local timestamp
 # TAIL
 ./doravel local tail # selecciona uno de los archivos de log
@@ -19,6 +19,7 @@
 ./doravel x bash
 # SUPERVISOR
 ./doravel local supervisor start
+./doravel local supervisor program list
 ./doravel local supervisor program create name
 ./doravel local supervisor program rm name
 # ENVIRONMENT

@@ -15,12 +15,7 @@ echo "
 "
 ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
-DISTRO=$(cat /etc/os-release | grep "^ID=" | cut -d= -f2)
-DISTRO=${DISTRO//\"/}
-
-bash <(curl -s $ENDPOINT/scripts/install)
-curl -s $ENDPOINT/deps/$DISTRO | bash
+bash <(curl -s "https://raw.githubusercontent.com/byancode/doravel/main/scripts/install")
 
 git config --global user.name  "__GIT_NAME__"
 git config --global user.email "__GIT_EMAIL__"
@@ -37,5 +32,5 @@ git clone --branch=__GIT_BRANCH__ git@github.com:__GIT_REPOSITORY__.git .
 read -p "¿Desea iniciar el proyecto? (y/n): " RESPONSE
 
 if [ "$RESPONSE" == 'y' ]; then
-    ./doravel up --env production -d
+    ./doravel prod up -d
 fi

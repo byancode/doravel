@@ -1,4 +1,0 @@
-#!/bin/bash
-
-dnf update -y
-dnf -y install git openssh-server expect

@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# arch install -y git ssh expect
-sudo pacman -Syu
-sudo pacman -S git openssh expect -y
