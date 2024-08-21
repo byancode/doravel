@@ -17,28 +17,9 @@ services:
             - default
         depends_on:
             - memcached
+            - postgres
             - soketi
-            - mysql
             - redis
-        links:
-            - minio
-            - mailpit
-            - meilisearch
-    mysql:
-        restart: on-failure
-        image: mysql:8
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
-            MYSQL_DATABASE: ${DB_DATABASE:-doravel}
-            MYSQL_USER: ${DB_USERNAME:-doravel}
-            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
-            MYSQL_TCP_PORT: ${DB_PORT:-3306}
-        expose:
-            - ${DB_PORT:-3306}
-        volumes:
-            - data-mysql:/var/lib/mysql
-        networks:
-            - default
     redis:
         restart: on-failure
         image: redis
@@ -109,25 +90,38 @@ services:
             - ${SOKETI_METRICS_SERVER_PORT:-9601}:9601
         networks:
             - default
-    phpmyadmin:
-        restart: on-failure
-        image: phpmyadmin/phpmyadmin
+    postgres:
+        image: postgis/postgis:16-3.4
         environment:
-            PMA_HOST: ${DB_HOST:-mysql}
-            PMA_PORT: ${DB_PORT:-3306}
-            PMA_USER: ${DB_USERNAME:-root}
-            PMA_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+            POSTGRES_DB: $DB_DATABASE
+            POSTGRES_USER: $DB_USERNAME
+            POSTGRES_PASSWORD: $DB_PASSWORD
+        expose:
+            - 5432
+        volumes:
+            - data-postgres:/var/lib/postgresql
+        networks:
+            - default
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-github@byancode.com}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-secret}
+            CONFIG_DATABASE_URI: postgresql://$DB_USERNAME:$DB_PASSWORD@postgres:5432/$DB_DATABASE
         ports:
-            - ${PHPMYADMIN_PORT:-8080}:80
+            - ${DB_ADMIN_PORT:-8080}:80
         networks:
             - default
         depends_on:
-            - mysql
+            - postgres
+        volumes:
+          - data-pgadmin:/var/lib/pgadmin
 networks:
     default:
         driver: bridge
 volumes:
     data-meilisearch:
-    data-mysql:
+    data-postgres:
+    data-pgadmin:
     data-redis:
     data-minio:
