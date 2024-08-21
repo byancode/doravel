@@ -2,8 +2,6 @@ FROM byancode/doravel:php-8.2
 
 ENV GIT_EMAIL='__GIT_EMAIL__' \
     GIT_NAME='__GIT_NAME__' \
-    # Laravel
-    LARAVEL_AUTO_SCHEDULE=true \
     # PHP
     PHP_UPLOAD_MAX_FILESIZE=1G \
     PHP_MAX_EXECUTION_TIME=60 \
