@@ -60,7 +60,7 @@ fi
 curl -O ${ENDPOINT}/bin/doravel
 chmod +x ./doravel
 
-if [ ! -d ./vendor ] || [ ! -d ./vendor/laravel/octane ]; then
+if [ ! -d ./vendor ]; then
     IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
     docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) initialize
 fi
