@@ -29,6 +29,7 @@
 ./doravel project create name
 ./doravel project init
 # DORAVEL
+./doravel compose
 ./doravel upgrade
 ./doravel update
 ./doravel x bash

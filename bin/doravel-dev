@@ -91,6 +91,7 @@ COMMANDS_ENVIRONMENT=(
 )
 
 COMMANDS_DORAVEL=(
+    "compose"
     "package"
     "project"
     "upgrade"
