@@ -62,5 +62,5 @@ chmod +x ./doravel
 
 if [ ! -d ./vendor ] || [ ! -d ./vendor/laravel/octane ]; then
     IMAGE_NAME=$(cat Dockerfile | grep "FROM" | awk '{print $2}')
-    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) doravel-initialize
+    docker run --rm -it -v $(pwd):/var/www $(echo $IMAGE_NAME) initialize
 fi

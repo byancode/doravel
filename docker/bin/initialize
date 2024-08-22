@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd /var/www
+
+php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+composer install
+npm install
+
+artisan key:generate
+artisan storage:link
