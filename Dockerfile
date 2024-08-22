@@ -13,6 +13,7 @@ ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_
 ENV PHP_CPPFLAGS="$PHP_CFLAGS"
 ENV PHP_LDFLAGS="-Wl,-O1 -pie"
 
+ARG UV_VERSION=0.3.0
 ARG PHP_VERSION=8.2.2
 ARG SSH2_VERSION=1.4.1
 ARG NODE_VERSION=22.2.0
@@ -200,6 +201,7 @@ RUN apk add --no-cache \
     docker-pecl-build swoole ${SWOOLE_VERSION}; \
     docker-pecl-build redis ${REDIS_VERSION}; \
     docker-pecl-build ssh2 ${SSH2_VERSION}; \
+    docker-pecl-build uv ${UV_VERSION}; \
 	rm -rf /tmp/pear ~/.pearrc; \
     \
     docker-php-ext-enable \
