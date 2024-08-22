@@ -5,7 +5,6 @@ if [ ! -d ./storage ] || [ ! -d ./bootstrap ] || [ ! -d ./resources ] || [ ! -d 
     exit 0
 fi
 
-
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
 
 askOverrideFile() {
@@ -22,8 +21,8 @@ askOverrideFile() {
     fi
     if [ "$RESPONSE" == 'y' ] && [ -f ./$OUTPUT ]; then
         TIMESPAMP=$(date +%s)
-        mkdir ./.doravel
-        cp ./$OUTPUT ./.doravel/backup_${TIMESPAMP}_${OUTPUT}
+        mkdir -p ./.doravel/backups/${TIMESPAMP}
+        cp ./$OUTPUT ./.doravel/backups/${TIMESPAMP}/${OUTPUT}
     fi
     if [ "$RESPONSE" == 'y' ]; then
         curl -s ${ENDPOINT}/stubs/$INPUT > ./$OUTPUT
@@ -34,27 +33,27 @@ ENV_NAME=local
 touch ./supervisord.conf
 askOverrideFile .env .env
 askOverrideFile Dockerfile Dockerfile
-askOverrideFile docker-compose.yml docker-compose.$ENV_NAME.yml
+askOverrideFile docker-compose.yaml docker-compose.yaml
 
-if ! [ -f ./.env.prod ]; then
+ENV_NAME=prod
+if ! [ -f ./.env.$ENV_NAME ]; then
     read -p "¿Desea agregar un entorno de produccion? (y/n): " RESPONSE
     if [ "$RESPONSE" == 'y' ]; then
-        ENV_NAME=prod
         touch ./supervisord.$ENV_NAME.conf
-        askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
-        askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
-        askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
+        askOverrideFile .env .env.$ENV_NAME
+        askOverrideFile Dockerfile Dockerfile.$ENV_NAME
+        askOverrideFile docker-compose.yaml docker-compose.$ENV_NAME.yaml
     fi
 fi
 
-if ! [ -f ./.env.test ]; then
-    read -p "¿Desea agregar un entorno de testing? (y/n): " RESPONSE
+ENV_NAME=dev
+if ! [ -f ./.env.$ENV_NAME ]; then
+    read -p "¿Desea agregar un entorno de development? (y/n): " RESPONSE
     if [ "$RESPONSE" == 'y' ]; then
-        ENV_NAME=test
         touch ./supervisord.$ENV_NAME.conf
-        askOverrideFile .env.$ENV_NAME .env.$ENV_NAME
-        askOverrideFile Dockerfile.$ENV_NAME Dockerfile.$ENV_NAME
-        askOverrideFile docker-compose.$ENV_NAME.yml docker-compose.$ENV_NAME.yml
+        askOverrideFile .env .env.$ENV_NAME
+        askOverrideFile Dockerfile Dockerfile.$ENV_NAME
+        askOverrideFile docker-compose.yaml docker-compose.$ENV_NAME.yaml
     fi
 fi
 

@@ -1,22 +1,17 @@
 #!/bin/bash
 
-
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
-curl -s $ENDPOINT/scripts/install | bash && source ~/.bashrc
 
-GIT_URL=$(git config --get remote.origin.url)
+curl -s $ENDPOINT/scripts/install | bash
+source ~/.bashrc
+
 GIT_NAME=$(git config --get user.name)
 GIT_EMAIL=$(git config --get user.email)
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-GIT_REPOSITORY=$(git config --get remote.origin.url | sed 's/.*\/\([^ ]*\/[^.]*\)\.git/\1/')
-
-if [ -z "$GIT_REPOSITORY" ] && [ ! -z "$GIT_URL" ]; then
-    GIT_REPOSITORY=$(echo $GIT_URL | sed 's/.*\:\(.*\)\.git/\1/' | grep -o -E '(\w+\/\w+)$')
-fi
+GIT_REPOSITORY=$(git config --get remote.origin.url | grep -o -E '[\/|:](\w+\/\w+)' | sed 's/^.//')
 
 if [ -z "$GIT_REPOSITORY" ]; then
     read -p "Ingrese el nombre del repositorio: " GIT_REPOSITORY
-    # validamos con regexp si el nombre del repositorio es correcto
     if [[ ! $GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del repositorio no es correcto"
         exit 1
@@ -25,7 +20,6 @@ fi
 
 if [ -z "$GIT_BRANCH" ]; then
     read -p "Ingrese el nombre del branch: " GIT_BRANCH
-    # validamos con regexp si el nombre del repositorio es correcto
     if [[ ! $GIT_BRANCH =~ ^[a-zA-Z0-9_-]+$ ]]; then
         echo "El nombre del branch no es correcto"
         exit 1
@@ -48,15 +42,8 @@ if [ -z "$GIT_EMAIL" ]; then
     fi
 fi
 
-if [[ $GIT_URL =~ ^http:// ]]; then
-    echo ""
-    echo "⚠️ Oops... necesitas que el remote origin de tu proyecto sea con ssh"
-    echo ""
-    exit 1
-fi
-
 if [ ! -f ./storage/.ssh/id_rsa ]; then
-    ssh-keygen -t rsa -b 4096 -C "$email" -f ./storage/.ssh/id_rsa -q -N ""
+    ssh-keygen -t rsa -b 4096 -C "$GIT_EMAIL" -f ./storage/.ssh/id_rsa -q -N ""
     chmod 600 ./storage/.ssh/id_rsa
 fi
 
@@ -87,27 +74,10 @@ sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./deploy
 
 chmod +x ./deploy
 
-curl -s $ENDPOINT/scripts/init | bash && source ~/.bashrc
+curl -s $ENDPOINT/scripts/init | bash
+source ~/.bashrc
 
-sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile
-sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile
-
-if [ -f ./Dockerfile.prod ]; then
-    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.prod
-    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.prod
-fi
-
-if [ -f ./Dockerfile.test ]; then
-    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.test
-    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.test
-fi
-
-if [ -f ./Dockerfile.dev ]; then
-    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.dev
-    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.dev
-fi
-
-if [ -f ./Dockerfile.local ]; then
-    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./Dockerfile.local
-    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./Dockerfile.local
-fi
+find . -name 'Dockerfile*' | while read FILE; do
+    sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i $FILE
+    sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i $FILE
+done
