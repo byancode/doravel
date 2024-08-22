@@ -5,17 +5,14 @@ ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
 curl -s $ENDPOINT/scripts/install | bash
 source ~/.bashrc
 
+GIT_URL=$(git config --get remote.origin.url)
 GIT_NAME=$(git config --get user.name)
 GIT_EMAIL=$(git config --get user.email)
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-GIT_REPOSITORY=$(git config --get remote.origin.url | grep -o -E '[\/|:](\w+\/\w+)' | sed 's/^.//')
 
-if [ -z "$GIT_REPOSITORY" ]; then
-    read -p "Ingrese el nombre del repositorio: " GIT_REPOSITORY
-    if [[ ! $GIT_REPOSITORY =~ ^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$ ]]; then
-        echo "El nombre del repositorio no es correcto"
-        exit 1
-    fi
+if [[ ! "$GIT_URL" =~ \.git$ ]]; then
+    echo "El repositorio no es correcto"
+    exit 1
 fi
 
 if [ -z "$GIT_BRANCH" ]; then
@@ -67,10 +64,10 @@ curl -O ${ENDPOINT}/stubs/deploy
 
 sed -e 's~__RSA_KEY__~'$RSA_KEY'~' -i ./deploy
 sed -e 's~__RSA_PUB__~'$RSA_PUB'~' -i ./deploy
+sed -e 's~__GIT_URL__~'$GIT_URL'~' -i ./deploy
 sed -e 's~__GIT_NAME__~'$GIT_NAME'~' -i ./deploy
 sed -e 's~__GIT_EMAIL__~'$GIT_EMAIL'~' -i ./deploy
 sed -e 's~__GIT_BRANCH__~'$GIT_BRANCH'~' -i ./deploy
-sed -e 's~__GIT_REPOSITORY__~'$GIT_REPOSITORY'~' -i ./deploy
 
 chmod +x ./deploy
 

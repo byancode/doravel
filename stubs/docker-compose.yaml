@@ -1,4 +1,3 @@
-name: local
 services:
     app:
         restart: on-failure

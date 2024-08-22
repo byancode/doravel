@@ -27,7 +27,7 @@ chmod 600 $HOME/.ssh/id_rsa
 
 LANG=en_US
 
-git clone --branch=__GIT_BRANCH__ git@github.com:__GIT_REPOSITORY__.git .
+git clone --branch=__GIT_BRANCH__ __GIT_URL__ .
 
 read -p "¿Desea iniciar el proyecto? (y/n): " RESPONSE
 
