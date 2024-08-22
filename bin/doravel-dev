@@ -78,7 +78,7 @@ if [ $COMMAND == "" ]; then
     echo "Running doravel..."
 fi
 
-COMMANDS_DOCKER_COMPOSE=$(docker compose --help | awk '/^Commands:/ {flag=1; next} /^Options:/ {flag=0} /^Run/ {exit} flag {print $1}')
+IFS=$'\n' read -r -d '' -a COMMANDS_DOCKER_COMPOSE <<< "$(docker compose --help | awk '/^Commands:/ {flag=1; next} /^Options:/ {flag=0} /^Run/ {exit} flag {print $1}')"
 
 COMMANDS_ENVIRONMENT=(
     "tinker" "test" "migrate" "seed" "rollback"
@@ -97,8 +97,11 @@ COMMANDS_DORAVEL=(
     "update"
 )
 
-# JOIN COMMANDS
-COMMANDS=("${COMMANDS_DOCKER_COMPOSE[@]}" "${COMMANDS_ENVIRONMENT[@]}" "${COMMANDS_DORAVEL[@]}")
+COMMANDS=( "${COMMANDS_DOCKER_COMPOSE[@]}" "${COMMANDS_ENVIRONMENT[@]}" "${COMMANDS_DORAVEL[@]}" )
+
+for i in "${!COMMANDS[@]}"; do
+    echo "$i: ${COMMANDS[$i]}"
+done
 
 # exit if command not exists
 if [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
