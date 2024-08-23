@@ -136,15 +136,15 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
 fi
 
 if [ "$ENV_NAME" == "local" ]; then
-    if [ ! -f '.env' ] || [ ! -f ".env.${ENV_NAME}" ]; then
+    if [ ! -f '.env' ] && [ ! -f ".env.${ENV_NAME}" ]; then
         echo "the .env file does not exist"
         exit 0
-    elif [ -f '.env' ]; then
+    elif [ -f ".env.${ENV_NAME}" ]; then
+        ENV_FILE=".env.${ENV_NAME}"
+    else
         ENV_FILE=".env"
     fi
-fi
-
-if [ ! -f ".env.${ENV_NAME}" ]; then
+elif [ ! -f ".env.${ENV_NAME}" ]; then
     echo "the .env.${ENV_NAME} file does not exist"
     exit 0
 fi
