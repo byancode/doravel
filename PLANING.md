@@ -14,8 +14,9 @@
 # DEPLOY
 ./doravel local deploy init
 ./doravel local deploy destroy
-# TAIL
-./doravel local tail # selecciona uno de los archivos de log
+# DEBUG
+./doravel local debug logs
+./doravel local debug swoole
 # SUPERVISOR
 ./doravel local supervisor start
 ./doravel local supervisor program list

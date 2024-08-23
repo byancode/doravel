@@ -9,6 +9,7 @@ services:
             APP_ENV: ${APP_ENV:-local}
         volumes:
             - .:/var/www
+            - /var/run/docker.sock:/var/run/docker.sock
         ports:
             - ${APP_PORT:-80}:80
             - ${VITE_PORT:-5173}:5173

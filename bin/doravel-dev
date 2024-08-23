@@ -7,32 +7,26 @@ DORAVEL COMMANDS:
 Usage: doravel COMMAND [OPTIONS]
 
 Commands:
-    x                  Ejecuta un comando en la imagen de doravel
-    sh                 Abre el terminal sh de doravel
-    php                Ejecuta un comando php en el contenedor de laravel
+    x                  Ejecuta un comando en una imagen aislada de doravel
+    sh, ash, bash      Abre la terminal de doravel
     fix                Corrige los permisos de los archivos
-    cmd                ejecuta un comando en el contenedor de laravel
-    add                Agrega un nuevo entorno de docker-compose
-    new                Crea un nuevo proyecto de laravel
+    php                Ejecuta un comando php en el contenedor de laravel
+    node               Ejecuta un comando node en el contenedor de laravel
+    npm                Ejecuta un comando npm en el contenedor de laravel
     test               Inicia el entorno de pruebas
-    init               Inicia un proyecto con doravel
-    ports              Muestra los puertos de los servicios
+    seed               Ejecuta los seeders de la base de datos
+    debug              Inicia el entorno de desarrollo
+    deploy             Inicia el entorno de produccion
     tinker             Abre el terminal tinker de laravel
-    reload             Reinicia el contenedor de laravel
-    install            Instala doravel globalmente
+    migrate            Ejecuta las migraciones de la base de datos
+    project            Muestra la informacion del proyecto
     artisan            Ejecuta un comando artisan
     composer           Ejecuta un comando composer
-    installer          Crea un instalador de doravel
+    rollback           Revierte las migraciones de la base de datos
     supervisor         Ejecuta un comando supervisorctl
     timestamp          Estable el timestamp en el archivo .env
-    logging            Muestra los logs de laravel
-    global             Instala el comando doravel globalmente
     upgrade            Actualiza doravel a la ultima version globalmente
     update             Actualiza doravel a la ultima version en el proyecto
-    ssh-keys           Genera las llaves ssh para el deploy
-    rm-env             Elimina un entorno de doravel
-    new-program        Agrega un nuevo programa a supervisor
-    new-package        crea un nuevo paquete de laravel
 
 Run "doravel COMMAND --help" for more information on a command.
 
@@ -87,7 +81,9 @@ COMMANDS_ENVIRONMENT=(
     "supervisor"
     "timestamp"
     "deploy"
+    "debug"
     "env"
+    "x"
 )
 
 COMMANDS_DORAVEL=(
