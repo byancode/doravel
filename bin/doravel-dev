@@ -11,8 +11,8 @@ Commands:
     sh, ash, bash      Abre la terminal de doravel
     fix                Corrige los permisos de los archivos
     php                Ejecuta un comando php en el contenedor de laravel
-    node               Ejecuta un comando node en el contenedor de laravel
     npm                Ejecuta un comando npm en el contenedor de laravel
+    node               Ejecuta un comando node en el contenedor de laravel
     test               Inicia el entorno de pruebas
     seed               Ejecuta los seeders de la base de datos
     debug              Inicia el entorno de desarrollo
@@ -67,11 +67,8 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
 fi
 
 COMMAND="$1"
+IS_SUBCOMMAND=0
 shift
-
-if [ $COMMAND == "" ]; then
-    echo "Running doravel..."
-fi
 
 ENV_NAME="local"
 ENV_FILE=$(find . -name ".env.${COMMAND}*" -exec basename {} \; | head -n 1)
@@ -93,7 +90,6 @@ COMMANDS_ENVIRONMENT=(
     "deploy"
     "debug"
     "env"
-    "x"
 )
 
 COMMANDS_DORAVEL=(
@@ -102,6 +98,7 @@ COMMANDS_DORAVEL=(
     "project"
     "upgrade"
     "update"
+    "x"
 )
 
 COMMANDS=( "${COMMANDS_DOCKER_COMPOSE[@]}" "${COMMANDS_ENVIRONMENT[@]}" "${COMMANDS_DORAVEL[@]}" )
@@ -113,21 +110,10 @@ fi
 
 if [ "$ENV_NAME" == "$ENV_MATCH" ] || [ "$ENV_NAME" == "local" ]; then
     if [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
+        IS_SUBCOMMAND=1
         COMMAND="$1"
         shift
     fi
-fi
-
-if [ "$ENV_NAME" == "local" ]; then
-    if [ ! -f '.env' ] || [ ! -f ".env.${ENV_NAME}" ]; then
-        echo "the .env file does not exist"
-        exit 0
-    fi
-fi
-
-if [ ! -f ".env.${ENV_NAME}" ]; then
-    echo "the .env.${ENV_NAME} file does not exist"
-    exit 0
 fi
 
 if [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
@@ -139,7 +125,35 @@ COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COM
 COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
 
-echo "Environment: $ENV_NAME"
+if [ ! -z "$COMMAND_DORAVEL" ] && [ $IS_SUBCOMMAND -eq 1 ]; then
+    echo "Command not found"
+    exit 0
+fi
+
+if [ ! -z "$COMMAND_DORAVEL" ]; then
+    echo "Command doravel"
+    exit 0
+fi
+
+if [ "$ENV_NAME" == "local" ]; then
+    if [ ! -f '.env' ] || [ ! -f ".env.${ENV_NAME}" ]; then
+        echo "the .env file does not exist"
+        exit 0
+    elif [ -f '.env' ]; then
+        ENV_FILE=".env"
+    fi
+fi
+
+if [ ! -f ".env.${ENV_NAME}" ]; then
+    echo "the .env.${ENV_NAME} file does not exist"
+    exit 0
+fi
+
+if [ -f ".env.${ENV_NAME}" ]; then
+    ENV_FILE=".env.${ENV_NAME}"
+fi
+
+echo "Environment: $ENV_FILE"
 
 if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
     echo "Command docker-compose"
@@ -147,8 +161,4 @@ fi
 
 if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
     echo "Command environment"
-fi
-
-if [ ! -z "$COMMAND_DORAVEL" ]; then
-    echo "Command doravel"
 fi
