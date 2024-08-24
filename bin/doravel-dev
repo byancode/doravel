@@ -75,6 +75,8 @@ ENV_FILE=$(find . -name ".env.${COMMAND}*" -exec basename {} \; | head -n 1)
 
 if [ ! -z "$ENV_FILE" ]; then
     ENV_NAME=$(echo $ENV_FILE | sed 's/.env.//g')
+else
+    ENV_NAME="$COMMAND"
 fi
 
 ENV_MATCH=$(echo $ENV_NAME | grep -E "^$COMMAND")
@@ -87,9 +89,10 @@ COMMANDS_ENVIRONMENT=(
     "bash" "ash" "sh"
     "supervisor"
     "timestamp"
+    "destroy"
     "deploy"
     "debug"
-    "env"
+    "init"
 )
 
 COMMANDS_DORAVEL=(
@@ -103,11 +106,6 @@ COMMANDS_DORAVEL=(
 
 COMMANDS=( "${COMMANDS_DOCKER_COMPOSE[@]}" "${COMMANDS_ENVIRONMENT[@]}" "${COMMANDS_DORAVEL[@]}" )
 
-if [ "$ENV_NAME" != "$ENV_MATCH" ] && [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
-    echo "environment not found"
-    exit 0
-fi
-
 if [ "$ENV_NAME" == "$ENV_MATCH" ] || [ "$ENV_NAME" == "local" ]; then
     if [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
         IS_SUBCOMMAND=1
@@ -116,14 +114,34 @@ if [ "$ENV_NAME" == "$ENV_MATCH" ] || [ "$ENV_NAME" == "local" ]; then
     fi
 fi
 
+COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COMMAND " | xargs)
+COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
+COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
+
+if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
+    echo "create environment $ENV_NAME"
+    if [ "$ENV_NAME" != 'local' ]; then
+        touch ".env.${ENV_NAME}"
+    else
+        touch '.env'
+    fi
+    exit 0
+fi
+
+if [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
+    rm -rf ".env.$ENV_NAME"
+    exit 0
+fi
+
+if [ "$ENV_NAME" != "$ENV_MATCH" ] && [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
+    echo "environment not found"
+    exit 0
+fi
+
 if [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
     echo "Command not found"
     exit 0
 fi
-
-COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COMMAND " | xargs)
-COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
-COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
 
 if [ ! -z "$COMMAND_DORAVEL" ] && [ $IS_SUBCOMMAND -eq 1 ]; then
     echo "Command not found"
@@ -153,12 +171,10 @@ if [ -f ".env.${ENV_NAME}" ]; then
     ENV_FILE=".env.${ENV_NAME}"
 fi
 
-echo "Environment: $ENV_FILE"
+if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
+    echo "Command environment"
+fi
 
 if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
     echo "Command docker-compose"
-fi
-
-if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
-    echo "Command environment"
 fi

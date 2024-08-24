@@ -5,12 +5,11 @@
 ./doravel local [bash|ash|sh]
 ./doravel local test
 ./doravel local down
+./doravel local init
+./doravel local destroy
 ./doravel local ports [list|shuffle]
 ./doravel local [artisan|composer|tinker|npm|node|php]
 ./doravel local timestamp
-# ENVIRONMENT
-./doravel local env init
-./doravel local env destroy
 # DEPLOY
 ./doravel local deploy init
 ./doravel local deploy destroy
@@ -33,5 +32,5 @@
 ./doravel compose
 ./doravel upgrade
 ./doravel update
-./doravel x bash
+./doravel x
 ```

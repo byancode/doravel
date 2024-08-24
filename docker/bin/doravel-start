@@ -20,25 +20,18 @@ function is_false {
     fi
 }
 
-APP_ENV=${APP_ENV:-'local'}
+APP_ENV="${APP_ENV:-'local'}"
+
+echo 'export DORAVEL_ENV='$APP_ENV > /root/.bashrc
+echo 'export DORAVEL_ENV='$APP_ENV > /root/.ashrc
+echo 'export DORAVEL_ENV='$APP_ENV > /root/.shrc
 
 if [ ! -f /var/www/.env ] && [ -f /var/www/.env.example ]; then
     cp /var/www/.env.example /var/www/.env
 fi
 
-if [ ! -f /var/www/.env ] && [ ! -d /var/www/app ]; then
-    rm -rf /var/www/*
-fi
-
-# check is /var/www/ empty
-if [ ! "$(ls -A /var/www)" ]; then
-    echo "Installing Laravel..."
-    composer create-project --prefer-dist laravel/laravel /var/www
-    echo "Laravel installed"
-fi
-
 if [ ! -f /var/www/.env ]; then
-    echo "File /var/www/.env not found. Exiting..."
+    echo "File /var/www/.env not found."
     exit 1
 fi
 
@@ -102,14 +95,12 @@ fi
 
 
 OPCACHE_FILE="${PHP_INI_DIR}/conf.d/docker-php-ext-opcache.ini"
-sed -e 's/opcache.enable=.*/opcache.enable='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
-sed -e 's/opcache.enable =.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
-sed -e 's/opcache.enable_cli=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
-sed -e 's/opcache.enable_cli =.*/opcache.enable_cli = '$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
-sed -e 's/upload_max_filesize =.*/upload_max_filesize = '$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE
-sed -e 's/max_execution_time =.*/max_execution_time = '$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE
-sed -e 's/post_max_size =.*/post_max_size = '$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE
-sed -e 's/memory_limit =.*/memory_limit = '$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE
+sed -e 's/opcache.enable\s?=.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+sed -e 's/opcache.enable_cli\s?=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $OPCACHE_FILE
+sed -e 's/upload_max_filesize\s?=.*/upload_max_filesize = '$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE
+sed -e 's/max_execution_time\s?=.*/max_execution_time = '$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE
+sed -e 's/post_max_size\s?=.*/post_max_size = '$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE
+sed -e 's/memory_limit\s?=.*/memory_limit = '$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE
 
 
 APP_DEBUG=${APP_DEBUG:-true}
@@ -144,8 +135,6 @@ if is_true $APP_SSL && is_true $APP_SELF_CERT; then
     echo "SSL certificate generated"
 fi
 
-
-# configure timezone
 ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime
 echo ${APP_TIMEZONE} > /etc/timezone
 echo "Timezone configured"

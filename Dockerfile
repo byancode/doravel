@@ -14,6 +14,7 @@ ENV PHP_CPPFLAGS="$PHP_CFLAGS"
 ENV PHP_LDFLAGS="-Wl,-O1 -pie"
 
 ARG UV_VERSION=0.3.0
+ARG GUM_VERSION=0.14.4
 ARG PHP_VERSION=8.2.2
 ARG SSH2_VERSION=1.4.1
 ARG NODE_VERSION=22.2.0
@@ -47,11 +48,12 @@ RUN apk add --no-cache \
 		tar \
 		xz \
         jq \
+        yq \
     ; \
     \
 	apk add --no-cache --virtual .fnm-deps libstdc++ libgcc; \
 	export SHELL="/bin/ash"; \
-    curl -fsSL https://vanaware.github.io/fnm-alpine/install.sh | sh; \
+    curl -fsSL "https://vanaware.github.io/fnm-alpine/install.sh" | sh; \
 	\
 	/root/.local/share/fnm/fnm install $NODE_VERSION; \
 	/root/.local/share/fnm/fnm default $NODE_VERSION; \
@@ -60,6 +62,10 @@ RUN apk add --no-cache \
     set -eux; \
     mkdir -p "$PHP_INI_DIR/conf.d"; \
     \
+	curl -fsSL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" -o /tmp/gum.apk; \
+	apk add --no-cache --allow-untrusted /tmp/gum.apk; \
+	rm -f /tmp/gum.apk; \
+	\
 	apk add --no-cache --virtual .fetch-deps gnupg; \
 	\
 	mkdir -p /usr/src; \
