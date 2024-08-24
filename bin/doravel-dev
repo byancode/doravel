@@ -124,7 +124,7 @@ if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
         ENV_NAME="$ENV_DEFAULT"
         touch '.env'
     elif [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
-        touch ".env.${ENV_NAME}"
+        touch ".env.$ENV_NAME"
     else
         touch '.env'
     fi
@@ -167,7 +167,7 @@ fi
 
 if [ "$ENV_NAME" == "$ENV_DEFAULT" ]; then
     if [ ! -f '.env' ] && [ ! -f ".env.$ENV_NAME" ]; then
-        echo "the .env file does not exist"
+        echo "the environment does not exist"
         exit 0
     elif [ -f ".env.$ENV_NAME" ]; then
         ENV_FILE=".env.$ENV_NAME"
