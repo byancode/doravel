@@ -70,6 +70,7 @@ COMMAND="$1"
 IS_SUBCOMMAND=0
 shift
 
+ENV_DEFAULT="local"
 ENV_NAME="local"
 ENV_FILE=$(find . -name ".env.${COMMAND}*" -exec basename {} \; | head -n 1)
 
@@ -106,7 +107,7 @@ COMMANDS_DORAVEL=(
 
 COMMANDS=( "${COMMANDS_DOCKER_COMPOSE[@]}" "${COMMANDS_ENVIRONMENT[@]}" "${COMMANDS_DORAVEL[@]}" )
 
-if [ "$ENV_NAME" == "$ENV_MATCH" ] || [ "$ENV_NAME" == "local" ]; then
+if [ "$ENV_NAME" == "$ENV_MATCH" ] || [ "$ENV_NAME" == "$ENV_DEFAULT" ]; then
     if [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
         IS_SUBCOMMAND=1
         COMMAND="$1"
@@ -119,17 +120,28 @@ COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND "
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
 
 if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
-    echo "create environment $ENV_NAME"
-    if [ "$ENV_NAME" != 'local' ]; then
+    if [ "$ENV_NAME" == "$COMMAND_ENVIRONMENT" ]; then
+        ENV_NAME="$ENV_DEFAULT"
+        touch '.env'
+    elif [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
         touch ".env.${ENV_NAME}"
     else
         touch '.env'
     fi
+    echo "created environment $ENV_NAME"
     exit 0
 fi
 
 if [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
-    rm -rf ".env.$ENV_NAME"
+    if [ "$ENV_NAME" == "$COMMAND_ENVIRONMENT" ]; then
+        ENV_NAME="$ENV_DEFAULT"
+    fi
+    if [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
+        rm -rf ".env.$ENV_NAME"
+    else
+        rm -rf '.env'
+    fi
+    echo "destroyed environment $ENV_NAME"
     exit 0
 fi
 
@@ -153,22 +165,22 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
     exit 0
 fi
 
-if [ "$ENV_NAME" == "local" ]; then
-    if [ ! -f '.env' ] && [ ! -f ".env.${ENV_NAME}" ]; then
+if [ "$ENV_NAME" == "$ENV_DEFAULT" ]; then
+    if [ ! -f '.env' ] && [ ! -f ".env.$ENV_NAME" ]; then
         echo "the .env file does not exist"
         exit 0
-    elif [ -f ".env.${ENV_NAME}" ]; then
-        ENV_FILE=".env.${ENV_NAME}"
+    elif [ -f ".env.$ENV_NAME" ]; then
+        ENV_FILE=".env.$ENV_NAME"
     else
         ENV_FILE=".env"
     fi
-elif [ ! -f ".env.${ENV_NAME}" ]; then
-    echo "the .env.${ENV_NAME} file does not exist"
+elif [ ! -f ".env.$ENV_NAME" ]; then
+    echo "the .env.$ENV_NAME file does not exist"
     exit 0
 fi
 
-if [ -f ".env.${ENV_NAME}" ]; then
-    ENV_FILE=".env.${ENV_NAME}"
+if [ -f ".env.$ENV_NAME" ]; then
+    ENV_FILE=".env.$ENV_NAME"
 fi
 
 if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
