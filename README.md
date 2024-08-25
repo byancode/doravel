@@ -10,9 +10,9 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 # 😄 Beneficios
 - [x] trabaja con varios entornos en el mismo proyecto
 - [x] configura php, mysql y demás desde los archivos .env
-- [x] auto configuración de nginx
+- [x] auto configuración de NGINX
 - [x] actualiza tu repositorio git cada 5 segundos
-- [x] ejecuta tus comandos laravel con supervisord
+- [x] ejecuta tus comandos laravel con supervisor
 
 # 📦 Instalación
 > copia y pega en consola de tu computadora
@@ -23,9 +23,9 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/main/script
 # 💻 Comandos
 
 ```bash
-./doravel up --env prod
-./doravel down --env prod
-./doravel restart --env prod
+./doravel prod up
+./doravel prod down
+./doravel prod restart
 ```
 
 ## Dockerfile

@@ -30,3 +30,9 @@
 ./doravel local deploy init
 ./doravel local deploy destroy
 ```
+
+# TODO
+
+- [ ] integrar gh (github cli), doctl (digitalocean cli)
+- [ ] implementar deploy key en el comando `./doravel local deploy init`
+- [ ] definir un servidor de despliegue en el comando `./doravel local deploy init`
