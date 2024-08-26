@@ -91,11 +91,11 @@ services:
     pgadmin:
         image: dpage/pgadmin4
         environment:
-            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-github@byancode.com}
-            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-secret}
             CONFIG_DATABASE_URI: postgresql://$DB_USERNAME:$DB_PASSWORD@postgres:5432/$DB_DATABASE
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-hello@example.com}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-secret}
         ports:
-            - ${DB_ADMIN_PORT:-8080}:80
+            - ${PGADMIN_PORT:-8080}:80
         networks:
             - default
         depends_on:

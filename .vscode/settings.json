@@ -11,5 +11,14 @@
         "supervisord.conf": "supervisord.*.conf",
         "docker-compose.y*ml": "docker-compose.*.yml,docker-compose.*.yaml",
         "docker-compose.local.y*ml": "docker-compose.*.yml,docker-compose.*.yaml"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "node_modules/": true,
     }
 }

@@ -12,6 +12,7 @@
 ./doravel local timestamp
 # DEPLOY
 ./doravel local deploy init
+./doravel local deploy push
 ./doravel local deploy destroy
 # DEBUG
 ./doravel local debug logs
@@ -34,3 +35,9 @@
 ./doravel update
 ./doravel x
 ```
+
+# TODO
+
+- [ ] integrar gh (github cli), doctl (digitalocean cli)
+- [ ] implementar deploy key en el comando `./doravel local deploy init`
+- [ ] definir un servidor de despliegue en el comando `./doravel local deploy init`
