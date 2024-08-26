@@ -119,30 +119,8 @@ COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COM
 COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
 
-if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
-    if [ "$ENV_NAME" == "$COMMAND_ENVIRONMENT" ]; then
-        ENV_NAME="$ENV_DEFAULT"
-        touch '.env'
-    elif [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
-        touch ".env.$ENV_NAME"
-    else
-        touch '.env'
-    fi
-    echo "created environment $ENV_NAME"
-    exit 0
-fi
-
-if [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
-    if [ "$ENV_NAME" == "$COMMAND_ENVIRONMENT" ]; then
-        ENV_NAME="$ENV_DEFAULT"
-    fi
-    if [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
-        rm -rf ".env.$ENV_NAME"
-    else
-        rm -rf '.env'
-    fi
-    echo "destroyed environment $ENV_NAME"
-    exit 0
+if [ $IS_SUBCOMMAND -eq 0 ] && [[ " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
+    ENV_NAME="$ENV_DEFAULT"
 fi
 
 if [ "$ENV_NAME" != "$ENV_MATCH" ] && [[ ! " ${COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
@@ -183,8 +161,27 @@ if [ -f ".env.$ENV_NAME" ]; then
     ENV_FILE=".env.$ENV_NAME"
 fi
 
+echo "Environment: $ENV_NAME"
+
 if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
     echo "Command environment"
+
+    if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
+        if [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
+            touch ".env.$ENV_NAME"
+        else
+            touch '.env'
+        fi
+        echo "created environment $ENV_NAME"
+    elif [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
+        if [ "$ENV_NAME" != "$ENV_DEFAULT" ]; then
+            rm -rf ".env.$ENV_NAME"
+        else
+            rm -rf '.env'
+        fi
+        echo "destroyed environment $ENV_NAME"
+    fi
+    exit 0
 fi
 
 if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
