@@ -7,9 +7,11 @@
 ./doravel local down
 ./doravel local init
 ./doravel local destroy
-./doravel local ports [list|shuffle]
 ./doravel local [artisan|composer|tinker|npm|node|php]
 ./doravel local timestamp
+# PORTS
+./doravel local ports [list|shuffle]
+./doravel local ports show [service]
 # DEPLOY
 ./doravel local deploy init
 ./doravel local deploy push

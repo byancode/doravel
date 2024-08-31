@@ -2,10 +2,4 @@
 
 APP_ENV=${APP_ENV:-'local'}
 
-if [ -f /var/www/.env.$APP_ENV ]; then
-    source /var/www/.env.$APP_ENV
-elif [ -f /var/www/.env ]; then
-    source /var/www/.env
-fi
-
 /usr/local/bin/php-cli /var/www/artisan --env="$APP_ENV" $@

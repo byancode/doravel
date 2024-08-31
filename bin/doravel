@@ -222,7 +222,7 @@ doravel_exec() {
 }
 
 docker_ports() {
-    LINES=$(dv ps --status running --format json | jq '.Service + "|" + .Ports')
+    LINES=$($DOCKER_COMPOSE ps --status running --format json | jq '.Service + "|" + .Ports')
     while IFS= read -r LINE; do
         SERVICE=$(echo $LINE | cut -d"|" -f1 | cut -d'"' -f2)
         PORTS=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
@@ -238,7 +238,7 @@ docker_ports() {
 }
 
 docker_find_ports() {
-    echo $(docker_ports) | tr ' ' '\n' | grep -E "^$1"
+    echo $(docker_ports) | tr ' ' '\n' | grep "$1"
 }
 
 docker_print_ports() {
@@ -284,9 +284,20 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
                 docker_print_ports "$REMOTE_IP" "$LOCAL_IP" "$LINE"
             done
             exit 0
-        elif [[ " $SERVICES " =~ " $1 " ]]; then
-            LINE=$(docker_find_ports $1)
-            docker_print_ports "$REMOTE_IP" "$LOCAL_IP" "$LINE"
+        elif [ "$1" == "show" ]; then
+            shift 1
+            ARGUMENTS=$(echo "$@" | sed 's/^ +| +$//' | tr ' ' '\n')
+            if [ -z "$ARGUMENTS" ]; then
+                echo "No services provided"
+                exit 1
+            fi
+            for SERVICE in $ARGUMENTS; do
+                LINE=$(docker_find_ports "$SERVICE")
+                if [ -z "$LINE" ]; then
+                    continue
+                fi
+                docker_print_ports "$REMOTE_IP" "$LOCAL_IP" "$LINE"
+            done
             exit 0
         else
             echo "Service $1 not found"
