@@ -22,9 +22,12 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/develop/scr
 # 💻 Comandos
 
 ```bash
-./doravel up --env prod
-./doravel down --env prod
-./doravel restart --env prod
+# local
+./doravel up
+./doravel down
+# production
+./doravel prod up
+./doravel prod down
 ```
 
 ## Dockerfile
