@@ -20,8 +20,8 @@
 # SUPERVISOR
 ./doravel local supervisor start
 ./doravel local supervisor program list
-./doravel local supervisor program create name
 ./doravel local supervisor program rm name
+./doravel local supervisor program add name
 # PACKAGE
 ./doravel package create name
 ./doravel package test
@@ -33,6 +33,7 @@
 ./doravel compose
 ./doravel upgrade
 ./doravel update
+./doravel fix
 ./doravel x
 ```
 

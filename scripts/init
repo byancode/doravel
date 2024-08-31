@@ -5,7 +5,7 @@ if [ ! -d ./storage ] || [ ! -d ./bootstrap ] || [ ! -d ./resources ] || [ ! -d 
     exit 0
 fi
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/develop"
 
 askOverrideFile() {
     INPUT=$1

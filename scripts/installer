@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/develop"
 
 curl -s $ENDPOINT/scripts/install | bash
 source ~/.bashrc

@@ -1,10 +1,6 @@
 services:
   doravel:
     image: byancode/doravel:8.1
-    build:
-      context: .
-      dockerfile: Dockerfile
-      no_cache: true
     ports:
       - 80:80
       - 8000:8000

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/develop"
 
 if [ ! -f /var/www/vendor/laravel/octane ]; then
     /usr/local/bin/composer require laravel/octane --working-dir=/var/www --with-all-dependencies

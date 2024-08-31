@@ -2,6 +2,7 @@ FROM alpine:3.20
 
 ENV ETC_PATH=/usr/local/etc
 ENV PHP_INI_DIR=${ETC_PATH}/php
+ENV DOCKER_CONTAINER=1
 
 # Apply stack smash protection to functions using local buffers and alloca()
 # Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
@@ -21,15 +22,12 @@ ARG NODE_VERSION=22.2.0
 ARG REDIS_VERSION=6.0.2
 ARG SWOOLE_VERSION=5.1.1
 
-ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" \
-    PHP_BINARY_FILE="/binaries/php-${PHP_VERSION}.tar.xz"
+ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz"
+ENV PHP_BINARY_FILE="${PHP_INI_DIR}/binaries/php-${PHP_VERSION}.tar.xz"
 
-COPY ./docker/php/conf.d/* ${ETC_PATH}/php/conf.d/
-COPY ./docker/php/extensions/* /tmp/
+COPY ./docker/php/* ${ETC_PATH}/php/
 COPY ./docker/supervisor/* ${ETC_PATH}/
-COPY ./docker/services/* /var/services/
 COPY ./docker/bin/* /usr/local/bin/
-COPY ./docker/php/binaries/ /binaries/
 COPY ./docker/nginx/ /etc/nginx/
 COPY ./docker/ssl/* /etc/ssl/
 
@@ -43,6 +41,7 @@ RUN apk add --no-cache \
 		docker \
         nginx \
 		bash \
+		htop \
 		curl \
         git \
 		tar \
@@ -72,8 +71,8 @@ RUN apk add --no-cache \
 	cd /usr/src; \
 	\
     if [ -f "${PHP_BINARY_FILE}" ]; then \
-        cp   ${PHP_BINARY_FILE} /usr/src/php.tar.xz; \
-        rm -Rf /binaries; \
+        cp  "${PHP_BINARY_FILE}" /usr/src/php.tar.xz; \
+        rm -Rf "${PHP_INI_DIR}/binaries"; \
     else \
 	    docker-php-download; \
     fi; \
@@ -123,9 +122,9 @@ RUN apk add --no-cache \
     rm -vf /usr/include/iconv.h; \
     \
     export \
-		CFLAGS="$PHP_CFLAGS" \
 		CPPFLAGS="$PHP_CPPFLAGS" \
 		LDFLAGS="$PHP_LDFLAGS" \
+		CFLAGS="$PHP_CFLAGS" \
 	; \
 	docker-php-source extract; \
     cd /usr/src/php; \

@@ -15,7 +15,7 @@ echo "
 "
 ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
-bash <(curl -s "https://raw.githubusercontent.com/byancode/doravel/main/scripts/install")
+bash <(curl -s "https://raw.githubusercontent.com/byancode/doravel/develop/scripts/install")
 
 git config --global user.name  "__GIT_NAME__"
 git config --global user.email "__GIT_EMAIL__"

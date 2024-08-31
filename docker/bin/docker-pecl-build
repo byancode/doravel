@@ -13,7 +13,9 @@ if [ -z "$VERSION" ]; then
     exit 1;
 fi
 
-cd /tmp;
+EXTENSION_DIR="${PHP_INI_DIR}/extensions"
+
+cd ${EXTENSION_DIR};
 tar -xf ${EXTENSION}-${VERSION}.tgz;
 cd ${EXTENSION}-${VERSION};
 
@@ -28,6 +30,6 @@ echo "installing ${EXTENSION}...";
 
 /usr/local/bin/docker-php-ext-enable $EXTENSION
 
-rm -rf /tmp/${EXTENSION}-*;
+rm -rf ${EXTENSION_DIR}/${EXTENSION}-*;
 
 echo "Installed success ${EXTENSION} ${VERSION}";

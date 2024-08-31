@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES="curl git unzip jq";
+PACKAGES="curl git unzip jq go";
 MANAGER="";
 
 if [ -x "$(command -v sudo)" ]; then
@@ -8,25 +8,51 @@ if [ -x "$(command -v sudo)" ]; then
 fi
 
 if [ -x "$(command -v apt)" ]; then
+    SUDO_MKDIR="$MANAGER mkdir";
+    SUDO_GPG="$MANAGER gpg";
+    SUDO_TEE="$MANAGER tee";
     MANAGER="$MANAGER apt";
     $MANAGER update;
-    $MANAGER install -y $PACKAGES;
+    $SUDO_MKDIR -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | $SUDO_GPG --dearmor -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | $SUDO_TEE /etc/apt/sources.list.d/charm.list
+    $MANAGER install -y $(echo $PACKAGES) gh gum;
 elif [ -x "$(command -v dnf)" ]; then
     MANAGER="$MANAGER dnf";
     $MANAGER update;
-    $MANAGER install -y $PACKAGES;
+    $MANAGER install -y $(echo $PACKAGES);
+
+    if [ -x "$(command -v gh)" ]; then
+        $MANAGER install 'dnf-command(config-manager)'
+        $MANAGER config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+        $MANAGER install gh --repo gh-cli
+    fi
 elif [ -x "$(command -v yum)" ]; then
     MANAGER="$MANAGER yum";
     $MANAGER update;
-    $MANAGER install -y $PACKAGES;
+
+    type -p yum-config-manager >/dev/null || $MANAGER install yum-utils
+
+    if [ -x "$(command -v sudo)" ]; then
+        CONFIG_MANAGER="sudo yum-config-manager";
+    else
+        CONFIG_MANAGER="yum-config-manager";
+    fi
+
+    $MANAGER install -y $(echo $PACKAGES);
+
+    if [ -x "$(command -v gh)" ]; then
+        $CONFIG_MANAGER --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+        $MANAGER install gh
+    fi
 elif [ -x "$(command -v apk)" ]; then
     MANAGER="$MANAGER apk";
     $MANAGER update;
-    $MANAGER add $PACKAGES;
+    $MANAGER add $(echo $PACKAGES) github-cli;
 elif [ -x "$(command -v pacman)" ]; then
     MANAGER="$MANAGER pacman";
     $MANAGER -Sy;
-    $MANAGER -S $PACKAGES;
+    $MANAGER -S $(echo $PACKAGES) github-cli;
 else
     echo "Distro not supported"
     exit 1
@@ -52,7 +78,7 @@ if ! [ -x "$(command -v docker)" ]; then
     fi
 fi
 
-ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/main"
+ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/develop"
 
 if [ ! -d ~/bin ]; then
     mkdir ~/bin
