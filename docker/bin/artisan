@@ -2,4 +2,10 @@
 
 APP_ENV=${APP_ENV:-'local'}
 
-/usr/local/bin/php-cli /var/www/artisan --env="$APP_ENV" $@
+COMMAND="/usr/local/bin/php-cli /var/www/artisan"
+
+if [ "$APP_ENV" == "local" ]; then
+    $COMMAND $@
+else
+    $COMMAND --env="$APP_ENV" $@
+fi

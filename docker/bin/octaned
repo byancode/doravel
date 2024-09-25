@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cleanup() {
+    /usr/local/bin/artisan octane:stop;
+}
+
+trap cleanup INT TERM
+trap cleanup EXIT
+
+/usr/local/bin/artisan octane:start --server=swoole $@

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo "Stopping Nginx"
-/usr/bin/killall -9 nginx || true
-sleep 1
-echo "Starting Nginx"
-/usr/sbin/nginx -c /etc/nginx/nginx.conf -g "daemon off;"

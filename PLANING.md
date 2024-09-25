@@ -24,17 +24,18 @@
 ./doravel local supervisor program list
 ./doravel local supervisor program rm name
 ./doravel local supervisor program add name
+# SERVICE
+./doravel local service add minio
+./doravel local service rm minio
 # PACKAGE
 ./doravel package create name
 ./doravel package test
 ./doravel package init
-# PROJECT
-./doravel project create name
-./doravel project init
 # DORAVEL
 ./doravel compose
 ./doravel upgrade
 ./doravel update
+./doravel new [name]
 ./doravel fix
 ./doravel x
 ```

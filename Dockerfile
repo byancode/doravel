@@ -1,18 +1,6 @@
 FROM alpine:3.20
 
-ENV ETC_PATH=/usr/local/etc
-ENV PHP_INI_DIR=${ETC_PATH}/php
 ENV DOCKER_CONTAINER=1
-
-# Apply stack smash protection to functions using local buffers and alloca()
-# Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
-# Enable optimization (-O2)
-# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
-# https://github.com/docker-library/php/issues/272
-# -D_LARGEFILE_SOURCE and -D_FILE_OFFSET_BITS=64 (https://www.php.net/manual/en/intro.filesystem.php)
-ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
-ENV PHP_CPPFLAGS="$PHP_CFLAGS"
-ENV PHP_LDFLAGS="-Wl,-O1 -pie"
 
 ARG UV_VERSION=0.3.0
 ARG GUM_VERSION=0.14.4
@@ -22,17 +10,15 @@ ARG NODE_VERSION=22.2.0
 ARG REDIS_VERSION=6.0.2
 ARG SWOOLE_VERSION=5.1.1
 
-ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz"
-ENV PHP_BINARY_FILE="${PHP_INI_DIR}/binaries/php-${PHP_VERSION}.tar.xz"
+COPY docker/bin/* /usr/local/bin/
+COPY .doravel/* /root/.doravel/
+COPY docker/php/* /tmp/php/
+COPY bin/* /usr/local/bin/
 
-COPY ./docker/php/* ${ETC_PATH}/php/
-COPY ./docker/supervisor/* ${ETC_PATH}/
-COPY ./docker/bin/* /usr/local/bin/
-COPY ./docker/nginx/ /etc/nginx/
-COPY ./docker/ssl/* /etc/ssl/
-
-
-RUN apk add --no-cache \
+RUN export SHELL="/bin/ash"; \
+	set -eux;\
+	\
+	apk add --no-cache \
 		ca-certificates \
 		inotify-tools \
         supervisor \
@@ -40,6 +26,7 @@ RUN apk add --no-cache \
         expect \
 		docker \
         nginx \
+        nano \
 		bash \
 		htop \
 		curl \
@@ -50,57 +37,27 @@ RUN apk add --no-cache \
         yq \
     ; \
     \
-	apk add --no-cache --virtual .fnm-deps libstdc++ libgcc; \
-	export SHELL="/bin/ash"; \
-    curl -fsSL "https://vanaware.github.io/fnm-alpine/install.sh" | sh; \
-	\
-	/root/.local/share/fnm/fnm install $NODE_VERSION; \
-	/root/.local/share/fnm/fnm default $NODE_VERSION; \
-	\
-	apk del --no-network .fnm-deps; \
-    set -eux; \
-    mkdir -p "$PHP_INI_DIR/conf.d"; \
-    \
-	curl -fsSL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" -o /tmp/gum.apk; \
-	apk add --no-cache --allow-untrusted /tmp/gum.apk; \
-	rm -f /tmp/gum.apk; \
-	\
-	apk add --no-cache --virtual .fetch-deps gnupg; \
-	\
-	mkdir -p /usr/src; \
-	cd /usr/src; \
-	\
-    if [ -f "${PHP_BINARY_FILE}" ]; then \
-        cp  "${PHP_BINARY_FILE}" /usr/src/php.tar.xz; \
-        rm -Rf "${PHP_INI_DIR}/binaries"; \
-    else \
-	    docker-php-download; \
-    fi; \
-	\
-	apk del --no-network .fetch-deps; \
-    \
-    set -eux; \
 	apk add --no-cache --virtual .build-deps \
 		argon2-dev \
 		build-base \
 		coreutils \
 		curl-dev \
+		bzip2-dev \
 		libpng-dev \
 		libxslt-dev \
 		openssl-dev \
 		libedit-dev \
-		bzip2-dev \
 		libjpeg-turbo-dev \
 		gnu-libiconv-dev \
 		postgresql-dev \
 		libsodium-dev \
 		libxml2-dev \
 		linux-headers \
+		icu-data-full \
 		oniguruma-dev \
 		readline-dev \
         libzip-dev \
 		sqlite-dev \
-		icu-data-full \
 		mysql-dev \
         icu-dev \
 		zlib-dev \
@@ -117,27 +74,38 @@ RUN apk add --no-cache \
 		re2c \
 		g++ \
 		gcc \
+		gnupg \
+		libgcc \
+		libstdc++ \
 	; \
+	\
+    curl -fsSL "https://vanaware.github.io/fnm-alpine/install.sh" | sh; \
+	\
+	/root/.local/share/fnm/fnm install $NODE_VERSION; \
+	/root/.local/share/fnm/fnm default $NODE_VERSION; \
     \
-    rm -vf /usr/include/iconv.h; \
+	curl -fsSL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" -o /tmp/gum.apk; \
+	\
+	apk add --no-cache --allow-untrusted /tmp/gum.apk; \
+	\
+	mkdir -p /usr/src; \
+	cd /usr/src; \
+	\
+    cp "/tmp/php/binaries/php-${PHP_VERSION}.tar.xz" /usr/src/php.tar.xz; \
     \
-    export \
-		CPPFLAGS="$PHP_CPPFLAGS" \
-		LDFLAGS="$PHP_LDFLAGS" \
-		CFLAGS="$PHP_CFLAGS" \
-	; \
-	docker-php-source extract; \
+	tar -Jxf /usr/src/php.tar.xz -C /usr/src/php --strip-components=1; \
     cd /usr/src/php; \
+	\
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+	\
 	./configure \
 		--build="$gnuArch" \
-		--with-config-file-path="$PHP_INI_DIR" \
-		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
 		--enable-option-checking=fatal \
+		--with-config-file-path="/root/.doravel/php" \
+		--with-config-file-scan-dir="/root/.doravel/php/conf.d" \
 		--with-mhash \
+		--with-pear \
 		--with-pic \
-		--enable-mbstring \
-		--enable-mysqlnd \
 		--with-password-argon2 \
 		--with-sodium=shared \
 		--with-pdo-sqlite=/usr \
@@ -154,13 +122,15 @@ RUN apk add --no-cache \
 		--with-avif \
 		--with-webp \
 		--with-jpeg \
+		--enable-mbstring \
+		--enable-mysqlnd \
 		--enable-session \
 		--enable-phpdbg \
 		--enable-ctype \
 		--enable-phar \
 		--enable-pdo \
 		--enable-gd \
-#		--enable-fpm \
+		--enable-fpm \
 		--enable-ftp \
 		--enable-exif \
 		--enable-intl \
@@ -174,9 +144,6 @@ RUN apk add --no-cache \
 		--enable-short-tags \
 		--enable-opcache-jit \
 		--enable-phpdbg-readline \
-		--with-pear \
-# bundled pcre does not support JIT on s390x
-# https://manpages.debian.org/bullseye/libpcre3-dev/pcrejit.3.en.html#AVAILABILITY_OF_JIT_SUPPORT
 		$(test "$gnuArch" = 's390x-linux-musl' && echo '--without-pcre-jit') \
 	; \
 	make -j "$(nproc)"; \
@@ -191,10 +158,7 @@ RUN apk add --no-cache \
 		' -- '{}' + \
 	; \
 	make clean; \
-	cp -v php.ini-* "$PHP_INI_DIR/"; \
-    cp -v php.ini-production "$PHP_INI_DIR/php.ini"; \
-    cd /; \
-	docker-php-source delete; \
+    \
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
@@ -203,24 +167,20 @@ RUN apk add --no-cache \
 	)"; \
 	apk add --no-cache $runDeps; \
     \
-    docker-pecl-build swoole ${SWOOLE_VERSION}; \
-    docker-pecl-build redis ${REDIS_VERSION}; \
-    docker-pecl-build ssh2 ${SSH2_VERSION}; \
-    docker-pecl-build uv ${UV_VERSION}; \
-	rm -rf /tmp/pear ~/.pearrc; \
-    \
-    docker-php-ext-enable \
-        opcache \
-        sodium \
-    ; \
+    php-build-extension swoole ${SWOOLE_VERSION}; \
+    php-build-extension redis ${REDIS_VERSION}; \
+    php-build-extension ssh2 ${SSH2_VERSION}; \
+    php-build-extension uv ${UV_VERSION}; \
+	\
     apk del --no-network .build-deps; \
-    rm -f /usr/src/php.tar.xz;
+    rm -vf /usr/include/iconv.h; \
+    rm -f  /usr/src/php.tar.xz; \
+	rm -rf /root/.pearrc; \
+	rm -rf /usr/src/php; \
+	rm -rf /tmp/*;
 
 WORKDIR /var/www
 
-EXPOSE 80
-EXPOSE 443
-EXPOSE 5173
 EXPOSE 8000
-
-CMD ["doravel-start"]
+EXPOSE 9000
+EXPOSE 5173

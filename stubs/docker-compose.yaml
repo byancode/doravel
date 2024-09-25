@@ -7,14 +7,15 @@ services:
             dockerfile: Dockerfile
         environment:
             APP_ENV: ${APP_ENV:-local}
+        command: doraveld
         volumes:
             - .:/var/www
             - /var/run/docker.sock:/var/run/docker.sock
         ports:
-            - ${APP_PORT:-80}:80
+            - ${APP_PORT:-80}:8000
             - ${VITE_PORT:-5173}:5173
         networks:
-            - default
+            - doravel
         depends_on:
             - memcached
             - postgres
@@ -27,7 +28,7 @@ services:
         expose:
             - 6379
         networks:
-            - default
+            - doravel
     minio:
         restart: on-failure
         image: minio/minio
@@ -41,8 +42,8 @@ services:
         volumes:
             - data-minio:/data/minio
         networks:
-            - default
-        command: minio server /data/minio --console-address ":${MINIO_CONSOLE_PORT:-8900}"
+            - doravel
+        command: minio server /data/minio --console-address ":8900"
         healthcheck:
             test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
             retries: 3
@@ -54,6 +55,8 @@ services:
             - 1025
         ports:
             - "${MAILPIT_DASHBOARD_PORT:-8025}:8025"
+        networks:
+            - doravel
     meilisearch:
         restart: on-failure
         image: getmeili/meilisearch
@@ -64,7 +67,7 @@ services:
         volumes:
             - data-meilisearch:/meili_data
         networks:
-            - default
+            - doravel
         healthcheck:
             test: ['CMD', 'wget', '--no-verbose', '--spider', 'http://localhost:7700/health']
             retries: 3
@@ -75,10 +78,11 @@ services:
         expose:
             - 11211
         networks:
-            - default
+            - doravel
     postgres:
         image: postgres
         environment:
+            TZ: $APP_TIMEZONE
             POSTGRES_DB: $DB_DATABASE
             POSTGRES_USER: $DB_USERNAME
             POSTGRES_PASSWORD: $DB_PASSWORD
@@ -87,7 +91,7 @@ services:
         volumes:
             - data-postgres:/var/lib/postgresql
         networks:
-            - default
+            - doravel
     pgadmin:
         image: dpage/pgadmin4
         environment:
@@ -96,14 +100,14 @@ services:
             PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-secret}
         ports:
             - ${PGADMIN_PORT:-8080}:80
-        networks:
-            - default
         depends_on:
             - postgres
         volumes:
-          - data-pgadmin:/var/lib/pgadmin
+            - data-pgadmin:/var/lib/pgadmin
+        networks:
+            - doravel
 networks:
-    default:
+    doravel:
         driver: bridge
 volumes:
     data-meilisearch:

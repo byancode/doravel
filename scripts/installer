@@ -39,7 +39,7 @@ if [ -z "$GIT_EMAIL" ]; then
     fi
 fi
 
-if [ ! -f ./storage/.ssh/id_rsa ]; then
+if [ ! -f "./storage/.ssh/id_rsa" ]; then
     ssh-keygen -t rsa -b 4096 -C "$GIT_EMAIL" -f ./storage/.ssh/id_rsa -q -N ""
     chmod 600 ./storage/.ssh/id_rsa
 fi

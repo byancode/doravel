@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cleanup() {
+    /usr/bin/killall -9 nginx || true
+}
+
+trap cleanup INT TERM
+trap cleanup EXIT
+
+/usr/sbin/nginx -c /etc/nginx/nginx.conf -g "daemon off;" $@

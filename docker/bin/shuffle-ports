@@ -1,0 +1,75 @@
+#!/usr/bin/php
+<?php
+
+$shortopts  = "";
+$shortopts .= "e:";  // Valor obligatorio
+
+$longopts  = array(
+    "env:",     // Valor obligatorio
+);
+
+$options = getopt($shortopts, $longopts);
+
+$path = getcwd();
+$env_name = $options['env'] ?? $options['e'] ?? getenv('APP_ENV') ?: 'local';
+$env_file = "$path/.env";
+$docker_compose_name = 'docker-compose';
+$docker_compose_files = glob("$path/docker-compose.*");
+
+if (empty($docker_compose_files)) {
+    exit(0);
+}
+
+function get_docker_compose_file_by_name($name) {
+    global $docker_compose_files;
+    $files = preg_grep("/$name\.ya?ml$/i", $docker_compose_files);
+    return current($files);
+}
+
+if ($env_name != 'local') {
+    $env_file .= ".$env_name";
+    $docker_compose_name .= ".$env_name";
+}
+
+$env_content = file_get_contents($env_file);
+$docker_compose_file = get_docker_compose_file_by_name($docker_compose_name);
+
+$json_text = shell_exec("cat \"{$docker_compose_file}\" | yq -o json -M -N -I 0");
+$json = json_decode($json_text, true);
+
+$services = $json['services'] ?? [];
+
+foreach ($services as $name => $service) {
+    $ports = $service['ports'] ?? [];
+
+    if (empty($ports)) {
+        continue;
+    }
+
+    foreach ($ports as $raw_port) {
+        if (preg_match('/^\d+:\d+$/', $raw_port)) {
+            continue;
+        }
+
+        if ($raw_port[0] != '$') {
+            continue;
+        }
+
+        $publish_pattern = '/^\$\{?([A-Z0-9_]+)(?=\W)/';
+        preg_match($publish_pattern, $raw_port, $matches);
+
+        if (empty($matches)) {
+            continue;
+        }
+
+        $env_name_port = $matches[1];
+        $random_port = mt_rand(2000, 9999);
+        $pattern = '/^' . $env_name_port . '(?:\s+)?=(?:\s+)?(\d+)/m';
+        $replacement = "$env_name_port=$random_port";
+        echo "Replacing $replacement\n";
+        $env_content = preg_replace($pattern, $replacement, $env_content);
+    }
+}
+
+
+file_put_contents($env_file, $env_content);

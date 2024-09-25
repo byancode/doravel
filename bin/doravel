@@ -10,16 +10,16 @@ Commands:
     x                  Ejecuta un comando en una imagen aislada de doravel
     sh, ash, bash      Abre la terminal de doravel
     fix                Corrige los permisos de los archivos
-    php                Ejecuta un comando php en el contenedor de laravel
-    npm                Ejecuta un comando npm en el contenedor de laravel
-    node               Ejecuta un comando node en el contenedor de laravel
+    php                Ejecuta un comando php en el contenedor de doravel
+    npm                Ejecuta un comando npm en el contenedor de doravel
+    node               Ejecuta un comando node en el contenedor de doravel
     test               Inicia el entorno de pruebas
     debug              Inicia el entorno de desarrollo
     deploy             Inicia el entorno de produccion
     tinker             Abre el terminal tinker de laravel
     artisan            Ejecuta un comando artisan
     composer           Ejecuta un comando composer
-    supervisor         Ejecuta un comando supervisorctl
+    supervisorctl      Ejecuta un comando supervisorctl
     timestamp          Estable el timestamp en el archivo .env
     upgrade            Actualiza doravel a la ultima version globalmente
     update             Actualiza doravel a la ultima version en el proyecto
@@ -68,10 +68,11 @@ COMMANDS_ARTISAN=(
 COMMANDS_ENVIRONMENT=(
     "${COMMANDS_ARTISAN[@]}"
     "${COMMANDS_BIN[@]}"
-    "supervisor"
+    "supervisorctl"
     "timestamp"
     "compose"
     "destroy"
+    "reload"
     "deploy"
     "debug"
     "ports"
@@ -84,6 +85,7 @@ COMMANDS_DORAVEL=(
     "update"
     "logout"
     "login"
+    "setup"
     "fix"
     "new"
     "x"
@@ -149,6 +151,7 @@ fi
 COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
+DORAVEL_IMAGE=$(cat "$DOCKER_FILE" | grep "FROM" | awk '{print $2}')
 
 echo "Command: $COMMAND"
 echo "Environment: $ENV_NAME"
@@ -172,6 +175,45 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         else
             echo "No bootstrap or storage directories found"
         fi
+    elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
+        if [ $DOCKER_CONTAINER -eq 1 ]; then
+            if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+                cp .env.example .env
+            fi
+            if [ ! -d "./.doravel" ]; then
+                mkdir .doravel
+                cp /root/.doravel/* .doravel
+            else
+                gum confirm "Do you want to overwrite the .doravel directory?" || exit 0
+                cp -fr /root/.doravel/* .doravel
+            fi
+            touch database/database.sqlite
+            npm install || exit 1
+            composer install || exit 1
+            artisan key:generate || exit 1
+            artisan storage:link || exit 1
+            doravel local init
+        else
+            doravel x doravel setup
+        fi
+        exit 0
+    elif [ "$COMMAND_DORAVEL" == 'new' ]; then
+        if [ -z "$1" ]; then
+            echo "Project directory is required"
+            exit 1
+        fi
+        DIRECTORY=$1
+        shift
+        if [ "$DIRECTORY" != '.' ] && [ -d "$DIRECTORY" ]; then
+            echo "Directory $DIRECTORY already exists"
+            exit 1
+        fi
+        docker run --rm -it -v .:/var/www $DORAVEL_IMAGE composer create-project laravel/laravel $DIRECTORY $@
+        exit $?
+        if [  "$DIRECTORY" != '.' ]; then
+            cd $DIRECTORY
+        fi
+        doravel setup
     fi
     exit 0
 fi
@@ -210,14 +252,42 @@ if [ -z "$DOCKER_COMPOSE_FILE" ]; then
 fi
 
 DOCKER_COMPOSE="docker compose --project-name $PROJECT_NAME --env-file $ENV_FILE --file $DOCKER_COMPOSE_FILE"
-DOCKER_IMAGE=$(cat $DOCKER_FILE | grep "FROM" | awk '{print $2}')
 
-doravel_exec() {
+container_exec() {
     if ! $DOCKER_COMPOSE ps --services --status running | grep -q "app"; then
         echo "Service 'app' is not running"
         exit 1
     else
          $DOCKER_COMPOSE exec app $@
+    fi
+}
+
+supervisorctl_exec() {
+    if [ $DOCKER_CONTAINER -eq 1 ]; then
+        EXECUTABLE="supervisorctl --configuration /etc/supervisord.conf"
+        COMMANDS=( "start" "stop" "restart" "status" "reload" "remove" "enable" "disable" )
+
+        COMMAND="$1"
+        shift
+
+        if [ -z "$COMMAND" ] || [[ ! " ${COMMANDS[@]} " =~ " $COMMAND " ]]; then
+            $EXECUTABLE $@
+        fi
+
+        VALUE="$1"
+        shift
+
+        if [ -z "$VALUE" ]; then
+            $EXECUTABLE $COMMAND
+        elif [ "$VALUE" == "all" ]; then
+            $EXECUTABLE $COMMAND $VALUE
+        else
+            $EXECUTABLE $COMMAND $($EXECUTABLE status | sed -n "/$VALUE/p" | awk '{print $1}')
+        fi
+
+        $EXECUTABLE $@
+    else
+        container_exec doravel supervisorctl $@
     fi
 }
 
@@ -277,12 +347,24 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         REMOTE_IP=$(curl -s https://checkip.amazonaws.com/)
         LOCAL_IP=$(hostname -I | cut -d" " -f1)
 
+        if [ -z "$1" ]; then
+            echo "Usage: doravel ports [list|show|shuffle]"
+            exit 0
+        fi
+
         if [ "$1" == "list" ]; then
             LINES=$(echo $(docker_ports) | tr ' ' '\n')
 
             for LINE in $LINES; do
                 docker_print_ports "$REMOTE_IP" "$LOCAL_IP" "$LINE"
             done
+            exit 0
+        elif [ "$1" == "shuffle" ]; then
+            if [ $DOCKER_CONTAINER -eq 1 ]; then
+                shuffle-ports --env $ENV_NAME
+            else
+                docker run --rm -it -v .:/var/www $DORAVEL_IMAGE shuffle-ports --env $ENV_NAME
+            fi
             exit 0
         elif [ "$1" == "show" ]; then
             shift 1
@@ -303,25 +385,25 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             echo "Service $1 not found"
             exit 1
         fi
-    elif [ "$COMMAND_ENVIRONMENT" == "supervisor" ]; then
-        if [ $DOCKER_CONTAINER -eq 1 ]; then
-            supervisorctl --configuration /etc/supervisord.conf $@
-        else
-            doravel_exec supervisorctl --configuration /etc/supervisord.conf $@
-        fi
-        exit 0
+    elif [ "$COMMAND_ENVIRONMENT" == "reload" ]; then
+        supervisorctl_exec reload
+        supervisorctl_exec restart all
+        exit $?
+    elif [ "$COMMAND_ENVIRONMENT" == "supervisorctl" ]; then
+        supervisorctl_exec $@
+        exit $?
     elif [[ " ${COMMANDS_ARTISAN[@]} " =~ " $COMMAND_ENVIRONMENT " ]]; then
         if [ $DOCKER_CONTAINER -eq 1 ]; then
             artisan $COMMAND_ENVIRONMENT $@
         else
-            doravel_exec artisan $COMMAND_ENVIRONMENT $@
+            container_exec artisan $COMMAND_ENVIRONMENT $@
         fi
         exit 0
     elif [[ " ${COMMANDS_BIN[@]} " =~ " $COMMAND_ENVIRONMENT " ]]; then
         if [ $DOCKER_CONTAINER -eq 1 ]; then
             $COMMAND_ENVIRONMENT $@
         else
-            doravel_exec $COMMAND_ENVIRONMENT $@
+            container_exec $COMMAND_ENVIRONMENT $@
         fi
         exit 0
     elif [ "$COMMAND_ENVIRONMENT" == "timestamp" ]; then

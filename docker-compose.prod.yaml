@@ -1,6 +1,0 @@
-services:
-  doravel:
-    image: byancode/doravel:8.1
-    ports:
-      - 80:80
-      - 8000:8000

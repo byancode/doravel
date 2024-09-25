@@ -1,0 +1,11 @@
+#!/bin/sh
+
+APP_ENV=${APP_ENV:-'local'}
+OCTANE_ENABLED=${OCTANE_ENABLED:-'false'}
+
+if [ "$OCTANE_ENABLED" = "true" ]; then
+    /usr/local/bin/artisan serve $@
+else
+    /usr/local/bin/octaned $@
+fi
+

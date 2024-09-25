@@ -4,13 +4,12 @@
     "explorer.fileNesting.patterns": {
         ".env": ".env.*",
         "artisan": "doravel",
-        ".gitignore": ".gitignore,.gitattributes",
         "Dockerfile": "Dockerfile.*",
+        ".gitignore": ".gitattributes",
         "package.json": "package-lock.json",
         "composer.json": "composer.lock",
         "supervisord.conf": "supervisord.*.conf",
-        "docker-compose.y*ml": "docker-compose.*.yml,docker-compose.*.yaml",
-        "docker-compose.local.y*ml": "docker-compose.*.yml,docker-compose.*.yaml"
+        "docker-compose.y*ml": "docker-compose.*.yml,docker-compose.*.yaml"
     },
     "files.exclude": {
         "**/.git": true,

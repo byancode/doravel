@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES="curl git unzip jq go";
+PACKAGES="curl git unzip jq yq go";
 MANAGER="";
 
 if [ -x "$(command -v sudo)" ]; then
@@ -87,7 +87,7 @@ fi
 curl -s $ENDPOINT/bin/doravel -o ~/bin/doravel
 
 if [ -f ~/bin/doravel ]; then
-    ln -sf ~/bin/doravel ~/bin/dv
+    ln -sf ~/bin/doravel ~/bin/d
 fi
 
 if ! grep -q "export PATH=\$PATH:\$HOME/bin" ~/.bashrc; then
