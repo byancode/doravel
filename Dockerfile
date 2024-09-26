@@ -2,21 +2,25 @@ FROM alpine:3.20
 
 ENV DOCKER_CONTAINER=1
 
+ENV SHELL=/bin/ash
+ENV ENV=/root/.ashrc
+
 ARG UV_VERSION=0.3.0
 ARG GUM_VERSION=0.14.4
+ARG FNM_VERSION=1.37.1
 ARG PHP_VERSION=8.2.2
-ARG SSH2_VERSION=1.4.1
 ARG NODE_VERSION=22.2.0
 ARG REDIS_VERSION=6.0.2
 ARG SWOOLE_VERSION=5.1.1
+ARG COMPOSER_VERSION=2.7.9
 
 COPY docker/bin/* /usr/local/bin/
 COPY .doravel/* /root/.doravel/
 COPY docker/php/* /tmp/php/
 COPY bin/* /usr/local/bin/
+COPY docker/root/* /root/
 
-RUN export SHELL="/bin/ash"; \
-	set -eux;\
+RUN set -eux;\
 	\
 	apk add --no-cache \
 		ca-certificates \
@@ -25,6 +29,7 @@ RUN export SHELL="/bin/ash"; \
 		openssl \
         expect \
 		docker \
+		unzip \
         nginx \
         nano \
 		bash \
@@ -78,11 +83,12 @@ RUN export SHELL="/bin/ash"; \
 		libgcc \
 		libstdc++ \
 	; \
+	curl -fsSL "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" -o /usr/local/bin/composer; \
+    curl -fsSL "https://github.com/Schniz/fnm/releases/download/v${FNM_VERSION}/fnm-linux.zip" -o /tmp/fnm.zip; \
+	unzip /tmp/fnm.zip -d /usr/local/bin; \
 	\
-    curl -fsSL "https://vanaware.github.io/fnm-alpine/install.sh" | sh; \
-	\
-	/root/.local/share/fnm/fnm install $NODE_VERSION; \
-	/root/.local/share/fnm/fnm default $NODE_VERSION; \
+	/usr/local/bin/fnm install $NODE_VERSION; \
+	/usr/local/bin/fnm default $NODE_VERSION; \
     \
 	curl -fsSL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" -o /tmp/gum.apk; \
 	\
@@ -169,12 +175,11 @@ RUN export SHELL="/bin/ash"; \
     \
     php-build-extension swoole ${SWOOLE_VERSION}; \
     php-build-extension redis ${REDIS_VERSION}; \
-    php-build-extension ssh2 ${SSH2_VERSION}; \
     php-build-extension uv ${UV_VERSION}; \
 	\
     apk del --no-network .build-deps; \
     rm -vf /usr/include/iconv.h; \
-    rm -f  /usr/src/php.tar.xz; \
+    rm -vf /usr/src/php.tar.xz; \
 	rm -rf /root/.pearrc; \
 	rm -rf /usr/src/php; \
 	rm -rf /tmp/*;

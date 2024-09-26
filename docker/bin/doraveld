@@ -1,21 +1,5 @@
 #!/bin/sh
 
-function is_true {
-    if [ "$1" == "true" ] || [ "$1" == "True" ] || [ "$1" == "TRUE" ] || [ "$1" == "1" ]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-function is_false {
-    if [ "$1" == "false" ] || [ "$1" == "False" ] || [ "$1" == "FALSE" ] || [ "$1" == "0" ]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
 APP_ENV="${APP_ENV:-'local'}"
 
 echo 'export DORAVEL_ENV='$APP_ENV > /root/.bashrc
@@ -73,9 +57,6 @@ git config --global user.email "$(echo $GIT_EMAIL)"
 
 PHP_INI_FILE="/root/.doravel/php/php.ini"
 
-if [ ! -f $PHP_INI_FILE ]; then
-    cp -v "${PHP_INI_FILE}-production" $PHP_INI_FILE
-fi
 
 # check if key exists on .env file
 if [ -z "$APP_KEY" ]; then

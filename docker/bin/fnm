@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ -f /root/.local/share/fnm/fnm ]; then
-  /root/.local/share/fnm/fnm $@
-  exit $?
-fi

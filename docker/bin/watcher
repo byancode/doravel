@@ -4,21 +4,19 @@ DIRECTORY_PATH="/var/www"
 UNWATCH_FILE="$DIRECTORY_PATH/.unwatch"
 TEMP_FILE="/tmp/unwatch_temp.$$"
 
-# Inicializa los patrones de exclusión
 echo "/var/www/.git" > $TEMP_FILE
 echo "/var/www/vendor" >> $TEMP_FILE
 echo "/var/www/storage" >> $TEMP_FILE
 echo "/var/www/.unwatch" >> $TEMP_FILE
 echo "/var/www/node_modules" >> $TEMP_FILE
 
-# Función para limpiar los procesos de PHP
 cleanup() {
     /bin/pgrep -f 'artisan.*(serve|octane\:start)' | /usr/bin/xargs /bin/kill -15;
     /bin/rm -f $TEMP_FILE;
 }
 
-# sigint y sigterm
 trap cleanup INT TERM
+trap cleanup EXIT
 
 if [ -f "$UNWATCH_FILE" ]; then
     FILE_CONTENT=$(/bin/cat "$UNWATCH_FILE"; echo)

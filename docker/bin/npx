@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ -f /root/.local/share/fnm/aliases/default/bin/npx ]; then
-  /root/.local/share/fnm/aliases/default/bin/npx $@
-  exit $?
-fi

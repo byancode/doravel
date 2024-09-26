@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ -f /root/.local/share/fnm/aliases/default/bin/npm ]; then
-  /root/.local/share/fnm/aliases/default/bin/npm $@
-  exit $?
-fi
