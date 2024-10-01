@@ -32,9 +32,9 @@ RUN set -eux; \
     --nginx-with "stream" \
     --nginx-with "threads" \
     --nginx-with "poll_module" \
-    # --nginx-with "select_module" \
-    # --nginx-with "http_ssl_module" \
-    # --nginx-with "stream_ssl_module" \
+    --nginx-with "select_module" \
+    --nginx-with "http_ssl_module" \
+    --nginx-with "stream_ssl_module" \
     --nginx-with "http_slice_module" \
     --nginx-with "http_gunzip_module" \
     --nginx-with "http_image_filter_module" \
@@ -44,6 +44,7 @@ RUN set -eux; \
     # https://github.com/php/php-src/tags
     --php "8.3.12" \
     # PHP WITH
+	--php-with "mhash" \
 	--php-with "mhash" \
 	--php-with "pear" \
 	--php-with "pic" \

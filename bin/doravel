@@ -244,9 +244,10 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
 
             BRANCH="11.x"
             mkdir -p "$DIRECTORY"; \
-            curl -fsSLO "https://github.com/laravel/laravel/archive/refs/heads/$BRANCH.tar.gz"
-	        tar -xzf "$BRANCH.tar.gz" -C "$DIRECTORY" --strip-components=1; \
-            rm -f "$BRANCH.tar.gz"; \
+            LARAVEL_FILE="$BRANCH.tar.gz"
+            curl -fsSLO "https://github.com/laravel/laravel/archive/refs/heads/$LARAVEL_FILE"
+	        tar -xzf "/tmp/$LARAVEL_FILE" -C "$DIRECTORY" --strip-components=1; \
+            rm -f "/tmp/$BRANCH.tar.gz"; \
 
             if [  "$DIRECTORY" != '.'  ]; then
                 cd $DIRECTORY

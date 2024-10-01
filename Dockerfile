@@ -39,6 +39,9 @@ RUN apk add --no-cache \
     ; \
 	curl -fSL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" -o /tmp/gum.apk; \
 	apk add --no-cache --allow-untrusted /tmp/gum.apk; \
+	\
+	doravel new .; \
+	\
 	apk cache -v clean; \
 	apk cache -v purge; \
 	rm -f /tmp/*;
