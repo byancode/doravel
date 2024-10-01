@@ -1,0 +1,6 @@
+#!/bin/ash
+
+case "$1" in
+    true|True|TRUE|1) exit 0 ;;
+    *) exit 1 ;;
+esac

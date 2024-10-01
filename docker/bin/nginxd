@@ -7,4 +7,11 @@ cleanup() {
 trap cleanup INT TERM
 trap cleanup EXIT
 
-/usr/sbin/nginx -c /etc/nginx/nginx.conf -g "daemon off;" $@
+CONFIGURATION_FILE="/var/www/.doravel/nginx/$APP_ENV.conf"
+
+if [ ! -f $CONFIGURATION_FILE ]; then
+    echo "No se encontró el archivo de configuración $CONFIGURATION_FILE"
+    exit 1
+fi
+
+/usr/sbin/nginx -c $CONFIGURATION_FILE -g "daemon off;" $@

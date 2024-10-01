@@ -1,0 +1,7 @@
+# CRONTAB
+# https://crontab.guru/
+# https://crontab.guru/examples.html
+#
+# -----------------------------------
+# EVERY MONTH - create certificates
+0 0 1 * * /usr/local/bin/certbot

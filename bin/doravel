@@ -1,5 +1,8 @@
 #!/bin/bash
 
+VERSION="1.0.0"
+DOCKER_CONTAINER=${DOCKER_CONTAINER:-0}
+
 function print_help {
     echo '
 DORAVEL COMMANDS:
@@ -17,6 +20,7 @@ Commands:
     debug              Inicia el entorno de desarrollo
     deploy             Inicia el entorno de produccion
     tinker             Abre el terminal tinker de laravel
+    compose            Ejecuta un comando docker compose
     artisan            Ejecuta un comando artisan
     composer           Ejecuta un comando composer
     supervisorctl      Ejecuta un comando supervisorctl
@@ -26,10 +30,10 @@ Commands:
 
 Run "doravel COMMAND --help" for more information on a command.
 
---------------------------------------------
-
-DOCKER COMPOSE COMMANDS:
-    '"$(docker compose --help)"'
+┌──────────────────────────────────────────────────────────────────────────┐
+│ IMPORTANT:  DORAVEL IS A SUPERSET OF DOCKER,                             │
+│             YOU CAN USE DOCKER COMPOSE COMMANDS                          │
+└──────────────────────────────────────────────────────────────────────────┘
 '
 }
 
@@ -148,10 +152,30 @@ else
     DOCKER_COMPOSE_NAME="docker-compose"
 fi
 
+DOCKER_COMPOSE_FILE=$(find . -maxdepth 1 -name "$DOCKER_COMPOSE_NAME.y*" | head -n 1)
 COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
-DORAVEL_IMAGE=$(cat "$DOCKER_FILE" | grep "FROM" | awk '{print $2}')
+DORAVEL_IMAGE="byancode/doravel:$VERSION"
+
+doravel_image_run() {
+    docker run --rm -it -v .:/var/www $DORAVEL_IMAGE $@
+}
+
+recursive_cp() {
+    ROOT_PATH=$1
+    DEST_PATH=$2
+    ORIGIN_PATH=$ROOT_PATH$DEST_PATH
+
+    for FROM_PATH in $(find $ORIGIN_PATH); do
+        TARGET_PATH=${FROM_PATH#$ROOT_PATH}
+        if [ -d $FROM_PATH ]; then
+            mkdir -vp $TARGET_PATH
+        elif [ ! -f $TARGET_PATH ]; then
+            cp -v $FROM_PATH $TARGET_PATH
+        fi
+    done
+}
 
 echo "Command: $COMMAND"
 echo "Environment: $ENV_NAME"
@@ -162,8 +186,16 @@ if [ ! -z "$COMMAND_DORAVEL" ] && [ $IS_SUBCOMMAND -eq 1 ]; then
 fi
 
 if [ ! -z "$COMMAND_DORAVEL" ]; then
-    echo "Command doravel"
-    if [ "$COMMAND_DORAVEL" == 'fix' ]; then
+    echo "Command doravel: $COMMAND_DORAVEL"
+    if [ "$COMMAND_DORAVEL" == 'x' ]; then
+        VOLUMES=( "-v .:/var/www" )
+        DOCKER_SOCKET_FILE="/var/run/docker.sock"
+        if [ -S "$DOCKER_SOCKET_FILE" ]; then
+            VOLUMES+=( "-v /var/run/docker.sock:/var/run/docker.sock" )
+        fi
+        docker run --rm -it ${VOLUMES[@]} $DORAVEL_IMAGE $@
+        exit $?
+    elif [ "$COMMAND_DORAVEL" == 'fix' ]; then
         if [ -d "./bootstrap" ]; then
             sudo chown -R $(id -un):$(id -gn) ./bootstrap/cache
         fi
@@ -175,57 +207,95 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         else
             echo "No bootstrap or storage directories found"
         fi
+        exit 0
     elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
+        echo "Command doravel"
         if [ $DOCKER_CONTAINER -eq 1 ]; then
-            if [ ! -f ".env" ] && [ -f ".env.example" ]; then
-                cp .env.example .env
-            fi
-            if [ ! -d "./.doravel" ]; then
-                mkdir .doravel
-                cp /root/.doravel/* .doravel
-            else
-                gum confirm "Do you want to overwrite the .doravel directory?" || exit 0
-                cp -fr /root/.doravel/* .doravel
-            fi
+            recursive_cp /root/ .doravel/
+            recursive_cp /root/ .vscode/
+
             touch database/database.sqlite
-            npm install || exit 1
-            composer install || exit 1
-            artisan key:generate || exit 1
-            artisan storage:link || exit 1
+
+            # npm install
+            # composer install
+            # artisan key:generate
+            # artisan storage:link
+
             doravel local init
+            exit 0
         else
             doravel x doravel setup
+            exit $?
         fi
-        exit 0
     elif [ "$COMMAND_DORAVEL" == 'new' ]; then
-        if [ -z "$1" ]; then
-            echo "Project directory is required"
-            exit 1
+        if [ $DOCKER_CONTAINER -eq 1 ]; then
+            DIRECTORY=$1
+            shift 1
+
+            if [ -z "$DIRECTORY" ]; then
+                echo "Project directory is required"
+                exit 1
+            fi
+
+            if [ "$DIRECTORY" != '.' ] && [ -d "$DIRECTORY" ]; then
+                echo "Directory $DIRECTORY already exists"
+                exit 1
+            fi
+
+            BRANCH="11.x"
+            mkdir -p "$DIRECTORY"; \
+            curl -fsSLO "https://github.com/laravel/laravel/archive/refs/heads/$BRANCH.tar.gz"
+	        tar -xzf "$BRANCH.tar.gz" -C "$DIRECTORY" --strip-components=1; \
+            rm -f "$BRANCH.tar.gz"; \
+
+            if [  "$DIRECTORY" != '.'  ]; then
+                cd $DIRECTORY
+            fi
+
+            doravel setup
+            exit 0
+        else
+            doravel x doravel new $@
+            exit 0
         fi
-        DIRECTORY=$1
-        shift
-        if [ "$DIRECTORY" != '.' ] && [ -d "$DIRECTORY" ]; then
-            echo "Directory $DIRECTORY already exists"
-            exit 1
-        fi
-        docker run --rm -it -v .:/var/www $DORAVEL_IMAGE composer create-project laravel/laravel $DIRECTORY $@
-        exit $?
-        if [  "$DIRECTORY" != '.' ]; then
-            cd $DIRECTORY
-        fi
-        doravel setup
     fi
-    exit 0
 fi
 
 if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
     echo "Command environment"
 
     if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
-        touch $ENV_FILE
-        touch "$DOCKER_COMPOSE_NAME.yaml"
-        echo "created environment $ENV_NAME"
-        exit 0
+        if [ $DOCKER_CONTAINER -eq 1 ]; then
+            DOCKER_COMPOSE_FILE="$DOCKER_COMPOSE_NAME.yaml"
+            STUBS_PATH="/root/stubs"
+
+            if [ ! -f "$ENV_FILE" ]; then
+                cp "$STUBS_PATH/.env" "$ENV_FILE"
+            fi
+            if [ ! -f "$DOCKER_FILE" ]; then
+                cp "$STUBS_PATH/Dockerfile" "$DOCKER_FILE"
+            fi
+            if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
+                cp "$STUBS_PATH/docker-compose.yaml" "$DOCKER_COMPOSE_FILE"
+            fi
+
+            DOCKERFILE_NAME=$(basename $DOCKER_FILE)
+            sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $ENV_FILE
+            sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $DOCKER_FILE
+            cp -vf /root/.doravel/cron/local .doravel/cron/$ENV_NAME
+            cp -vf /root/.doravel/php/local.ini .doravel/php/$ENV_NAME.ini
+            cp -vf /root/.doravel/nginx/local.conf .doravel/nginx/$ENV_NAME.conf
+            cp -vf /root/.doravel/supervisor/local.conf .doravel/supervisor/$ENV_NAME.conf
+            yq '.services.app.build.dockerfile="'$DOCKERFILE_NAME'", .services.app.environment.APP_ENV="'$ENV_NAME'"' \
+                < "$STUBS_PATH/docker-compose.yaml" \
+                > $DOCKER_COMPOSE_FILE;
+
+            echo "created environment $ENV_NAME"
+            exit 0
+        else
+            doravel x doravel $ENV_NAME init
+            exit 0
+        fi
     elif [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
         rm -f $ENV_FILE
         rm -f "$DOCKER_COMPOSE_NAME.yaml"
@@ -243,11 +313,8 @@ DIR_NAME=$(basename $(pwd))
 PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
 PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
 
-DOCKER_CONTAINER=${DORAVEL_CONTAINER:-0}
-DOCKER_COMPOSE_FILE=$(find . -maxdepth 1 -name "$DOCKER_COMPOSE_NAME.y*" | head -n 1)
-
 if [ -z "$DOCKER_COMPOSE_FILE" ]; then
-    echo "the ./$DOCKER_COMPOSE_NAME.yaml file does not exist"
+    echo "the $DOCKER_COMPOSE_FILE file does not exist"
     exit 0
 fi
 
@@ -258,7 +325,8 @@ container_exec() {
         echo "Service 'app' is not running"
         exit 1
     else
-         $DOCKER_COMPOSE exec app $@
+        $DOCKER_COMPOSE exec app $@
+        exit $?
     fi
 }
 

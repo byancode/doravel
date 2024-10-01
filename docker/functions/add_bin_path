@@ -1,0 +1,5 @@
+#!/bin/ash
+
+if [ -d  "$1" ] && $(echo $PATH | grep -q $1); then
+    export PATH="$1:$PATH"
+fi

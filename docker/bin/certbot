@@ -1,0 +1,66 @@
+#!/bin/ash
+
+set -eux
+
+COMMAND="$1"
+shift 1
+
+# Definir variables
+DOMAIN="server"
+CERT_DIR="${APP_PATH}/.doravel/.ssl"
+
+ROOT_CERT_DIR="/root/.doravel/.ssl"
+ROOT_CONFIGURATION_FILE="${ROOT_CERT_DIR}/${DOMAIN}.cnf"
+
+CONFIGURATION_FILE="${CERT_DIR}/${DOMAIN}.cnf"
+CERTIFICATE_FILE="${CERT_DIR}/${DOMAIN}.crt"
+PRIVATE_FILE="${CERT_DIR}/${DOMAIN}.key"
+CSR_FILE="${CERT_DIR}/${DOMAIN}.csr"
+
+if [ ! -d "$CERT_DIR" ] && [ "$COMMAND" = "write" ]; then
+    echo "Creando directorio de certificados SSL..."
+    mkdir -vp "$CERT_DIR"
+    cp -v "$ROOT_CERT_DIR"/* "$CERT_DIR"
+fi
+
+if [ ! -d "$CERT_DIR" ]; then
+    echo "No se encontró el directorio de certificados SSL en ${CERT_DIR}."
+    exit 1
+fi
+
+if [ ! -f $CONFIGURATION_FILE ]; then
+    echo "El archivo de configuración ${CONFIGURATION_FILE} no existe."
+    exit 1
+fi
+
+if [ ! -f "$PRIVATE_FILE" ]; then
+    echo "Generando clave privada en ${PRIVATE_FILE}..."
+    openssl genrsa -out "$PRIVATE_FILE" 2048
+fi
+
+if [ -f "$CERTIFICATE_FILE" ] && [ -f "$PRIVATE_FILE" ] && [ -f "$CSR_FILE" ]; then
+    IS_EXPIRED=$(openssl x509 -checkend 0 -noout -in "$CERTIFICATE_FILE" && echo "false" || echo "true")
+    if is_false $IS_EXPIRED; then
+        echo "El certificado SSL en ${CERTIFICATE_FILE} aún es válido."
+        exit 0
+    fi
+fi
+
+echo "Creando la solicitud de firma de certificado (CSR) en ${CSR_FILE} usando ${CONFIGURATION_FILE}..."
+openssl req -new -key "$PRIVATE_FILE" -out "$CSR_FILE" -config "$CONFIGURATION_FILE"
+
+echo "Generando certificado SSL autofirmado en ${CERTIFICATE_FILE}..."
+openssl x509 -req -in "$CSR_FILE" -signkey "$PRIVATE_FILE" -out "$CERTIFICATE_FILE" -days 365 -extensions v3_req -extfile "$CONFIGURATION_FILE"
+
+if [ -f "$CERTIFICATE_FILE" ] && [ -f "$PRIVATE_FILE" ]; then
+    echo "Certificado SSL y clave privada generados correctamente en ${CERT_DIR}."
+
+    if [ "$COMMAND" != "write" ]; then
+        nginx -s reload
+    fi
+
+    exit 0
+else
+    echo "Error: no se pudo generar el certificado SSL. Verifica los archivos de configuración y permisos."
+    exit 1
+fi

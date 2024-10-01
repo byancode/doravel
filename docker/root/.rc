@@ -1,0 +1,20 @@
+
+# ENVIRONMETS
+
+export APP_ENV="${APP_ENV:-'local'}"
+export APP_PATH="/var/www"
+export FNM_PATH="/root/.local/share/fnm"
+export REMOTE_IP_FILE="/var/run/remote_ip"
+export DOCKER_CONTAINER=1
+
+if [ ! -f $REMOTE_IP_FILE ]; then
+    curl -fsSL https://checkip.amazonaws.com/ -o $REMOTE_IP_FILE
+fi
+
+export REMOTE_IP=$(cat $REMOTE_IP_FILE)
+
+# PATH
+
+if [ -d "/root/bin" ]; then
+    add_bin_path "/root/bin"
+fi

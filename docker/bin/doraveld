@@ -1,205 +1,26 @@
-#!/bin/sh
+#!/bin/ash
 
-APP_ENV="${APP_ENV:-'local'}"
+echo $$ > /var/run/doraveld.pid
 
-echo 'export DORAVEL_ENV='$APP_ENV > /root/.bashrc
-echo 'export DORAVEL_ENV='$APP_ENV > /root/.ashrc
-echo 'export DORAVEL_ENV='$APP_ENV > /root/.shrc
+echo "Iniciando doraveld..."
 
-if [ ! -f /var/www/.env ] && [ -f /var/www/.env.example ]; then
-    cp /var/www/.env.example /var/www/.env
-fi
+cleanup() {
+    rm -f /var/run/doraveld.pid
+    exit 0
+}
 
-if [ ! -f /var/www/.env ]; then
-    echo "File /var/www/.env not found."
-    exit 1
-fi
+trap cleanup INT TERM
 
-if [ -f /var/www/.env.$APP_ENV ]; then
-    ENV_FILE=/var/www/.env.$APP_ENV
-    source $ENV_FILE
-else
-    ENV_FILE=/var/www/.env
-    source $ENV_FILE
-fi
+while true; do
+    CONFIGURATION_FILE="/var/www/.doravel/supervisor/$APP_ENV.conf"
 
-if [ -d /var/www/storage/.ssh ]; then
-    cp -R /var/www/storage/.ssh /root/.ssh
-fi
+    if [ ! -f $CONFIGURATION_FILE ]; then
+        echo "No se encontró el archivo de configuración $CONFIGURATION_FILE, esperando 2 segundos..."
+        sleep 2
+        continue
+    fi
 
-if [ -f /root/.ssh/id_rsa ]; then
-    chmod 600 /root/.ssh/id_rsa
-fi
-
-
-# aqui agregaremos los argumentos para el servidor octane
-LARAVEL_AUTO_SCHEDULE=${LARAVEL_AUTO_SCHEDULE:-true}
-ONLY_ENV_SUPERVISOR=${ONLY_ENV_SUPERVISOR:-false}
-PHP_OPCACHE_ENABLE=${PHP_OPCACHE_ENABLE:-false}
-NPM_AUTO_INSTALL=${NPM_AUTO_INSTALL:-true}
-NPM_AUTO_BUILD=${NPM_AUTO_BUILD:-true}
-VITE_ENABLE=${VITE_ENABLE:-false}
-
-
-GIT_NAME=${GIT_NAME:-"Byancode"}
-GIT_EMAIL=${GIT_EMAIL:-"byancode@gmail.com"}
-
-
-PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-1G}
-PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-60}
-PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-0}
-PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-"-1"}
-
-
-git config --global user.name  "$(echo $GIT_NAME)"
-git config --global user.email "$(echo $GIT_EMAIL)"
-
-
-PHP_INI_FILE="/root/.doravel/php/php.ini"
-
-
-# check if key exists on .env file
-if [ -z "$APP_KEY" ]; then
-    php /var/www/artisan key:generate
-fi
-
-
-if is_true $PHP_OPCACHE_ENABLE; then
-    OPCACHE_ENABLE=1
-else
-    OPCACHE_ENABLE=0
-fi
-
-# OPCACHE
-sed -e 's/opcache.enable\s?=.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
-sed -e 's/opcache.enable_cli\s?=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
-# PHP
-sed -e 's/upload_max_filesize\s?=.*/upload_max_filesize = '$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE
-sed -e 's/max_execution_time\s?=.*/max_execution_time = '$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE
-sed -e 's/post_max_size\s?=.*/post_max_size = '$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE
-sed -e 's/memory_limit\s?=.*/memory_limit = '$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE
-
-APP_DEBUG=${APP_DEBUG:-true}
-APP_URL=${APP_URL:-"http://localhost"}
-APP_HOST=$(php -r "echo parse_url('$APP_URL', PHP_URL_HOST);")
-APP_TIMEZONE=${APP_TIMEZONE:-"UTC"}
-APP_SELF_CERT=${APP_SELF_CERT:-true}
-SERVER_NAME=${SERVER_NAME:-$APP_HOST}
-
-
-if [[ "${APP_URL}" =~ ^https:// ]]; then
-    APP_SSL=${APP_SSL:-true}
-else
-    APP_SSL=${APP_SSL:-false}
-fi
-
-if is_true $APP_SSL && is_true $APP_SELF_CERT; then
-    echo "Starting SSL certificate..."
-
-    APP_IP=$(/bin/hostname -I | /usr/bin/awk '{print $1}')
-    sed -e 's/__APP_HOST__/'$APP_HOST'/g' -i /etc/ssl/sancert.cnf
-    sed -e 's/__APP_IP__/'$APP_IP'/g' -i /etc/ssl/.cnf
-
-    openssl dhparam -out /etc/ssl/certs/doravel.pem 2048
-    openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes \
-    -subj "/C=PE/ST=Lima/O=Byancode S.A.C/CN="${APP_HOST} \
-    -out /etc/ssl/certs/doravel.crt \
-    -keyout /etc/ssl/certs/doravel.key
-    echo "SSL certificate generated"
-fi
-
-ln -snf /usr/share/zoneinfo/${APP_TIMEZONE} /etc/localtime
-echo ${APP_TIMEZONE} > /etc/timezone
-echo "Timezone configured"
-
-if [ -f /etc/nginx/sites-available/site.conf ]; then
-    sed -e 's/__APP_ENV__/'$APP_ENV'/g' -i /etc/nginx/sites-available/site.conf
-fi
-if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
-    sed -e 's/__APP_ENV__/'$APP_ENV'/g' -i /etc/nginx/sites-available/ssl-site.conf
-fi
-echo "Environment configured"
-
-
-if is_false $APP_SSL; then
-    rm -f /etc/nginx/sites-available/ssl-site.conf;
-fi
-echo "SSL configured"
-
-if [ -f /etc/nginx/sites-available/site.conf ]; then
-    sed -e 's/__SERVER_NAME__/'$SERVER_NAME'/g' -i /etc/nginx/sites-available/site.conf
-fi
-if [ -f /etc/nginx/sites-available/ssl-site.conf ]; then
-    sed -e 's/__SERVER_NAME__/'$SERVER_NAME'/g' -i /etc/nginx/sites-available/ssl-site.conf
-fi
-echo "Host configured"
-
-
-if [ -d /var/www/storage ]; then
-    chmod -R 777 /var/www/storage;
-else
-    mkdir /var/www/storage;
-    chmod -R 777 /var/www/storage;
-fi
-
-if [ ! -d /var/www/vendor/ ]; then
-    composer install --quiet --working-dir=/var/www
-fi
-
-if [ ! -d /var/www/node_modules/ ] && is_true $NPM_AUTO_INSTALL; then
-    echo "Installing npm packages..."
-    npm install --prefix /var/www
-    echo "npm packages installed"
-fi
-
-if is_true $NPM_AUTO_BUILD; then
-    echo "Building assets..."
-    npm run build
-    echo "Assets built"
-fi
-
-if [ ! -L /var/www/public/storage ]; then
-    php artisan storage:link
-fi
-
-cat /usr/local/etc/supervisord.conf > /supervisord.conf
-
-if [ -d /var/www/vendor/laravel/octane ]; then
-    cat /var/services/service-octane.conf >> /supervisord.conf
-else
-    cat /var/services/service-server.conf >> /supervisord.conf
-fi
-
-if is_true $APP_DEBUG; then
-    cat /var/services/service-watcher.conf >> /supervisord.conf
-fi
-
-if is_true $LARAVEL_AUTO_SCHEDULE; then
-    cat /var/services/service-schedule.conf >> /supervisord.conf
-fi
-
-echo "" >> /supervisord.conf
-
-if [ -f /var/www/supervisord.conf ] && is_false $ONLY_ENV_SUPERVISOR; then
-    cat /var/www/supervisord.conf >> /supervisord.conf
-fi
-
-if [ -f "/var/www/supervisord.${APP_ENV}.conf" ]; then
-    echo ""                                    >> /supervisord.conf
-    cat "/var/www/supervisord.${APP_ENV}.conf" >> /supervisord.conf
-fi
-
-sed -e 's/$APP_ENV/'$APP_ENV'/g' -i /supervisord.conf
-sed -e 's/__ENV__/'$APP_ENV'/g' -i /supervisord.conf
-
-if [ -z "$APP_KEY" ]; then
-    /usr/local/bin/php /var/www/artisan --env=$APP_ENV key:generate
-fi
-
-echo "Starting supervisord..."
-
-if is_true $APP_DEBUG || is_true $VITE_ENABLE; then
-    cat /var/services/service-vite.conf >> /supervisord.conf
-fi
-
-/usr/bin/supervisord --nodaemon --configuration /etc/supervisor/supervisord.conf
+    /usr/bin/supervisord --nodaemon --configuration $CONFIGURATION_FILE
+    echo "supervisord se ha detenido. Reiniciando en 1 segundo..."
+    sleep 1
+done

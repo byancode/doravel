@@ -31,7 +31,7 @@ services:
             - doravel
     minio:
         restart: on-failure
-        image: minio/minio
+        image: minio/minio:${MINIO_VERSION:-latest}
         expose:
             - 9000
         ports:
@@ -50,7 +50,7 @@ services:
             timeout: 5s
     mailpit:
         restart: on-failure
-        image: axllent/mailpit
+        image: axllent/mailpit:${MAILPIT_VERSION:-latest}
         expose:
             - 1025
         ports:
@@ -59,7 +59,7 @@ services:
             - doravel
     meilisearch:
         restart: on-failure
-        image: getmeili/meilisearch
+        image: getmeili/meilisearch:${MEILISEARCH_VERSION:-latest}
         expose:
             - 7700
         ports:
@@ -74,13 +74,14 @@ services:
             timeout: 5s
     memcached:
         restart: on-failure
-        image: memcached:alpine
+        image: memcached:${MEMCACHED_VERSION:-latest}
         expose:
             - 11211
         networks:
             - doravel
     postgres:
-        image: postgres
+        restart: on-failure
+        image: postgres:${POSTGRES_VERSION:-latest}
         environment:
             TZ: $APP_TIMEZONE
             POSTGRES_DB: $DB_DATABASE
@@ -93,7 +94,8 @@ services:
         networks:
             - doravel
     pgadmin:
-        image: dpage/pgadmin4
+        restart: on-failure
+        image: dpage/pgadmin4:${PGADMIN_VERSION:-latest}
         environment:
             CONFIG_DATABASE_URI: postgresql://$DB_USERNAME:$DB_PASSWORD@postgres:5432/$DB_DATABASE
             PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-hello@example.com}

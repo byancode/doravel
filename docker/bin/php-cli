@@ -1,3 +1,32 @@
-#!/bin/sh
+#!/bin/ash
 
-/usr/local/bin/php -c /usr/local/etc/php/php.ini -d variables_order=EGPCS $@
+set -eux
+
+source $(get_env_file $APP_ENV)
+
+# PHP ENVIROMENT
+PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-1G}
+PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-60}
+PHP_OPCACHE_ENABLED=${PHP_OPCACHE_ENABLED:-false}
+PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-0}
+PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-"-1"}
+
+# FILE
+PHP_INI_FILE="$APP_PATH/.doravel/php/$APP_ENV.ini"
+
+if [ -f "${PHP_INI_FILE}-${APP_ENV}" ]; then
+    PHP_INI_FILE="${PHP_INI_FILE}-${APP_ENV}"
+fi
+
+# PHP
+sed -e 's/upload_max_filesize\s?=.*/upload_max_filesize = '$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE
+sed -e 's/max_execution_time\s?=.*/max_execution_time = '$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE
+sed -e 's/post_max_size\s?=.*/post_max_size = '$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE
+sed -e 's/memory_limit\s?=.*/memory_limit = '$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE
+
+# OPCACHE
+OPCACHE_ENABLE=$(is_true $PHP_OPCACHE_ENABLED && echo 1 || echo 0)
+sed -e 's/opcache.enable\s?=.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
+sed -e 's/opcache.enable_cli\s?=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
+
+/usr/local/bin/php -c "$PHP_INI_FILE" -d variables_order=EGPCS $@

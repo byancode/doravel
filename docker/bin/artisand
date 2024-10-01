@@ -1,11 +1,39 @@
-#!/bin/sh
+#!/bin/ash
 
-APP_ENV=${APP_ENV:-'local'}
-OCTANE_ENABLED=${OCTANE_ENABLED:-'false'}
+set -eux
 
-if is_true "$OCTANE_ENABLED"; then
-    /usr/local/bin/artisan serve $@
-else
-    /usr/local/bin/octaned $@
+source $(get_env_file $APP_ENV)
+
+TIMEZONE_FILE='/usr/share/zoneinfo/'$APP_TIMEZONE
+
+if [ -z "$APP_TIMEZONE" ] || [ ! -f "$TIMEZONE_FILE" ]; then
+    APP_TIMEZONE='UTC'
 fi
 
+if [ ! -f "$TIMEZONE_FILE" ]; then
+    ln -snf /usr/share/zoneinfo/UTC /etc/localtime
+else
+    ln -snf "$TIMEZONE_FILE" /etc/localtime
+fi
+
+if [ ! -d $APP_PATH/vendor ]; then
+    /usr/local/bin/composer install
+fi
+
+if [ -z "$APP_KEY" ]; then
+    /usr/local/bin/artisan key:generate
+fi
+
+if [ ! -L $APP_PATH/public/storage ]; then
+    /usr/local/bin/artisan storage:link
+fi
+
+if [ -f $APP_PATH/.doravel/startup.sh ]; then
+    sh  $APP_PATH/.doravel/startup.sh
+fi
+
+if [ -d $APP_PATH/vendor/laravel/octane ] && is_true ${OCTANE_ENABLED:-'false'}; then
+    /usr/local/bin/octaned $@
+else
+    /usr/local/bin/artisan serve $@
+fi

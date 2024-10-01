@@ -1,0 +1,396 @@
+#!/bin/bash
+
+set -eux;
+
+cleanup() {
+	rm -rf /tmp/*;
+	exit 0;
+}
+
+trap cleanup INT TERM;
+trap cleanup EXIT;
+
+DEFAULT_PACKAGES=(
+	"argon2-dev"
+	"build-base"
+	"coreutils"
+	"curl-dev"
+	"bzip2-dev"
+	"libpng-dev"
+	"libxslt-dev"
+	"openssl-dev"
+	"libedit-dev"
+	"libjpeg-turbo-dev"
+	"gnu-libiconv-dev"
+	"postgresql-dev"
+	"libsodium-dev"
+	"libxml2-dev"
+	"linux-headers"
+	"icu-data-full"
+	"oniguruma-dev"
+	"readline-dev"
+	"libzip-dev"
+	"sqlite-dev"
+	"mysql-dev"
+	"libuv-dev"
+	"icu-dev"
+	"zlib-dev"
+	"pcre-dev"
+	"autoconf"
+	"gmp-dev"
+	"libc-dev"
+	"dpkg-dev"
+	"pkgconf"
+	"gd-dev"
+	"bison"
+	"dpkg"
+	"file"
+	"make"
+	"re2c"
+	"g++"
+	"gcc"
+	"gnupg"
+	"libgcc"
+	"musl-dev"
+	"libstdc++"
+);
+
+DEFAULT_PHP_WITH=(
+	"config-file-scan-dir=/etc/php/conf.d"
+	"config-file-path=/etc/php"
+	"mhash"
+	"pear"
+	"pic"
+	"password-argon2"
+	"sodium=shared"
+	"pdo-sqlite=/usr"
+	"pdo-mysql=mysqlnd"
+	"pdo-pgsql"
+	"sqlite3=/usr"
+	"iconv=/usr"
+	"readline"
+	"openssl"
+	"curl"
+	"zlib"
+	"bz2=/usr"
+	"zip"
+	"avif"
+	"webp"
+	"jpeg"
+);
+
+DEFAULT_PHP_ENABLE=(
+	"mbstring"
+	"mysqlnd"
+	"session"
+	"phpdbg"
+	"ctype"
+	"phar"
+	"pdo"
+	"gd"
+	"fpm"
+	"ftp"
+	"exif"
+	"intl"
+	"pcntl"
+	"shmop"
+	"bcmath"
+	"opcache"
+	"sockets"
+	"fileinfo"
+	"tokenizer"
+	"short-tags"
+	"opcache-jit"
+	"phpdbg-readline"
+	"option-checking=fatal"
+);
+
+declare -A NGINX_WITH
+declare -A NGINX_WITHOUT
+declare -A PHP_EXTENSIONS
+declare -A PHP_WITHOUT
+declare -A PHP_ENABLE
+declare -A PHP_WITH
+declare -A PACKAGES
+
+COMPOSER_VERSION="2.7.9"
+NGINX_VERSION="1.27.1"
+NODE_VERSION="22.2.0"
+PCRE2_VERSION="10.42"
+LIBGD_VERSION="2.3.3"
+ZLIB_VERSION="1.2.13"
+PHP_VERSION="8.2.2"
+
+for VALUE in "${DEFAULT_PACKAGES[@]}"; do
+	KEY=$(echo $VALUE | cut -d '=' -f 1);
+	PACKAGES[$KEY]="${VALUE}";
+done
+
+for VALUE in "${DEFAULT_PHP_WITH[@]}"; do
+	KEY=$(echo $VALUE | cut -d '=' -f 1);
+	PHP_WITH[$KEY]="--with-${VALUE}";
+done
+
+for VALUE in "${DEFAULT_PHP_ENABLE[@]}"; do
+	KEY=$(echo $VALUE | cut -d '=' -f 1);
+	PHP_ENABLE[$KEY]="--enable-${VALUE}";
+done
+
+parse_arguments() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --composer)
+        COMPOSER_VERSION="$2"
+        shift 2
+        ;;
+      --add-pkg)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+        PACKAGES[$KEY]="$2"
+        shift 2
+        ;;
+      --pcre2)
+        PCRE2_VERSION="$2"
+        shift 2
+        ;;
+	  --libgd)
+	  	LIBGD_VERSION="$2"
+		shift 2
+		;;
+      --zlib)
+        ZLIB_VERSION="$2"
+        shift 2
+        ;;
+	  --openssl)
+		OPENSSL_VERSION="$2"
+		shift 2
+		;;
+      --nginx)
+        NGINX_VERSION="$2"
+        shift 2
+        ;;
+      --nginx-with)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+        NGINX_WITH[$KEY]="--with-$2"
+        shift 2
+        ;;
+      --nginx-without)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+		NGINX_WITHOUT[$KEY]="--without-$2"
+        shift 2
+        ;;
+      --node)
+        NODE_VERSION="$2"
+        shift 2
+        ;;
+      --php)
+        PHP_VERSION="$2"
+        shift 2
+        ;;
+      --php-extension)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+		VALUE=$(echo $2 | cut -d '=' -f 2);
+
+		if [ -z "$VALUE" ]; then
+			echo "No se ha especificado la versión de la extensión $KEY";
+			exit 1;
+		fi
+
+        PHP_EXTENSIONS[$KEY]="$VALUE"
+        shift 2
+        ;;
+	  --php-with)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+		PHP_WITH[$KEY]="--with-$2"
+		shift 2
+		;;
+	  --php-enable)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+		PHP_ENABLE[$KEY]="--enable-$2"
+		shift 2
+		;;
+	  --php-without)
+	  	KEY=$(echo $2 | cut -d '=' -f 1);
+		PHP_WITHOUT[$KEY]="$KEY"
+		shift 2
+		;;
+      *)
+        echo "Opción no reconocida: $1"
+        exit 1
+        ;;
+    esac
+  done
+}
+
+parse_arguments "$@"
+
+PROCESSORS=$(($(nproc) - 8));
+
+for KEY in "${!PHP_EXTENSIONS[@]}"; do
+	VALUE="${PHP_EXTENSIONS[$KEY]}";
+	FILE_NAME="${KEY}-${VALUE}.tgz";
+	curl -fSL "https://pecl.php.net/get/${FILE_NAME}" \
+		-o /tmp/${FILE_NAME};
+done
+
+curl -fSL "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" \
+	-o /usr/local/bin/composer;
+chmod +x /usr/local/bin/composer;
+
+curl -fSL "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" \
+	-o /tmp/zlib.tar.gz;
+
+curl -fSL "github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz" \
+	-o /tmp/pcre2.tar.gz;
+
+curl -fSL "https://github.com/libgd/libgd/releases/download/gd-${LIBGD_VERSION}/libgd-${LIBGD_VERSION}.tar.gz" \
+	-o /tmp/libgd.tar.gz;
+
+curl -fSL "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" \
+	-o /tmp/openssl.tar.gz;
+
+curl -fSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o /tmp/nginx.tar.gz;
+
+curl -fSL "https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz" \
+	-o "/tmp/php.tar.gz";
+
+curl -fSL "https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz" \
+	-o /tmp/node.tar.xz;
+
+
+apk add --no-cache --virtual .build-deps \
+	${PACKAGES[@]} \
+;
+
+mkdir -p /root/.local/share/node;
+rm -rf /root/.local/share/node/*;
+tar -xJf /tmp/node.tar.xz -C /root/.local/share/node --strip-components=1;
+ln -sf /root/.local/share/node/bin/* /usr/local/bin/;
+
+
+mkdir -p /tmp/zlib;
+rm -rf /tmp/zlib/*;
+tar -xzf /tmp/zlib.tar.gz -C /tmp/zlib --strip-components=1;
+cd /tmp/zlib;
+./configure;
+make -j "$PROCESSORS";
+make install;
+
+
+mkdir -p /tmp/libgd;
+rm -rf /tmp/libgd/*;
+tar -xzf /tmp/libgd.tar.gz -C /tmp/libgd --strip-components=1;
+cd /tmp/libgd;
+./configure;
+make -j "$PROCESSORS";
+make install;
+
+
+mkdir -p /tmp/openssl;
+rm -rf /tmp/openssl/*;
+tar -xzf /tmp/openssl.tar.gz -C /tmp/openssl --strip-components=1;
+cd /tmp/openssl;
+./Configure;
+make -j "$PROCESSORS";
+make install;
+
+
+mkdir -p /tmp/pcre2;
+rm -rf /tmp/pcre2/*;
+tar -xzf /tmp/pcre2.tar.gz -C /tmp/pcre2 --strip-components=1;
+cd /tmp/pcre2;
+./configure;
+make -j "$PROCESSORS";
+make install;
+
+
+mkdir -p /etc/nginx;
+mkdir -p /tmp/nginx;
+mkdir -p /var/log/nginx;
+rm -rf /tmp/nginx/*;
+tar -xzf /tmp/nginx.tar.gz -C /tmp/nginx --strip-components=1;
+cd /tmp/nginx;
+
+./configure \
+    --sbin-path=/usr/sbin/nginx \
+    --conf-path=/etc/nginx/nginx.conf \
+    --pid-path=/var/run/nginx.pid \
+	--lock-path=/var/run/nginx.lock \
+	--http-log-path=/var/log/nginx/http.log \
+	--error-log-path=/var/log/nginx/error.log \
+	${NGINX_WITH[@]} \
+	${NGINX_WITHOUT[@]} \
+;
+
+make -j "$PROCESSORS";
+make install;
+
+mkdir -p /tmp/php;
+rm -rf /tmp/php/*;
+mkdir -p /etc/php/conf.d;
+tar -xzf /tmp/php.tar.gz -C /tmp/php --strip-components=1;
+cd /tmp/php;
+
+gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)";
+
+./configure \
+	--build="$gnuArch" \
+	${PHP_WITH[@]} \
+	${PHP_ENABLE[@]} \
+	${PHP_WITHOUT[@]} \
+;
+
+make -j "$PROCESSORS";
+
+# Elimina todos los archivos con extensión .a en el directorio actual y sus subdirectorios
+# find -type f -name '*.a' -delete;
+
+make install;
+
+# Copia el archivo php.ini-production desde /tmp/php a /root/.doravel/php y lo renombra a local.ini
+cp -vf /tmp/php/php.ini-production /root/.doravel/php/local.ini;
+
+# Elimina información de depuración de archivos ejecutables en el directorio /usr/local.
+find \
+	/usr/local \
+	-type f \
+	-perm '/0111' \
+	-exec sh -euxc ' \
+		strip --strip-all "$@" || : \
+	' -- '{}' + \
+;
+
+make clean;
+
+# Escanea las dependencias necesarias en /usr/local, las formatea y filtra
+runDeps="$( \
+    scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
+        | tr ',' '\n' \
+        | sort -u \
+        | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+)";
+
+
+apk add --no-cache $runDeps;
+
+for KEY in "${!PHP_EXTENSIONS[@]}"; do
+	cd /tmp;
+	VALUE="${PHP_EXTENSIONS[$KEY]}";
+	PACKAGE="${KEY}-${VALUE}"
+	echo "Instalando extensión $PACKAGE";
+	PACKAGE_FILE="/tmp/${PACKAGE}.tgz"
+	tar -xf "$PACKAGE_FILE";
+	echo "Descomprimiendo $PACKAGE_FILE";
+	cd "$PACKAGE";
+	echo "Configurando $KEY";
+	phpize;
+	./configure;
+	make;
+	echo "Instalando $PACKAGE";
+	make install;
+done
+
+apk del --no-network .build-deps;
+rm -vf /var/spool/cron/crontabs/*;
+rm -vf /usr/include/iconv.h;
+rm -rf /root/.pearrc;
+rm -rf /tmp/*;

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/ash
 
 APP_ENV=${APP_ENV:-'local'}
 

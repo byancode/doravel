@@ -1,0 +1,61 @@
+#!/bin/ash
+
+echo $$ > /var/run/watcherd.pid
+
+UNWATCH_FILE="$APP_PATH/.unwatch"
+TEMP_FILE="/tmp/unwatch_temp.$$"
+
+echo "$APP_PATH/.git" > $TEMP_FILE
+echo "$APP_PATH/vendor" >> $TEMP_FILE
+echo "$APP_PATH/storage" >> $TEMP_FILE
+echo "$APP_PATH/.unwatch" >> $TEMP_FILE
+echo "$APP_PATH/node_modules" >> $TEMP_FILE
+
+cleanup() {
+    rm -f /var/run/watcherd.pid
+    exit 0
+}
+
+trap cleanup INT TERM
+
+if [ -f "$UNWATCH_FILE" ]; then
+    FILE_CONTENT=$(cat "$UNWATCH_FILE"; echo)
+    echo "$FILE_CONTENT" | while IFS= read -r line; do
+        # Ignora líneas vacías y comentarios
+        case "$line" in
+            \#*|"" ) continue ;;
+        esac
+        # Escapar comillas simples en la línea
+        line=$(echo "$line" | sed "s/'/\\\\'/g")
+        # agrega en el string line el path APP_PATH si no lo tiene
+        if [ "${line:0:1}" != "/" ]; then
+            line="$APP_PATH/$line"
+        fi
+        # si empieza con / pero no con APP_PATH, lo agrega
+        if [ "${line:0:${#APP_PATH}}" != "$APP_PATH" ]; then
+            line="$APP_PATH$line"
+        fi
+        echo "$line" >> $TEMP_FILE
+    done
+fi
+
+# Construye la lista de exclusiones para el comando find
+EXCLUDE_FIND_ARGS=""
+while IFS= read -r pattern; do
+    EXCLUDE_FIND_ARGS="$EXCLUDE_FIND_ARGS -ipath '$pattern' -prune -o"
+done < "$TEMP_FILE"
+
+
+# Ejecuta find para obtener todos los archivos y excluye los patrones especificados
+WATCHED_FILES=$(eval "find '$APP_PATH' $EXCLUDE_FIND_ARGS -print")
+
+# Limpia el archivo temporal
+rm -f $TEMP_FILE
+
+# Construye el comando inotifywait con los archivos a observar
+COMMAND="inotifywait -m -e modify,create,delete $WATCHED_FILES"
+
+# Ejecuta el comando inotifywait y limpia los procesos PHP al recibir eventos
+eval $COMMAND | while read -r event; do
+    cleanup;
+done

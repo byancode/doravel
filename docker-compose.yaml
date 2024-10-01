@@ -1,0 +1,10 @@
+services:
+  release:
+    image: byancode/doravel:1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./tmp:/tmp
+      - ./bin/doravel:/usr/local/bin/doravel
+      - ./docker/bin/builder:/usr/local/bin/builder

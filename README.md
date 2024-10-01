@@ -34,7 +34,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/develop/scr
 #### Variables de entorno
 ```env
 # PHP
-PHP_OPCACHE_ENABLE=true
+PHP_OPCACHE_ENABLED=true
 PHP_UPLOAD_MAX_FILESIZE=1G
 PHP_MAX_EXECUTION_TIME=60
 PHP_POST_MAX_SIZE=1G

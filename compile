@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker compose -f docker-compose.compiled.yaml build --no-cache

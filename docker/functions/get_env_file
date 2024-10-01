@@ -1,0 +1,7 @@
+#!/bin/ash
+
+if [  -f "$APP_PATH/.env.$1"  ]; then
+    echo "$APP_PATH/.env.$1"
+else
+    echo "$APP_PATH/.env"
+fi
