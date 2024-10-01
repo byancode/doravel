@@ -45,7 +45,6 @@ RUN set -eux; \
     --php "8.3.12" \
     # PHP WITH
 	--php-with "mhash" \
-	--php-with "mhash" \
 	--php-with "pear" \
 	--php-with "pic" \
 	--php-with "sodium=shared" \
