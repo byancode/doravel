@@ -20,5 +20,5 @@
         "**/Thumbs.db": true,
         "node_modules/": true,
     },
-    "dbmlERDPreviewer.preferredTheme": "light"
+    "dbmlERDPreviewer.preferredTheme": "dark"
 }

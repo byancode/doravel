@@ -1,4 +1,4 @@
-Table users {
+Table users [headercolor: #699A33] {
   id int [pk, increment]
   name varchar(255)
   email varchar(255) [unique]
@@ -13,7 +13,7 @@ Table users {
   updated_at timestamp
 }
 
-Table jobs {
+Table jobs [headercolor: #943156] {
   id int [pk, increment]
   queue varchar(255)
   payload text
@@ -23,7 +23,7 @@ Table jobs {
   created_at timestamp
 }
 
-Table teams {
+Table teams [headercolor: #313975] {
   id int [pk, increment]
   user_id int
   name varchar(255)
@@ -34,7 +34,7 @@ Table teams {
 
 ref: teams.user_id > users.id
 
-Table team_user {
+Table team_user [headercolor: #666] {
   id int [pk, increment]
   team_id int
   user_id int
@@ -46,7 +46,7 @@ Table team_user {
 ref: team_user.team_id > teams.id
 ref: team_user.user_id > users.id
 
-Table team_invitations {
+Table team_invitations [headercolor: #313975] {
   id int [pk, increment]
   team_id int
   email varchar(255)
@@ -57,7 +57,7 @@ Table team_invitations {
 
 ref: team_invitations.team_id > teams.id
 
-Table password_resets {
+Table password_resets [headercolor: #313975] {
   email varchar(255)
   token varchar(255)
   created_at timestamp
@@ -65,7 +65,7 @@ Table password_resets {
 
 ref: password_resets.email > users.email
 
-Table failed_jobs {
+Table failed_jobs [headercolor: #943156] {
   id int [pk, increment]
   uuid varchar(255) [unique]
   connection text
