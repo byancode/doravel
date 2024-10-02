@@ -14,11 +14,13 @@ WORKDIR /var/www
 COPY docker/supervisor/ /etc/supervisor/
 COPY docker/functions/* /usr/local/bin/
 COPY docker/bin/* /usr/local/bin/
+COPY workflows/ /root/.workflows/
+COPY workplan/ /root/.workplan/
 COPY .doravel/ /root/.doravel/
 COPY .vscode/ /root/.vscode/
 COPY bin/* /usr/local/bin/
+COPY stubs/ /root/.stubs/
 COPY docker/root/* /root/
-COPY stubs/ /root/stubs/
 
 RUN apk add --no-cache \
 		ca-certificates \

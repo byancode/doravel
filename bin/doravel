@@ -211,6 +211,8 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
     elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
         echo "Command doravel"
         if [ $DOCKER_CONTAINER -eq 1 ]; then
+            recursive_cp /root/ .workflows/
+            recursive_cp /root/ .workplan/
             recursive_cp /root/ .doravel/
             recursive_cp /root/ .vscode/
 
@@ -270,7 +272,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
     if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
         if [ $DOCKER_CONTAINER -eq 1 ]; then
             DOCKER_COMPOSE_FILE="$DOCKER_COMPOSE_NAME.yaml"
-            STUBS_PATH="/root/stubs"
+            STUBS_PATH="/root/.stubs"
 
             if [ ! -f "$ENV_FILE" ]; then
                 cp "$STUBS_PATH/.env" "$ENV_FILE"

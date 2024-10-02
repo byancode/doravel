@@ -95,13 +95,13 @@ _Resumen breve del proyecto, incluyendo el objetivo principal, el problema que s
 ---
 
 ## 🧪 Plan de Pruebas
-- **Pruebas Unitarias**:  
+- **Pruebas Unitarias**:
   _Lista de los módulos o clases que requieren pruebas unitarias._
 
-- **Pruebas de Integración**:  
+- **Pruebas de Integración**:
   _Descripción de los módulos que deben ser probados en conjunto._
 
-- **Pruebas de Aceptación del Usuario (UAT)**:  
+- **Pruebas de Aceptación del Usuario (UAT)**:
   _Lista de pruebas funcionales que el usuario debe validar._
 
 ---

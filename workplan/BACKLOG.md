@@ -1,4 +1,4 @@
-# 📝 Backlog del Proyecto: [Nombre del Proyecto]
+# 📝 Backlog: [Nombre del Proyecto]
 
 **Descripción**:
 _Lista de todas las tareas, características y mejoras planificadas para el proyecto. Aquí se detallan los elementos pendientes de desarrollo, priorizados según su importancia y urgencia._
@@ -31,7 +31,7 @@ _Historias que definen qué quiere lograr el usuario con cada funcionalidad._
 
 - [ ] **[US-004]** Como usuario, quiero poder crear nuevas tareas y asignarles una prioridad, para organizar mejor mis pendientes.
 - [ ] **[US-005]** Como usuario, quiero poder marcar una tarea como completada, para ver mi progreso en la lista de tareas.
-- [?] **[US-006]** Como usuario, quiero recibir una notificación por correo cuando una tarea está próxima a vencer, para recordarme de completar la tarea a tiempo.
+- [ ] **[US-006]** Como usuario, quiero recibir una notificación por correo cuando una tarea está próxima a vencer, para recordarme de completar la tarea a tiempo.
     _Comentario: Verificar integración con API de notificaciones._
 
 ---
@@ -70,12 +70,12 @@ _Registro de errores o problemas detectados que requieren solución._
 ---
 
 ## 🔄 Flujo de Trabajo
-1. [ ] **Backlog**: Tareas y funcionalidades en lista de espera.
-2. [ ] **To Do**: Tareas que se han priorizado y están listas para ser trabajadas.
-3. [ ] **In Progress**: Tareas en proceso de desarrollo.
-4. [ ] **Review**: Tareas completadas que están en revisión.
-5. [ ] **Completed**: Tareas finalizadas y revisadas.
-6. [ ] **Blocked**: Tareas que no pueden avanzar debido a dependencias o problemas externos.
+- [ ] **Backlog**: Tareas y funcionalidades en lista de espera.
+- [ ] **To Do**: Tareas que se han priorizado y están listas para ser trabajadas.
+- [ ] **In Progress**: Tareas en proceso de desarrollo.
+- [ ] **Review**: Tareas completadas que están en revisión.
+- [ ] **Completed**: Tareas finalizadas y revisadas.
+- [ ] **Blocked**: Tareas que no pueden avanzar debido a dependencias o problemas externos.
 
 ---
 

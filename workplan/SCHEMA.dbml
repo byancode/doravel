@@ -1,0 +1,78 @@
+Table users {
+  id int [pk, increment]
+  name varchar(255)
+  email varchar(255) [unique]
+  email_verified_at timestamp
+  password varchar(255)
+  two_factor_secret text
+  two_factor_recovery_codes text
+  remember_token varchar(100)
+  profile_photo_path varchar(255)
+  current_team_id int
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table jobs {
+  id int [pk, increment]
+  queue varchar(255)
+  payload text
+  attempts int
+  reserved_at timestamp
+  available_at timestamp
+  created_at timestamp
+}
+
+Table teams {
+  id int [pk, increment]
+  user_id int
+  name varchar(255)
+  personal_team boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+ref: teams.user_id > users.id
+
+Table team_user {
+  id int [pk, increment]
+  team_id int
+  user_id int
+  role varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+ref: team_user.team_id > teams.id
+ref: team_user.user_id > users.id
+
+Table team_invitations {
+  id int [pk, increment]
+  team_id int
+  email varchar(255)
+  role varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+ref: team_invitations.team_id > teams.id
+
+Table password_resets {
+  email varchar(255)
+  token varchar(255)
+  created_at timestamp
+}
+
+ref: password_resets.email > users.email
+
+Table failed_jobs {
+  id int [pk, increment]
+  uuid varchar(255) [unique]
+  connection text
+  queue text
+  payload longtext
+  exception longtext
+  failed_at timestamp
+}
+
+ref: failed_jobs.uuid > jobs.id
