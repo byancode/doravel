@@ -228,32 +228,32 @@ PROCESSORS=$(($(nproc) - 8));
 for KEY in "${!PHP_EXTENSIONS[@]}"; do
 	VALUE="${PHP_EXTENSIONS[$KEY]}";
 	FILE_NAME="${KEY}-${VALUE}.tgz";
-	curl -fSL "https://pecl.php.net/get/${FILE_NAME}" \
+	curl -L "https://pecl.php.net/get/${FILE_NAME}" \
 		-o /tmp/${FILE_NAME};
 done
 
-curl -fSL "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" \
+curl -L "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" \
 	-o /usr/local/bin/composer;
 chmod +x /usr/local/bin/composer;
 
-curl -fSL "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" \
+curl -L "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" \
 	-o /tmp/zlib.tar.gz;
 
-curl -fSL "github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz" \
+curl -L "github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz" \
 	-o /tmp/pcre2.tar.gz;
 
-curl -fSL "https://github.com/libgd/libgd/releases/download/gd-${LIBGD_VERSION}/libgd-${LIBGD_VERSION}.tar.gz" \
+curl -L "https://github.com/libgd/libgd/releases/download/gd-${LIBGD_VERSION}/libgd-${LIBGD_VERSION}.tar.gz" \
 	-o /tmp/libgd.tar.gz;
 
-curl -fSL "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" \
+curl -L "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" \
 	-o /tmp/openssl.tar.gz;
 
-curl -fSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o /tmp/nginx.tar.gz;
+curl -L "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o /tmp/nginx.tar.gz;
 
-curl -fSL "https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz" \
+curl -L "https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz" \
 	-o "/tmp/php.tar.gz";
 
-curl -fSL "https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz" \
+curl -L "https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz" \
 	-o /tmp/node.tar.xz;
 
 
