@@ -1,6 +1,6 @@
 services:
   release:
-    image: byancode/doravel:1.0.0-build-1000
+    image: byancode/doravel:1.0.0-build-20241001
     build:
       context: .
       dockerfile: ./stubs/Dockerfile
