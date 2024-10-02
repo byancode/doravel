@@ -243,11 +243,13 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             fi
 
             BRANCH="11.x"
-            mkdir -p "$DIRECTORY"; \
+            mkdir -p "$DIRECTORY";
             LARAVEL_FILE="$BRANCH.tar.gz"
-            curl -fsSLO "https://github.com/laravel/laravel/archive/refs/heads/$LARAVEL_FILE"
-	        tar -xzf "/tmp/$LARAVEL_FILE" -C "$DIRECTORY" --strip-components=1; \
-            rm -f "/tmp/$BRANCH.tar.gz"; \
+            LARAVEL_TMP_FILE="/tmp/$LARAVEL_FILE"
+            curl -fsSL "https://github.com/laravel/laravel/archive/refs/heads/$LARAVEL_FILE" \
+                -o "$LARAVEL_TMP_FILE";
+	        tar -xzf "$LARAVEL_TMP_FILE" -C "$DIRECTORY" --strip-components=1;
+            rm -f "$LARAVEL_TMP_FILE";
 
             if [  "$DIRECTORY" != '.'  ]; then
                 cd $DIRECTORY
