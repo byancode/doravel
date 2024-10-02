@@ -50,9 +50,9 @@
 		{
 			"id": "pointer:pointer",
 			"typeName": "pointer",
-			"x": 535.6623647521935,
-			"y": 366.9751251021787,
-			"lastActivityTimestamp": 1727899964389,
+			"x": 622.4712991677475,
+			"y": 410.37959230995557,
+			"lastActivityTimestamp": 1727900898055,
 			"meta": {}
 		},
 		{
@@ -162,13 +162,13 @@
 		{
 			"meta": {},
 			"id": "page:QiFOx5T5dSV_BokEidGAO",
-			"name": "Impact Map ( 5W1H )",
+			"name": "Impact ( 5W1H )",
 			"index": "a05iy",
 			"typeName": "page"
 		},
 		{
 			"x": -264.6777181306675,
-			"y": -87.77882252242455,
+			"y": -87.77882252242449,
 			"z": 0.8524468189617727,
 			"meta": {},
 			"id": "camera:page:QiFOx5T5dSV_BokEidGAO",
