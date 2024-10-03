@@ -50,9 +50,9 @@
 		{
 			"id": "pointer:pointer",
 			"typeName": "pointer",
-			"x": 622.4712991677475,
-			"y": 410.37959230995557,
-			"lastActivityTimestamp": 1727900898055,
+			"x": 849.5523300630746,
+			"y": 654.9187794357588,
+			"lastActivityTimestamp": 1727923974187,
 			"meta": {}
 		},
 		{
@@ -69,7 +69,7 @@
 			"brush": null,
 			"scribbles": [],
 			"cursor": {
-				"type": "default",
+				"type": "grabbing",
 				"rotation": 0
 			},
 			"isFocusMode": false,
@@ -79,7 +79,7 @@
 			"screenBounds": {
 				"x": 0,
 				"y": 0,
-				"w": 1447,
+				"w": 1415,
 				"h": 852
 			},
 			"insets": [
@@ -97,11 +97,8 @@
 			"isFocused": true,
 			"devicePixelRatio": 1,
 			"isCoarsePointer": false,
-			"isHoveringCanvas": false,
-			"openMenus": [
-				"pages",
-				"page-menu"
-			],
+			"isHoveringCanvas": true,
+			"openMenus": [],
 			"isChangingStyle": false,
 			"isReadonly": false,
 			"meta": {},
@@ -167,9 +164,9 @@
 			"typeName": "page"
 		},
 		{
-			"x": -264.6777181306675,
-			"y": -87.77882252242449,
-			"z": 0.8524468189617727,
+			"x": -795.0510918240996,
+			"y": -577.9061601850333,
+			"z": 4.220087605927497,
 			"meta": {},
 			"id": "camera:page:QiFOx5T5dSV_BokEidGAO",
 			"typeName": "camera"
@@ -177,8 +174,10 @@
 		{
 			"editingShapeId": null,
 			"croppingShapeId": null,
-			"selectedShapeIds": [],
-			"hoveredShapeId": null,
+			"selectedShapeIds": [
+				"shape:WR1Flw5CLkxd3KQblqpXb"
+			],
+			"hoveredShapeId": "shape:WR1Flw5CLkxd3KQblqpXb",
 			"erasingShapeIds": [],
 			"hintingShapeIds": [],
 			"focusedGroupId": null,
@@ -444,8 +443,8 @@
 					"a26kW": {
 						"id": "a26kW",
 						"index": "a26kW",
-						"x": -965.5723387271418,
-						"y": 849.9064678430937
+						"x": -969.4705259657397,
+						"y": 853.804655081692
 					}
 				},
 				"scale": 1
@@ -478,8 +477,8 @@
 					"a26kW": {
 						"id": "a26kW",
 						"index": "a26kW",
-						"x": 379.15300365258656,
-						"y": 1264.6863354172806
+						"x": 380.39508624000916,
+						"y": 1264.3758147704248
 					}
 				},
 				"scale": 1
@@ -506,8 +505,8 @@
 					"a1": {
 						"id": "a1",
 						"index": "a1",
-						"x": 374.9674639995834,
-						"y": 105.57164958110718
+						"x": 375.75707164772564,
+						"y": 111.09890311810216
 					},
 					"a26kW": {
 						"id": "a26kW",
@@ -540,8 +539,8 @@
 					"a1": {
 						"id": "a1",
 						"index": "a1",
-						"x": 351.8306128850294,
-						"y": 93.28574949735
+						"x": 349.2951572700091,
+						"y": 95.50427316049272
 					},
 					"a26kW": {
 						"id": "a26kW",
@@ -580,7 +579,7 @@
 					"a26kW": {
 						"id": "a26kW",
 						"index": "a26kW",
-						"x": 1542.9782319084572,
+						"x": 1544.4000033407783,
 						"y": 893.5612205157142
 					}
 				},
