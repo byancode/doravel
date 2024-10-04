@@ -17,6 +17,7 @@ DEFAULT_PACKAGES=(
 	"curl-dev"
 	"bzip2-dev"
 	"libpng-dev"
+	"libwebp-dev"
 	"libxslt-dev"
 	"openssl-dev"
 	"libedit-dev"
@@ -55,6 +56,38 @@ DEFAULT_PACKAGES=(
 	"libstdc++"
 );
 
+DEFAULT_PHP_WITH=(
+	"config-file-scan-dir=/etc/php/conf.d"
+	"config-file-path=/etc/php"
+	"mhash"
+	"pic"
+	"password-argon2"
+	"sodium=shared"
+	"pdo-sqlite=/usr"
+	"sqlite3=/usr"
+	"iconv=/usr"
+	"readline"
+	"openssl"
+	"curl"
+	"zlib"
+	"jpeg"
+);
+
+DEFAULT_PHP_ENABLE=(
+	"mbstring"
+	"session"
+	"ctype"
+	"pdo"
+	"intl"
+	"pcntl"
+	"bcmath"
+	"fileinfo"
+	"tokenizer"
+	"short-tags"
+	"phpdbg-readline"
+	"option-checking=fatal"
+);
+
 declare -A NGINX_WITH
 declare -A NGINX_WITHOUT
 declare -A PHP_EXTENSIONS
@@ -71,11 +104,20 @@ PCRE2_VERSION="10.42"
 LIBGD_VERSION="2.3.3"
 ZLIB_VERSION="1.2.13"
 PHP_VERSION="8.2.2"
-PROCESSORS=$(nproc);
 
 for VALUE in "${DEFAULT_PACKAGES[@]}"; do
 	KEY=$(echo $VALUE | cut -d '=' -f 1);
 	PACKAGES[$KEY]="${VALUE}";
+done
+
+for VALUE in "${DEFAULT_PHP_WITH[@]}"; do
+	KEY=$(echo $VALUE | cut -d '=' -f 1);
+	PHP_WITH[$KEY]="--with-${VALUE}";
+done
+
+for VALUE in "${DEFAULT_PHP_ENABLE[@]}"; do
+	KEY=$(echo $VALUE | cut -d '=' -f 1);
+	PHP_ENABLE[$KEY]="--enable-${VALUE}";
 done
 
 parse_arguments() {
@@ -90,10 +132,6 @@ parse_arguments() {
         PACKAGES[$KEY]="$2"
         shift 2
         ;;
-	  --nproc)
-		PROCESSORS="$2"
-		shift 2
-		;;
       --pcre2)
         PCRE2_VERSION="$2"
         shift 2
@@ -140,7 +178,6 @@ parse_arguments() {
 			echo "No se ha especificado la versión de la extensión $KEY";
 			exit 1;
 		fi
-
         PHP_EXTENSIONS[$KEY]="$VALUE"
         shift 2
         ;;
@@ -169,62 +206,50 @@ parse_arguments() {
 
 parse_arguments "$@"
 
-if ! [[ "$PROCESSORS" =~ ^[0-9]+$ ]]; then
-	echo "El número de procesadores debe ser un número entero";
-	exit 1;
-fi
+PROCESSORS=$(($(nproc) - 8));
 
-if [ $PROCESSORS -gt $(nproc) ]; then
-	PROCESSORS=$(nproc);
-fi
 
-if [ $PROCESSORS -eq $(nproc) ]; then
-	PROCESSORS=$(($PROCESSORS * 80 / 100));
-fi
-
-if [ $PROCESSORS -lt 1 ]; then
-	PROCESSORS=1;
-fi
 
 for KEY in "${!PHP_EXTENSIONS[@]}"; do
 	VALUE="${PHP_EXTENSIONS[$KEY]}";
 	FILE_NAME="${KEY}-${VALUE}.tgz";
-	curl -L "https://pecl.php.net/get/${FILE_NAME}" \
+	curl -vL "https://pecl.php.net/get/${FILE_NAME}" \
 		-o /tmp/${FILE_NAME};
 done
 
 curl -L "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" \
-	 -o /usr/local/bin/composer;
+	-o /usr/local/bin/composer;
+chmod +x /usr/local/bin/composer;
 
 curl -L "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" \
-	 -o /tmp/zlib.tar.gz;
+	-o /tmp/zlib.tar.gz;
 
 curl -L "github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE2_VERSION}/pcre2-${PCRE2_VERSION}.tar.gz" \
-	 -o /tmp/pcre2.tar.gz;
+	-o /tmp/pcre2.tar.gz;
 
 curl -L "https://github.com/libgd/libgd/releases/download/gd-${LIBGD_VERSION}/libgd-${LIBGD_VERSION}.tar.gz" \
-	 -o /tmp/libgd.tar.gz;
+	-o /tmp/libgd.tar.gz;
 
 curl -L "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" \
-	 -o /tmp/openssl.tar.gz;
+	-o /tmp/openssl.tar.gz;
 
-curl -L "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" \
-	 -o /tmp/nginx.tar.gz;
+# curl -L "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o /tmp/nginx.tar.gz;
 
 curl -L "https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz" \
-	 -o "/tmp/php.tar.gz";
+	-o "/tmp/php.tar.gz";
 
-curl -L "https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz" \
-	 -o /tmp/node.tar.xz;
-
-
-apk add --no-cache --virtual .build-deps ${PACKAGES[@]};
+# curl -L "https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz" \
+# 	-o /tmp/node.tar.xz;
 
 
-mkdir -p /root/.local/share/node;
-rm -rf /root/.local/share/node/*;
-tar -xJf /tmp/node.tar.xz -C /root/.local/share/node --strip-components=1;
-ln -sf /root/.local/share/node/bin/* /usr/local/bin/;
+apk add --no-cache --virtual .build-deps \
+	${PACKAGES[@]} \
+;
+
+# mkdir -p /root/.local/share/node;
+# rm -rf /root/.local/share/node/*;
+# tar -xJf /tmp/node.tar.xz -C /root/.local/share/node --strip-components=1;
+# ln -sf /root/.local/share/node/bin/* /usr/local/bin/;
 
 
 mkdir -p /tmp/zlib;
@@ -245,58 +270,53 @@ make -j "$PROCESSORS";
 make install;
 
 
-mkdir -p /tmp/openssl;
-rm -rf /tmp/openssl/*;
-tar -xzf /tmp/openssl.tar.gz -C /tmp/openssl --strip-components=1;
-cd /tmp/openssl;
-./Configure;
-make -j "$PROCESSORS";
-make install;
+# mkdir -p /tmp/openssl;
+# rm -rf /tmp/openssl/*;
+# tar -xzf /tmp/openssl.tar.gz -C /tmp/openssl --strip-components=1;
+# cd /tmp/openssl;
+# ./Configure;
+# make -j "$PROCESSORS";
+# make install;
 
 
-mkdir -p /tmp/pcre2;
-rm -rf /tmp/pcre2/*;
-tar -xzf /tmp/pcre2.tar.gz -C /tmp/pcre2 --strip-components=1;
-cd /tmp/pcre2;
-./configure;
-make -j "$PROCESSORS";
-make install;
+# mkdir -p /tmp/pcre2;
+# rm -rf /tmp/pcre2/*;
+# tar -xzf /tmp/pcre2.tar.gz -C /tmp/pcre2 --strip-components=1;
+# cd /tmp/pcre2;
+# ./configure;
+# make -j "$PROCESSORS";
+# make install;
 
 
-mkdir -p /etc/nginx;
-mkdir -p /tmp/nginx;
-mkdir -p /var/log/nginx;
-rm -rf /tmp/nginx/*;
-tar -xzf /tmp/nginx.tar.gz -C /tmp/nginx --strip-components=1;
-cd /tmp/nginx;
+# mkdir -p /etc/nginx;
+# mkdir -p /tmp/nginx;
+# mkdir -p /var/log/nginx;
+# rm -rf /tmp/nginx/*;
+# tar -xzf /tmp/nginx.tar.gz -C /tmp/nginx --strip-components=1;
+# cd /tmp/nginx;
 
-./configure \
-    --sbin-path=/usr/sbin/nginx \
-    --conf-path=/etc/nginx/nginx.conf \
-    --pid-path=/var/run/nginx.pid \
-	--lock-path=/var/run/nginx.lock \
-	--http-log-path=/var/log/nginx/http.log \
-	--error-log-path=/var/log/nginx/error.log \
-	${NGINX_WITH[@]} \
-	${NGINX_WITHOUT[@]} \
-;
+# ./configure \
+#     --sbin-path=/usr/sbin/nginx \
+#     --conf-path=/etc/nginx/nginx.conf \
+#     --pid-path=/var/run/nginx.pid \
+# 	--lock-path=/var/run/nginx.lock \
+# 	--http-log-path=/var/log/nginx/http.log \
+# 	--error-log-path=/var/log/nginx/error.log \
+# 	${NGINX_WITH[@]} \
+# 	${NGINX_WITHOUT[@]} \
+# ;
 
-make -j "$PROCESSORS";
-make install;
+# make -j "$PROCESSORS";
+# make install;
 
-mkdir -p /tmp/php;
+mkdir -vp /tmp/php;
 rm -rf /tmp/php/*;
-mkdir -p /etc/php/conf.d;
+mkdir -vp /etc/php/conf.d;
+mkdir -vp /usr/custom/bin;
 tar -xzf /tmp/php.tar.gz -C /tmp/php --strip-components=1;
 cd /tmp/php;
 
 gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)";
-
-export \
-	CFLAGS="$PHP_CFLAGS" \
-	CPPFLAGS="$PHP_CPPFLAGS" \
-	LDFLAGS="$PHP_LDFLAGS" \
-;
 
 ./configure \
 	--build="$gnuArch" \
@@ -313,13 +333,10 @@ make -j "$PROCESSORS";
 make install;
 
 # Copia el archivo php.ini-production desde /tmp/php a /root/.doravel/php y lo renombra a local.ini
-cp -vf /tmp/php/php.ini-production /root/.doravel/php/local.ini;
 cp -vf /tmp/php/php.ini-production /etc/php/php.ini;
+cp -vf /tmp/php/php.ini-production /root/.doravel/php/local.ini;
 mv -vf /usr/local/bin/php /usr/local/bin/php-cli;
 mv -vf /usr/local/bin/php-tmp /usr/local/bin/php;
-
-# covertir todos los archivos ejecutables en /usr/local/bin a archivos ejecutables
-chmod +x /usr/local/bin/*;
 
 # Elimina información de depuración de archivos ejecutables en el directorio /usr/local.
 find \
@@ -361,18 +378,6 @@ for KEY in "${!PHP_EXTENSIONS[@]}"; do
 	make install;
 done
 
-# REVIEW: no se que hacer con esto
-mkdir -vp /root/.doravel/php/local.d/;
-
-EXTENSION_NAMES=$(find /usr/local/lib/php/extensions/ -name *.so | xargs -I {} basename {} | cut -d '.' -f 1);
-
-for EXTENSION_NAME in $EXTENSION_NAMES; do
-	echo "extension=$EXTENSION_NAME" > /root/.doravel/php/local.d/$EXTENSION_NAME.ini;
-done
-
-sed -i 's/DORAVEL_INSTALLED=0/DORAVEL_INSTALLED=1/' /root/.rc;
-
-# Elimina los archivos de desarrollo y las dependencias de compilación
 apk del --no-network .build-deps;
 rm -vf /var/spool/cron/crontabs/*;
 rm -vf /usr/include/iconv.h;

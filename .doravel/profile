@@ -1,3 +1,4 @@
+#!/bin/ash
 # ESTE ARCHIVO SE CARGARA AL EJECUTAR CUALQUIER SHELL
 #
 # EXPORT ENVIRONMENT VARIABLES
@@ -8,7 +9,7 @@ fi
 #
 # SET ALIAS FOR COMMANDS
 #
-alias d="doravel $APP_ENV"
+alias d="doravel"
 alias a="doravel $APP_ENV artisan"
 alias c="doravel $APP_ENV composer"
 alias s="doravel $APP_ENV supervisorctl"

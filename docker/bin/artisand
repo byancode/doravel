@@ -28,10 +28,6 @@ if [ ! -L $APP_PATH/public/storage ]; then
     /usr/local/bin/artisan storage:link
 fi
 
-if [ -f $APP_PATH/.doravel/startup.sh ]; then
-    sh  $APP_PATH/.doravel/startup.sh
-fi
-
 if [ -d $APP_PATH/vendor/laravel/octane ] && is_true ${OCTANE_ENABLED:-'false'}; then
     /usr/local/bin/octaned $@
 else

@@ -5,7 +5,8 @@ export APP_ENV="${APP_ENV:-'local'}"
 export APP_PATH="/var/www"
 export FNM_PATH="/root/.local/share/fnm"
 export REMOTE_IP_FILE="/var/run/remote_ip"
-export DOCKER_CONTAINER=1
+export DORAVEL_CONTAINER=1
+export DORAVEL_INSTALLED=0
 
 if [ ! -f $REMOTE_IP_FILE ]; then
     curl -fsSL https://checkip.amazonaws.com/ -o $REMOTE_IP_FILE

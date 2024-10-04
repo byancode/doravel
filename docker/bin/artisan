@@ -1,8 +1,11 @@
 #!/bin/ash
 
-APP_ENV=${APP_ENV:-'local'}
+if [ ! -d "./vendor" ]; then
+    composer install
+fi
 
-COMMAND="/usr/local/bin/php-cli /var/www/artisan"
+APP_ENV=${APP_ENV:-'local'}
+COMMAND="/usr/local/bin/php /var/www/artisan"
 
 if [ "$APP_ENV" == "local" ]; then
     $COMMAND $@

@@ -1,8 +1,15 @@
 #!/bin/ash
 
-set -eux
+set -eu
 
-source $(get_env_file $APP_ENV)
+ENV_FILE=$(get_env_file $APP_ENV)
+
+if [ -f $ENV_FILE ]; then
+    source $ENV_FILE
+else
+    echo "No se ha encontrado el archivo de configuración $ENV_FILE"
+    exit 1
+fi
 
 # PHP ENVIROMENT
 PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-1G}
@@ -14,8 +21,8 @@ PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-"-1"}
 # FILE
 PHP_INI_FILE="$APP_PATH/.doravel/php/$APP_ENV.ini"
 
-if [ -f "${PHP_INI_FILE}-${APP_ENV}" ]; then
-    PHP_INI_FILE="${PHP_INI_FILE}-${APP_ENV}"
+if [ ! -f $PHP_INI_FILE ]; then
+    PHP_INI_FILE="/etc/php/php.ini"
 fi
 
 # PHP
@@ -29,4 +36,4 @@ OPCACHE_ENABLE=$(is_true $PHP_OPCACHE_ENABLED && echo 1 || echo 0)
 sed -e 's/opcache.enable\s?=.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
 sed -e 's/opcache.enable_cli\s?=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
 
-/usr/local/bin/php -c "$PHP_INI_FILE" -d variables_order=EGPCS $@
+/usr/local/bin/php-cli -c "$PHP_INI_FILE" -d variables_order=EGPCS $@

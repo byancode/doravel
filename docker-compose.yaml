@@ -1,10 +1,24 @@
 services:
-  release:
+  base:
     image: byancode/doravel:1.0.0
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./tmp:/tmp
       - ./bin/doravel:/usr/local/bin/doravel
       - ./docker/bin/builder:/usr/local/bin/builder
+  release:
+    image: byancode/doravel:1.0.0-latest
+    build:
+      context: .
+      dockerfile: ./stubs/Dockerfile
+    volumes:
+      - ./bin/doravel:/usr/local/bin/doravel
+      - ./docker/bin/builder:/usr/local/bin/builder
+  test:
+    image: byancode/doravel:1.0.0-latest
+    volumes:
+      - ./bin/doravel:/usr/local/bin/doravel
+      - ./docker/bin/builder:/usr/local/bin/builder
+      - ./test/builder-test:/usr/local/bin/builder-test
+      - ./test/installer:/usr/local/bin/installer
