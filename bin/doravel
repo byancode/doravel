@@ -450,6 +450,20 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             fi
 
             DOCKERFILE_NAME=$(basename $DOCKER_FILE)
+            FOLDERS=(
+                ".doravel/php/$ENV_NAME.d"
+                ".doravel/supervisor/$ENV_NAME.d"
+            )
+            for FOLDER in "${FOLDERS[@]}"; do
+                if [ ! -d "$FOLDER" ]; then
+                    mkdir -vp "$FOLDER"
+                fi
+            done
+            if [ $DORAVEL_INSTALLED -eq 1 ]; then
+                for FOLDER in "${FOLDERS[@]}"; do
+                    recursive_cp /root/ $FOLDER/
+                done
+            fi
             sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $ENV_FILE
             sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $DOCKER_FILE
             cp -vf /root/.doravel/cron/local .doravel/cron/$ENV_NAME
