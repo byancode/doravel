@@ -1,10 +1,11 @@
 #!/bin/sh
 
 cleanup() {
-    /usr/local/bin/artisan octane:stop;
+    artisan octane:stop;
+    exist 0;
 }
 
 trap cleanup INT TERM
 trap cleanup EXIT
 
-/usr/local/bin/artisan octane:start --server=swoole $@
+artisan octane:start --server=swoole $@

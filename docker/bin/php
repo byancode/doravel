@@ -2,6 +2,12 @@
 
 set -eu
 
+if [ ! -f /usr/local/bin/php-cli ]; then
+    gum log --time rfc822 --level fatal "No has instalado PHP"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar PHP
+    exit 1
+fi
+
 ENV_FILE=$(get_env_file $APP_ENV)
 
 if [ -f $ENV_FILE ]; then

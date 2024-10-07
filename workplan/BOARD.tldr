@@ -48,87 +48,6 @@
 			"typeName": "page"
 		},
 		{
-			"id": "pointer:pointer",
-			"typeName": "pointer",
-			"x": 849.5523300630746,
-			"y": 654.9187794357588,
-			"lastActivityTimestamp": 1727923974187,
-			"meta": {}
-		},
-		{
-			"followingUserId": null,
-			"opacityForNextShape": 1,
-			"stylesForNextShape": {
-				"tldraw:geo": "cloud",
-				"tldraw:font": "sans",
-				"tldraw:dash": "solid",
-				"tldraw:size": "m",
-				"tldraw:color": "light-green",
-				"tldraw:horizontalAlign": "middle"
-			},
-			"brush": null,
-			"scribbles": [],
-			"cursor": {
-				"type": "grabbing",
-				"rotation": 0
-			},
-			"isFocusMode": false,
-			"exportBackground": true,
-			"isDebugMode": false,
-			"isToolLocked": false,
-			"screenBounds": {
-				"x": 0,
-				"y": 0,
-				"w": 1415,
-				"h": 852
-			},
-			"insets": [
-				false,
-				false,
-				true,
-				false
-			],
-			"zoomBrush": null,
-			"isGridMode": false,
-			"isPenMode": false,
-			"chatMessage": "",
-			"isChatting": false,
-			"highlightedUserIds": [],
-			"isFocused": true,
-			"devicePixelRatio": 1,
-			"isCoarsePointer": false,
-			"isHoveringCanvas": true,
-			"openMenus": [],
-			"isChangingStyle": false,
-			"isReadonly": false,
-			"meta": {},
-			"duplicateProps": null,
-			"id": "instance:instance",
-			"currentPageId": "page:QiFOx5T5dSV_BokEidGAO",
-			"typeName": "instance"
-		},
-		{
-			"editingShapeId": null,
-			"croppingShapeId": null,
-			"selectedShapeIds": [],
-			"hoveredShapeId": null,
-			"erasingShapeIds": [],
-			"hintingShapeIds": [],
-			"focusedGroupId": null,
-			"meta": {},
-			"id": "instance_page_state:page:page",
-			"pageId": "page:page",
-			"typeName": "instance_page_state"
-		},
-		{
-			"x": 98.65375242918913,
-			"y": -127.8278891325487,
-			"z": 0.7002744912900001,
-			"meta": {},
-			"id": "camera:page:page",
-			"typeName": "camera"
-		},
-		{
 			"meta": {},
 			"id": "page:YQMykXDYmEm8xXkf7arBr",
 			"name": "Brainstorming",
@@ -136,55 +55,11 @@
 			"typeName": "page"
 		},
 		{
-			"x": 0,
-			"y": 0,
-			"z": 1,
-			"meta": {},
-			"id": "camera:page:YQMykXDYmEm8xXkf7arBr",
-			"typeName": "camera"
-		},
-		{
-			"editingShapeId": null,
-			"croppingShapeId": null,
-			"selectedShapeIds": [],
-			"hoveredShapeId": null,
-			"erasingShapeIds": [],
-			"hintingShapeIds": [],
-			"focusedGroupId": null,
-			"meta": {},
-			"id": "instance_page_state:page:YQMykXDYmEm8xXkf7arBr",
-			"pageId": "page:YQMykXDYmEm8xXkf7arBr",
-			"typeName": "instance_page_state"
-		},
-		{
 			"meta": {},
 			"id": "page:QiFOx5T5dSV_BokEidGAO",
 			"name": "Impact ( 5W1H )",
 			"index": "a05iy",
 			"typeName": "page"
-		},
-		{
-			"x": -795.0510918240996,
-			"y": -577.9061601850333,
-			"z": 4.220087605927497,
-			"meta": {},
-			"id": "camera:page:QiFOx5T5dSV_BokEidGAO",
-			"typeName": "camera"
-		},
-		{
-			"editingShapeId": null,
-			"croppingShapeId": null,
-			"selectedShapeIds": [
-				"shape:WR1Flw5CLkxd3KQblqpXb"
-			],
-			"hoveredShapeId": "shape:WR1Flw5CLkxd3KQblqpXb",
-			"erasingShapeIds": [],
-			"hintingShapeIds": [],
-			"focusedGroupId": null,
-			"meta": {},
-			"id": "instance_page_state:page:QiFOx5T5dSV_BokEidGAO",
-			"pageId": "page:QiFOx5T5dSV_BokEidGAO",
-			"typeName": "instance_page_state"
 		},
 		{
 			"id": "asset:2076199158",
@@ -409,8 +284,8 @@
 					"a26kW": {
 						"id": "a26kW",
 						"index": "a26kW",
-						"x": 1850.758777675945,
-						"y": 40.67588077631922
+						"x": 1531.0143231923944,
+						"y": -0.08628337011600706
 					}
 				},
 				"scale": 1
@@ -437,8 +312,8 @@
 					"a1": {
 						"id": "a1",
 						"index": "a1",
-						"x": -41.01625114206945,
-						"y": -454.6457525306241
+						"x": -99.16515696135593,
+						"y": -421.41780634817474
 					},
 					"a26kW": {
 						"id": "a26kW",
@@ -471,8 +346,8 @@
 					"a1": {
 						"id": "a1",
 						"index": "a1",
-						"x": -325.84616270840286,
-						"y": 110.61347423368261
+						"x": -495.0517559794911,
+						"y": -16.136941060298795
 					},
 					"a26kW": {
 						"id": "a26kW",
@@ -511,8 +386,8 @@
 					"a26kW": {
 						"id": "a26kW",
 						"index": "a26kW",
-						"x": 1217.9898622034511,
-						"y": 1376.7576566001899
+						"x": 1230.7986090184136,
+						"y": 1405.880676547079
 					}
 				},
 				"scale": 1
@@ -545,8 +420,8 @@
 					"a26kW": {
 						"id": "a26kW",
 						"index": "a26kW",
-						"x": -600.6028300287712,
-						"y": 1340.128946305116
+						"x": -530.3815858696171,
+						"y": 1382.9743190037714
 					}
 				},
 				"scale": 1
@@ -573,8 +448,8 @@
 					"a1": {
 						"id": "a1",
 						"index": "a1",
-						"x": -181.69555164962685,
-						"y": 838.5948537675094
+						"x": 8.740753454721471,
+						"y": 909.0531974732805
 					},
 					"a26kW": {
 						"id": "a26kW",
@@ -671,27 +546,6 @@
 			"name": "Value VS Price",
 			"index": "a40sA",
 			"typeName": "page"
-		},
-		{
-			"x": -2.514875311630931,
-			"y": 24.121718150796795,
-			"z": 0.9702990000000001,
-			"meta": {},
-			"id": "camera:page:-O8q2yx44OHsB7P4ItrwD",
-			"typeName": "camera"
-		},
-		{
-			"editingShapeId": null,
-			"croppingShapeId": null,
-			"selectedShapeIds": [],
-			"hoveredShapeId": null,
-			"erasingShapeIds": [],
-			"hintingShapeIds": [],
-			"focusedGroupId": null,
-			"meta": {},
-			"id": "instance_page_state:page:-O8q2yx44OHsB7P4ItrwD",
-			"pageId": "page:-O8q2yx44OHsB7P4ItrwD",
-			"typeName": "instance_page_state"
 		},
 		{
 			"x": 703,
@@ -1046,6 +900,145 @@
 			"parentId": "page:page",
 			"index": "a82tl",
 			"typeName": "shape"
+		},
+		{
+			"id": "pointer:pointer",
+			"typeName": "pointer",
+			"x": 3348.8941843328294,
+			"y": 171.1060664633444,
+			"lastActivityTimestamp": 1728057669338,
+			"meta": {}
+		},
+		{
+			"followingUserId": null,
+			"opacityForNextShape": 1,
+			"stylesForNextShape": {
+				"tldraw:geo": "rectangle"
+			},
+			"brush": null,
+			"scribbles": [],
+			"cursor": {
+				"type": "default",
+				"rotation": 0
+			},
+			"isFocusMode": false,
+			"exportBackground": true,
+			"isDebugMode": false,
+			"isToolLocked": false,
+			"screenBounds": {
+				"x": 0,
+				"y": 0,
+				"w": 1415,
+				"h": 852
+			},
+			"insets": [
+				false,
+				false,
+				true,
+				false
+			],
+			"zoomBrush": null,
+			"isGridMode": false,
+			"isPenMode": false,
+			"chatMessage": "",
+			"isChatting": false,
+			"highlightedUserIds": [],
+			"isFocused": true,
+			"devicePixelRatio": 1,
+			"isCoarsePointer": false,
+			"isHoveringCanvas": true,
+			"openMenus": [],
+			"isChangingStyle": false,
+			"isReadonly": false,
+			"meta": {},
+			"duplicateProps": null,
+			"id": "instance:instance",
+			"currentPageId": "page:QiFOx5T5dSV_BokEidGAO",
+			"typeName": "instance"
+		},
+		{
+			"editingShapeId": null,
+			"croppingShapeId": null,
+			"selectedShapeIds": [],
+			"hoveredShapeId": null,
+			"erasingShapeIds": [],
+			"hintingShapeIds": [],
+			"focusedGroupId": null,
+			"meta": {},
+			"id": "instance_page_state:page:-O8q2yx44OHsB7P4ItrwD",
+			"pageId": "page:-O8q2yx44OHsB7P4ItrwD",
+			"typeName": "instance_page_state"
+		},
+		{
+			"editingShapeId": null,
+			"croppingShapeId": null,
+			"selectedShapeIds": [],
+			"hoveredShapeId": null,
+			"erasingShapeIds": [],
+			"hintingShapeIds": [],
+			"focusedGroupId": null,
+			"meta": {},
+			"id": "instance_page_state:page:QiFOx5T5dSV_BokEidGAO",
+			"pageId": "page:QiFOx5T5dSV_BokEidGAO",
+			"typeName": "instance_page_state"
+		},
+		{
+			"editingShapeId": null,
+			"croppingShapeId": null,
+			"selectedShapeIds": [],
+			"hoveredShapeId": null,
+			"erasingShapeIds": [],
+			"hintingShapeIds": [],
+			"focusedGroupId": null,
+			"meta": {},
+			"id": "instance_page_state:page:YQMykXDYmEm8xXkf7arBr",
+			"pageId": "page:YQMykXDYmEm8xXkf7arBr",
+			"typeName": "instance_page_state"
+		},
+		{
+			"editingShapeId": null,
+			"croppingShapeId": null,
+			"selectedShapeIds": [],
+			"hoveredShapeId": null,
+			"erasingShapeIds": [],
+			"hintingShapeIds": [],
+			"focusedGroupId": null,
+			"meta": {},
+			"id": "instance_page_state:page:page",
+			"pageId": "page:page",
+			"typeName": "instance_page_state"
+		},
+		{
+			"x": 3.4765625,
+			"y": 57.203125,
+			"z": 1,
+			"meta": {},
+			"id": "camera:page:-O8q2yx44OHsB7P4ItrwD",
+			"typeName": "camera"
+		},
+		{
+			"x": 1382.6710320341174,
+			"y": 1067.7995890756333,
+			"z": 0.22762023786009578,
+			"meta": {},
+			"id": "camera:page:QiFOx5T5dSV_BokEidGAO",
+			"typeName": "camera"
+		},
+		{
+			"x": 0,
+			"y": 0,
+			"z": 1,
+			"meta": {},
+			"id": "camera:page:YQMykXDYmEm8xXkf7arBr",
+			"typeName": "camera"
+		},
+		{
+			"x": 102.58676309973549,
+			"y": 36.50233335038757,
+			"z": 0.7468302434419568,
+			"meta": {},
+			"id": "camera:page:page",
+			"typeName": "camera"
 		}
 	]
 }

@@ -3,17 +3,15 @@ FROM byancode/doravel:1.0.0
 ENV APP_ENV=local
 
 RUN set -eux; \
-    apk add --no-cache \
-        libuv \
-    ; \
+    apk add --no-cache libuv; \
     builder \
     # number of parallel build processes
     --nproc $(nproc) \
     # packages are removed after installation
     # https://pkgs.alpinelinux.org/packages
-    --add-pkg "coreutils" \
-    --add-pkg "gmp-dev" \
-    --add-pkg "gcc" \
+    --build-pkg "coreutils" \
+    --build-pkg "gmp-dev" \
+    --build-pkg "gcc" \
     # https://github.com/composer/composer/tags
     --composer "2.7.9" \
     # https://nginx.org/en/download.html

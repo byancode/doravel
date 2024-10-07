@@ -1,17 +1,5 @@
 #!/bin/bash
 # --------------------------------------- #
-# 🔧   YOU CAN EDIT THE COMPILATION    🔧 #
-# --------------------------------------- #
-# Example:  latest
-#           PHP8.2
-#           PHP8.2NODE22.2
-#           PHP8.3NGINX1.27
-#           PHP8.1NGINX1.27NODE22.2
-# --------------------------------------- #
-
-DORAVEL_BUILD="latest"
-
-# --------------------------------------- #
 # ❌ DO NOT EDIT ANYTHING FROM HERE ON ❌ #
 # --------------------------------------- #
 
@@ -180,8 +168,7 @@ DOCKER_COMPOSE_FILE=$(find . -maxdepth 1 -name "$DOCKER_COMPOSE_NAME.y*" | head 
 COMMAND_DOCKER_COMPOSE=$(echo " ${COMMANDS_DOCKER_COMPOSE[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND " | xargs)
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
-DORAVEL_IMAGE_TAG="${DORAVEL_VERSION}-${DORAVEL_BUILD}"
-DORAVEL_IMAGE="byancode/doravel:$DORAVEL_IMAGE_TAG"
+DORAVEL_IMAGE="byancode/doravel:$DORAVEL_VERSION"
 
 doravel_image_run() {
     docker run --rm -it -v .:/var/www $DORAVEL_IMAGE $@
@@ -255,8 +242,7 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
                 echo "✅ Directory node_modules found"
             fi
 
-            ENVIRONMENTS=$(find . -maxdepth 1 -name ".env.*" | sed -E 's/^(\.\/)?\.env\.?//g' | sed 's/^$/local/g')
-            for ENVIROMENT in $ENVIRONMENTS; do
+            for ENVIROMENT in $(get_env_names); do
                 DOCKERCOMPOSE_NAME="docker-compose"
                 DOCKERFILE_PATH="Dockerfile"
                 ENV_PATH=".env"
@@ -371,10 +357,12 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         fi
     elif [ "$COMMAND_DORAVEL" == 'install' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            npm install
+            npm install && \
             composer install
+            exit $?
         else
             doravel x doravel install
+            exit $?
         fi
     elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
@@ -384,15 +372,27 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             recursive_cp /root/ .vscode/
 
             touch database/database.sqlite
+            SETUP_SCRIPT=".doravel/setup"
 
             doravel init && \
             doravel example destroy && \
             artisan key:generate && \
             artisan storage:link && \
             doravel install
-            exit $?
+            if [ $? -eq 1 ]; then
+                exit 1
+            elif [ -f $SETUP_SCRIPT ] && [ -x $SETUP_SCRIPT ]; then
+                $SETUP_SCRIPT
+                if [ $? -eq 0 ]; then
+                    echo "Setup completed 😃"
+                else
+                    echo "Setup failed 😔"
+                fi
+            fi
+            exit 0
         else
             doravel x doravel setup
+            exit $?
         fi
     elif [ "$COMMAND_DORAVEL" == 'new' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
@@ -423,10 +423,10 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             fi
 
             doravel setup
-            exit 0
+            exit $?
         else
             doravel x doravel new $@
-            exit 0
+            exit $?
         fi
     fi
 fi
@@ -440,13 +440,13 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             STUBS_PATH="/root/.stubs"
 
             if [ ! -f "$ENV_FILE" ]; then
-                cp "$STUBS_PATH/.env" "$ENV_FILE"
+                cp -f "$STUBS_PATH/.env" "$ENV_FILE"
             fi
             if [ ! -f "$DOCKER_FILE" ]; then
-                cp "$STUBS_PATH/Dockerfile" "$DOCKER_FILE"
+                cp -f "$STUBS_PATH/Dockerfile.built" "$DOCKER_FILE"
             fi
             if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
-                cp "$STUBS_PATH/docker-compose.yaml" "$DOCKER_COMPOSE_FILE"
+                cp -f "$STUBS_PATH/docker-compose.yaml" "$DOCKER_COMPOSE_FILE"
             fi
 
             DOCKERFILE_NAME=$(basename $DOCKER_FILE)
@@ -549,40 +549,49 @@ container_exec() {
 
 supervisorctl_exec() {
     if [ $DORAVEL_CONTAINER -eq 1 ]; then
-        EXECUTABLE="supervisorctl --configuration /etc/supervisord.conf"
         COMMANDS=( "start" "stop" "restart" "status" "reload" "remove" "enable" "disable" )
 
         COMMAND="$1"
         shift
 
         if [ -z "$COMMAND" ] || [[ ! " ${COMMANDS[@]} " =~ " $COMMAND " ]]; then
-            $EXECUTABLE $@
+            supervisorctl $@
+            exit $?
         fi
 
         VALUE="$1"
         shift
 
         if [ -z "$VALUE" ]; then
-            $EXECUTABLE $COMMAND
+            supervisorctl $COMMAND
+            exit $?
         elif [ "$VALUE" == "all" ]; then
-            $EXECUTABLE $COMMAND $VALUE
+            supervisorctl $COMMAND $VALUE
+            exit $?
         else
-            $EXECUTABLE $COMMAND $($EXECUTABLE status | sed -n "/$VALUE/p" | awk '{print $1}')
+            supervisorctl $COMMAND $(supervisorctl status | sed -n "/$VALUE/p" | awk '{print $1}')
+            exit $?
         fi
 
-        $EXECUTABLE $@
+        supervisorctl $@
+        exit $?
     else
         container_exec doravel supervisorctl $@
+        exist $?
     fi
 }
 
 docker_ports() {
     LINES=$($DOCKER_COMPOSE ps --status running --format json | jq '.Service + "|" + .Ports')
     while IFS= read -r LINE; do
+        if [ -z "$LINE" ]; then
+            continue
+        fi
+
         SERVICE=$(echo $LINE | cut -d"|" -f1 | cut -d'"' -f2)
         PORTS=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
 
-        if [ "$PORTS" == "" ]; then
+        if [ -z "$PORTS" ]; then
             continue
         fi
 
@@ -629,8 +638,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         exit 0
     elif [ "$COMMAND_ENVIRONMENT" == "ports" ]; then
         SERVICES=$($DOCKER_COMPOSE ps --status running --services | tr '\n' ' ')
-        REMOTE_IP=$(curl -s https://checkip.amazonaws.com/)
-        LOCAL_IP=$(hostname -I | cut -d" " -f1)
+        LOCAL_IP=$(hostname -i | cut -d" " -f1)
 
         if [ -z "$1" ]; then
             echo "Usage: doravel ports [list|show|shuffle]"
@@ -680,17 +688,19 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
     elif [[ " ${COMMANDS_ARTISAN[@]} " =~ " $COMMAND_ENVIRONMENT " ]]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             artisan $COMMAND_ENVIRONMENT $@
+            exit $?
         else
             container_exec artisan $COMMAND_ENVIRONMENT $@
+            exit $?
         fi
-        exit 0
     elif [[ " ${COMMANDS_BIN[@]} " =~ " $COMMAND_ENVIRONMENT " ]]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             $COMMAND_ENVIRONMENT $@
+            exit $?
         else
             container_exec $COMMAND_ENVIRONMENT $@
+            exit $?
         fi
-        exit 0
     elif [ "$COMMAND_ENVIRONMENT" == "timestamp" ]; then
         TIMESPAMP=$(date -u +%Y-%m-%d\T%H:%M:%S)
         sed -i "s/DOCKER_IMAGE_UPDATED_AT=.*/DOCKER_IMAGE_UPDATED_AT=$TIMESPAMP/" $ENV_FILE

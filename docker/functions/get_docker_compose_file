@@ -1,0 +1,13 @@
+#!/bin/ash
+
+FILE_PATH="$APP_PATH/docker-compose"
+
+if [ "$1" != 'local' ] && [ ! -z "$1" ]; then
+    FILE_PATH="$FILE_PATH.$1"
+fi
+
+if [  -f  "$FILE_PATH.yml" ]; then
+    echo  "$FILE_PATH.yml"
+else
+    echo  "$FILE_PATH.yaml"
+fi

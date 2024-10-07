@@ -2,8 +2,20 @@
 
 set -eux;
 
+if [ $DORAVEL_INSTALLED -eq 1 ]; then
+	echo "Doravel ya está instalado";
+	exit 0;
+fi
+
 cleanup() {
 	rm -rf /tmp/*;
+	if [ ! -f /usr/local/bin/php ] && [ -f /usr/local/bin/php.tmp ]; then
+		mv -vf /usr/local/bin/php.tmp /usr/local/bin/php;
+	fi
+	if [ -f /usr/local/bin/php ] && [ -f /usr/local/bin/php.tmp ]; then
+		rm -vf /usr/local/bin/php;
+		mv -vf /usr/local/bin/php.tmp /usr/local/bin/php;
+	fi
 	exit 0;
 }
 
@@ -85,7 +97,7 @@ parse_arguments() {
         COMPOSER_VERSION="$2"
         shift 2
         ;;
-      --add-pkg)
+      --build-pkg)
 	  	KEY=$(echo $2 | cut -d '=' -f 1);
         PACKAGES[$KEY]="$2"
         shift 2
@@ -194,7 +206,7 @@ for KEY in "${!PHP_EXTENSIONS[@]}"; do
 done
 
 curl -L "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" \
-	 -o /usr/local/bin/composer;
+	 -o /usr/local/bin/composer-cli;
 
 curl -L "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" \
 	 -o /tmp/zlib.tar.gz;
@@ -288,6 +300,7 @@ mkdir -p /tmp/php;
 rm -rf /tmp/php/*;
 mkdir -p /etc/php/conf.d;
 tar -xzf /tmp/php.tar.gz -C /tmp/php --strip-components=1;
+mv -f /usr/local/bin/php /usr/local/bin/php.tmp;
 cd /tmp/php;
 
 gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)";
@@ -316,7 +329,7 @@ make install;
 cp -vf /tmp/php/php.ini-production /root/.doravel/php/local.ini;
 cp -vf /tmp/php/php.ini-production /etc/php/php.ini;
 mv -vf /usr/local/bin/php /usr/local/bin/php-cli;
-mv -vf /usr/local/bin/php-tmp /usr/local/bin/php;
+mv -vf /usr/local/bin/php.tmp /usr/local/bin/php;
 
 # covertir todos los archivos ejecutables en /usr/local/bin a archivos ejecutables
 chmod +x /usr/local/bin/*;

@@ -1,11 +1,20 @@
 #!/bin/sh
 
+echo $$ > /var/run/nginxd.pid
+
 cleanup() {
-    /usr/bin/killall -9 nginx || true
+    rm -f /var/run/nginxd.pid
+    exit 0
 }
 
 trap cleanup INT TERM
 trap cleanup EXIT
+
+if [ ! -f /usr/sbin/nginx ]; then
+    gum log --time rfc822 --level fatal "No has instalado nginx"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar nginx
+    exit 1
+fi
 
 CONFIGURATION_FILE="/var/www/.doravel/nginx/$APP_ENV.conf"
 

@@ -2,6 +2,12 @@
 
 set -eux
 
+if [ ! -f /usr/local/bin/php-cli ]; then
+    gum log --time rfc822 --level fatal "No has instalado PHP"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar PHP
+    exit 1
+fi
+
 source $(get_env_file $APP_ENV)
 
 TIMEZONE_FILE='/usr/share/zoneinfo/'$APP_TIMEZONE

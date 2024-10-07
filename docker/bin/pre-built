@@ -1,0 +1,120 @@
+#!/bin/bash
+
+set -eux;
+
+COMPOSER_VERSION="2.7.9"
+PHP_EXTENSIONS=""
+PHP_VERSION="8.3"
+
+declare -A BUILD_PACKAGES
+declare -A PECL_EXTENSIONS
+
+add_build_package() {
+    if [ -z "$1" ]; then
+        echo "No se ha especificado el paquete";
+        exit 1;
+    fi
+
+    KEY=$(echo "$1" | cut -d '=' -f 1);
+
+    BUILD_PACKAGES[$KEY]="$1"
+}
+
+
+parse_arguments() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --composer)
+        COMPOSER_VERSION="$2"
+        shift 2
+        ;;
+      --build-pkg)
+        add_build_package "$2"
+        shift 2
+        ;;
+      --php)
+        PHP_VERSION="$2"
+        shift 2
+        ;;
+      --php-extensions)
+        PHP_EXTENSIONS="$2"
+        shift 2
+        ;;
+      --pecl-extension)
+	  	KEY=$(echo "$2" | cut -d '=' -f 1);
+		VALUE=$(echo "$2" | cut -d '=' -f 2);
+
+		if [ -z "$VALUE" ]; then
+			echo "No se ha especificado la versión de la extensión $KEY";
+			exit 1;
+		fi
+
+        PECL_EXTENSIONS[$KEY]="$VALUE"
+        shift 2
+        ;;
+      *)
+        echo "Opción no reconocida: $1"
+        exit 1
+        ;;
+    esac
+  done
+}
+
+parse_arguments $@;
+
+PHP_VERSION=$(echo "$PHP_VERSION" | sed -E 's/^([0-9]+)\.([0-9]+).*/\1\2/g')
+PHP_PREFIX="php${PHP_VERSION}"
+PHP_PACKAGES=$(echo "$PHP_EXTENSIONS" | sed -E 's/ +//g' | tr "," "\n" | xargs -I {} echo "${PHP_PREFIX}-{}")
+
+
+apk add --no-cache \
+    ${PHP_PACKAGES} \
+    ${PHP_PREFIX} \
+    nginx \
+;
+
+apk add --no-cache --virtual .build-deps \
+    argon2-dev build-base coreutils linux-headers icu-data-full oniguruma-dev icu-dev zlib-dev autoconf gmp-dev libc-dev dpkg-dev pkgconf bison dpkg file make re2c g++ gcc gnupg libgcc musl-dev libstdc++ \
+    ${BUILD_PACKAGES[@]};
+
+
+curl -L "https://github.com/composer/composer/releases/download/${COMPOSER_VERSION}/composer.phar" \
+	 -o "/usr/local/bin/composer-cli";
+
+
+for KEY in "${!PECL_EXTENSIONS[@]}"; do
+	VALUE="${PECL_EXTENSIONS[$KEY]}";
+	FILE_NAME="${KEY}-${VALUE}.tgz";
+	curl -L "https://pecl.php.net/get/${FILE_NAME}" \
+		 -o "/tmp/${FILE_NAME}";
+done
+
+
+for KEY in "${!PECL_EXTENSIONS[@]}"; do
+	cd /tmp;
+	VALUE="${PECL_EXTENSIONS[$KEY]}";
+	PACKAGE="${KEY}-${VALUE}"
+	echo "Instalando extensión $PACKAGE";
+	PACKAGE_FILE="/tmp/${PACKAGE}.tgz"
+	tar -xf "$PACKAGE_FILE";
+	echo "Descomprimiendo $PACKAGE_FILE";
+	cd "$PACKAGE";
+	echo "Configurando $KEY";
+	phpize;
+	./configure;
+	make;
+	echo "Instalando $PACKAGE";
+	make install;
+done
+
+chmod +x /usr/local/bin/*;
+ln -sf /usr/bin/${PHP_PREFIX} /usr/local/bin/php-cli;
+
+
+apk del --no-network .build-deps;
+
+rm -vf /var/spool/cron/crontabs/*;
+rm -vf /usr/include/iconv.h;
+rm -rf /var/cache/apk/*;
+rm -rf /root/.pearrc;
+rm -rf /tmp/*;

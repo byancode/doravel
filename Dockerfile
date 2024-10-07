@@ -31,6 +31,7 @@ COPY docker/root/* /root/
 
 RUN apk add --no-cache \
 		ca-certificates \
+		docker-compose \
 		inotify-tools \
         supervisor \
 		openssl \
@@ -40,6 +41,7 @@ RUN apk add --no-cache \
 		bash \
 		htop \
 		curl \
+		grep \
         git \
 		tar \
 		xz \

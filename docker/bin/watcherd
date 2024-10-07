@@ -17,6 +17,7 @@ cleanup() {
 }
 
 trap cleanup INT TERM
+trap cleanup EXIT
 
 if [ -f "$UNWATCH_FILE" ]; then
     FILE_CONTENT=$(cat "$UNWATCH_FILE"; echo)

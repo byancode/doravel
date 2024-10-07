@@ -1,0 +1,9 @@
+#!/bin/ash
+
+FILE_NAME="Dockerfile"
+
+if [ "$1" != 'local' ] && [ ! -z "$1" ]; then
+    FILE_NAME="$FILE_NAME.$1"
+fi
+
+echo "$APP_PATH/$FILE_NAME"

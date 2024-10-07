@@ -5,20 +5,25 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./bin/doravel:/usr/local/bin/doravel
       - ./docker/bin/builder:/usr/local/bin/builder
   release:
-    image: byancode/doravel:1.0.0-latest
     build:
       context: .
       dockerfile: ./stubs/Dockerfile
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./bin/doravel:/usr/local/bin/doravel
       - ./docker/bin/builder:/usr/local/bin/builder
   test:
-    image: byancode/doravel:1.0.0-latest
+    image: byancode/doravel:1.0.0
     volumes:
+      - ./demo:/var/www/demo
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./bin/doravel:/usr/local/bin/doravel
+      - ./docker/bin/shuffle-ports:/usr/local/bin/shuffle-ports
+      - ./docker/bin/pre-built:/usr/local/bin/pre-built
       - ./docker/bin/builder:/usr/local/bin/builder
       - ./test/builder-test:/usr/local/bin/builder-test
       - ./test/installer:/usr/local/bin/installer

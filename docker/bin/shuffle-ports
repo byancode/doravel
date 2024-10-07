@@ -1,75 +1,69 @@
-#!/usr/local/bin/php-cli
-<?php
+#!/bin/bash
 
-$shortopts  = "";
-$shortopts .= "e:";  // Valor obligatorio
+# Constants
+readonly SCRIPT_NAME=$(basename "$0")
+readonly MIN_PORT=2000
+readonly MAX_PORT=9999
 
-$longopts  = array(
-    "env:",     // Valor obligatorio
-);
+ENV_NAME="${APP_ENV:-local}"
 
-$options = getopt($shortopts, $longopts);
-
-$path = getcwd();
-$env_name = $options['env'] ?? $options['e'] ?? getenv('APP_ENV') ?: 'local';
-$env_file = "$path/.env";
-$docker_compose_name = 'docker-compose';
-$docker_compose_files = glob("$path/docker-compose.*");
-
-if (empty($docker_compose_files)) {
-    exit(0);
+log_error() {
+    gum log --time rfc822 --level error "$1"
 }
 
-function get_docker_compose_file_by_name($name) {
-    global $docker_compose_files;
-    $files = preg_grep("/$name\.ya?ml$/i", $docker_compose_files);
-    return current($files);
+log_info() {
+    gum log --time rfc822 --level info "$1"
 }
 
-if ($env_name != 'local') {
-    $env_file .= ".$env_name";
-    $docker_compose_name .= ".$env_name";
+parse_cli_options() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -e|--env)
+                ENV_NAME=$2
+                shift 2
+                ;;
+            -h|--help)
+                echo "Usage: $SCRIPT_NAME [OPTIONS]"
+                echo "Options:"
+                echo "  -e, --env ENV_NAME  Environment name (default: $DEFAULT_ENV)"
+                echo "  -h, --help          Show this help message and exit"
+                exit 0
+                ;;
+            *)
+                log_error "Invalid option: $1"
+                exit 1
+                ;;
+        esac
+    done
 }
 
-$env_content = file_get_contents($env_file);
-$docker_compose_file = get_docker_compose_file_by_name($docker_compose_name);
+parse_cli_options "$@"
 
-$json_text = shell_exec("cat \"{$docker_compose_file}\" | yq -o json -M -N -I 0");
-$json = json_decode($json_text, true);
+ENV_FILE=$(get_env_file "$ENV_NAME")
+DOCKERFILE=$(get_dockerfile "$ENV_NAME")
+DOCKER_COMPOSE_FILE=$(get_docker_compose_file "$ENV_NAME")
 
-$services = $json['services'] ?? [];
+if [ ! -f "$ENV_FILE" ]; then
+    log_error "Environment file not found: $ENV_FILE"
+    exit 1
+fi
 
-foreach ($services as $name => $service) {
-    $ports = $service['ports'] ?? [];
+if [ ! -f "$DOCKERFILE" ]; then
+    log_error "Dockerfile not found: $DOCKERFILE"
+    exit 1
+fi
 
-    if (empty($ports)) {
-        continue;
-    }
+if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
+    log_error "Docker Compose file not found: $DOCKER_COMPOSE_FILE"
+    exit 1
+fi
 
-    foreach ($ports as $raw_port) {
-        if (preg_match('/^\d+:\d+$/', $raw_port)) {
-            continue;
-        }
-
-        if ($raw_port[0] != '$') {
-            continue;
-        }
-
-        $publish_pattern = '/^\$\{?([A-Z0-9_]+)(?=\W)/';
-        preg_match($publish_pattern, $raw_port, $matches);
-
-        if (empty($matches)) {
-            continue;
-        }
-
-        $env_name_port = $matches[1];
-        $random_port = mt_rand(2000, 9999);
-        $pattern = '/^' . $env_name_port . '(?:\s+)?=(?:\s+)?(\d+)/m';
-        $replacement = "$env_name_port=$random_port";
-        echo "Replacing $replacement\n";
-        $env_content = preg_replace($pattern, $replacement, $env_content);
-    }
-}
-
-
-file_put_contents($env_file, $env_content);
+for RAW_PORT in $(cat "$DOCKER_COMPOSE_FILE" | yq '.services.*.ports[]'); do
+    if [[ ! "$RAW_PORT" =~ ^\$\{?([[:alnum:]]+_PORT) ]]; then
+        continue
+    fi
+    VAR_NAME="${BASH_REMATCH[1]}"
+    NEW_PORT=$(shuf -i $MIN_PORT-$MAX_PORT -n 1)
+    sed -i "s/$VAR_NAME=[0-9]*/$VAR_NAME=$NEW_PORT/" "$ENV_FILE"
+    log_info "Replaced $VAR_NAME=$NEW_PORT"
+done

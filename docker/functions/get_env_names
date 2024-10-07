@@ -1,0 +1,3 @@
+#!/bin/ash
+
+find . -maxdepth 1 -name ".env*" -type f -exec basename {} \; | grep -E "^\.env\.?(\w+)?$" | cut -d "." -f 3 | sed 's/^$/local/g'

@@ -1,0 +1,3 @@
+#!/bin/ash
+
+get_env_names | xargs -n 1 get_docker_compose_file

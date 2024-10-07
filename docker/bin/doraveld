@@ -10,6 +10,25 @@ cleanup() {
 }
 
 trap cleanup INT TERM
+trap cleanup EXIT
+
+if [ ! -f /usr/bin/supervisord ]; then
+    gum log --time rfc822 --level fatal "No has instalado supervisord"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar supervisor
+    exit 1
+fi
+
+if [ ! -f /usr/local/bin/php-cli ]; then
+    gum log --time rfc822 --level fatal "No has instalado PHP"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar PHP
+    exit 1
+fi
+
+if [ ! -f /usr/local/bin/composer ]; then
+    gum log --time rfc822 --level fatal "No has instalado Composer"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar Composer
+    exit 1
+fi
 
 while true; do
     CONFIGURATION_FILE="/var/www/.doravel/supervisor/$APP_ENV.conf"
