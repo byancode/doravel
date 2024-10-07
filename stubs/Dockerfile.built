@@ -7,14 +7,17 @@ RUN set -eux; \
     # PRE-BUILT
     pre-built \
     # download composer
+    # https://github.com/composer/composer/tags
     --composer "2.1.9" \
     # PHP PACKAGES
+    # https://pkgs.alpinelinux.org/packages?name=php83&branch=v3.20&arch=x86_64&origin=yes
     --php "8.3" \
     --php-extensions "dev,pear,phar,doc,apache2,bcmath,bz2,calendar,cgi,common,ctype,curl,dba,dbg,dom,embed,enchant,exif,ffi,fileinfo,fpm,ftp,gd,gettext,gmp,iconv,imap,intl,ldap,litespeed,mbstring,mysqli,mysqlnd,odbc,opcache,openssl,pcntl,pdo,pdo_dblib,pdo_mysql,pdo_odbc,pdo_pgsql,pdo_sqlite,pgsql,phpdbg,posix,pspell,session,shmop,simplexml,snmp,soap,sockets,sodium,sqlite3,sysvmsg,sysvsem,sysvshm,tidy,tokenizer,xml,xmlreader,xmlwriter,xsl,zip,pecl-swoole,pecl-redis" \
-    # packages are removed after installation
-    --build-pkg "build-base" \
+    # packages are auto removed after pecl extensions installed
+    --build-pkg "libuv-dev" \
     # build pecl extensions
+    # https://pecl.php.net/package/uv
     --pecl-extension "uv=0.3.0" \
 ;
 
-# COPY . /var/www
+COPY . /var/www

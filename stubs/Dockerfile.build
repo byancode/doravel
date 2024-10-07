@@ -13,7 +13,7 @@ RUN set -eux; \
     --build-pkg "gmp-dev" \
     --build-pkg "gcc" \
     # https://github.com/composer/composer/tags
-    --composer "2.7.9" \
+    --composer "2.8.1" \
     # https://nginx.org/en/download.html
     --nginx "1.27.1" \
     # https://github.com/PCRE2Project/pcre2/tags
@@ -95,4 +95,4 @@ RUN set -eux; \
     --php-extension "uv=0.3.0" \
 ;
 
-# COPY . /var/www
+COPY . /var/www

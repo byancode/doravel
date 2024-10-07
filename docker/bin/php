@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/bash
 
 set -eu
 
@@ -6,6 +6,18 @@ if [ ! -f /usr/local/bin/php-cli ]; then
     gum log --time rfc822 --level fatal "No has instalado PHP"
     # TODO - aqui debe hacer informacion de como usar el comando builder para instalar PHP
     exit 1
+fi
+
+if [[ "$@" =~ "artisan" ]] && [ "$PWD" == "$APP_PATH" ]; then
+    if [ ! -f /usr/local/bin/composer ]; then
+        gum log --time rfc822 --level fatal "No has instalado Composer"
+        # TODO - aqui debe hacer informacion de como usar el comando builder para instalar Composer
+        exit 1
+    fi
+
+    if [ ! -d "$APP_PATH/vendor" ]; then
+        composer install
+    fi
 fi
 
 ENV_FILE=$(get_env_file $APP_ENV)
