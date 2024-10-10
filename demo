@@ -1,5 +1,8 @@
-#!/bin/bash
+#!/bin/ash
 
-echo "❌ asdfkjhds"
-echo "❌ asdfkjhds"
-echo "❌ asdfkjhds"
+VOLUMES=(
+    "docker-compose"
+    "docker-compose.local"
+)
+
+echo ${#VOLUMES[@]}

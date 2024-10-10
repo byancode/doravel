@@ -1,0 +1,15 @@
+#!/bin/bash
+
+PID_FILE="/var/run/supervisord.pid"
+
+if [ ! -f $PID_FILE ]; then
+    echo "No se encontró el archivo de PID $PID_FILE"
+    exit 1
+fi
+
+kill $(cat $PID_FILE)
+if [ $? -eq 0 ]; then
+    gum spin --spinner dot --title "Recargando doraveld..." -- sleep 5
+else
+    gum log --time rfc822 --level fatal "No se pudo recargar doraveld"
+fi

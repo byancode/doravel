@@ -2,79 +2,14 @@
 
 set -eux;
 
-apk add --no-cache \
-    libuv \
-;
-builder \
-    --nproc $(nproc) \
-    --build-pkg "coreutils" \
-    --build-pkg "gmp-dev" \
-    --build-pkg "gcc" \
-    --composer "2.7.9" \
-    --nginx "1.27.1" \
-    --pcre2 "10.43" \
-    --zlib "1.3.1" \
-    --libgd "2.3.3" \
-    --openssl "3.3.0" \
-    --nginx-with "openssl=/tmp/openssl" \
-    --nginx-with "pcre=/tmp/pcre2" \
-    --nginx-with "zlib=/tmp/zlib" \
-    --nginx-with "pcre-jit" \
-    --nginx-with "stream" \
-    --nginx-with "threads" \
-    --nginx-with "poll_module" \
-    --nginx-with "select_module" \
-    --nginx-with "http_ssl_module" \
-    --nginx-with "stream_ssl_module" \
-    --nginx-with "http_slice_module" \
-    --nginx-with "http_gunzip_module" \
-    --nginx-with "http_image_filter_module" \
-    --nginx-without "http_grpc_module" \
+apk add --no-cache libuv; \
+
+pre-built \
+    --composer "2.8.1" \
     --node "22.2.0" \
-    --php "8.3.12" \
-    --php-with "mhash" \
-    --php-with "pear" \
-    --php-with "pic" \
-    --php-with "sodium=shared" \
-    --php-with "password-argon2" \
-    --php-with "pdo-mysql=mysqlnd" \
-    --php-with "pdo-sqlite=/usr" \
-    --php-with "pdo-pgsql" \
-    --php-with "sqlite3=/usr" \
-    --php-with "iconv=/usr" \
-    --php-with "readline" \
-    --php-with "openssl" \
-    --php-with "curl" \
-    --php-with "zlib" \
-    --php-with "bz2=/usr" \
-    --php-with "zip" \
-    --php-with "avif" \
-    --php-with "webp" \
-    --php-with "jpeg" \
-    --php-enable "mbstring" \
-    --php-enable "mysqlnd" \
-    --php-enable "session" \
-    --php-enable "phpdbg" \
-    --php-enable "ctype" \
-    --php-enable "phar" \
-    --php-enable "pdo" \
-    --php-enable "gd" \
-    --php-enable "fpm" \
-    --php-enable "ftp" \
-    --php-enable "exif" \
-    --php-enable "intl" \
-    --php-enable "pcntl" \
-    --php-enable "shmop" \
-    --php-enable "bcmath" \
-    --php-enable "opcache" \
-    --php-enable "sockets" \
-    --php-enable "fileinfo" \
-    --php-enable "tokenizer" \
-    --php-enable "short-tags" \
-    --php-enable "opcache-jit" \
-    --php-enable "phpdbg-readline" \
-    --php-enable "option-checking=fatal" \
-    --php-extension "swoole=5.1.1" \
-    --php-extension "redis=6.0.2" \
-    --php-extension "uv=0.3.0" \
+    --php "8.2" \
+    --php-extensions "dev,pear,phar,doc,apache2,bcmath,bz2,calendar,cgi,common,ctype,curl,dba,dbg,dom,embed,enchant,exif,ffi,fileinfo,fpm,ftp,gd,gettext,gmp,iconv,imap,intl,ldap,litespeed,mbstring,mysqli,mysqlnd,odbc,opcache,openssl,pcntl,pdo,pdo_dblib,pdo_mysql,pdo_odbc,pdo_pgsql,pdo_sqlite,pgsql,phpdbg,posix,pspell,session,shmop,simplexml,snmp,soap,sockets,sodium,sqlite3,sysvmsg,sysvsem,sysvshm,tidy,tokenizer,xml,xmlreader,xmlwriter,xsl,zip,pecl-swoole,pecl-redis" \
+    --build-pkg "build-base" \
+    --build-pkg "libuv-dev" \
+    --pecl-extension "uv=0.3.0" \
 ;

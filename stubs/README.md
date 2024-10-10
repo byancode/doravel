@@ -42,3 +42,12 @@ _Descripción breve del proyecto, especificando su propósito, las funcionalidad
   ```bash
     curl -L "https://raw.githubusercontent.com/[usuario]/[nombre-proyecto]/main/deploy" | bash
   ```
+
+## 📊 Charts
+
+```mermaid
+pie title Pets adopted by volunteers
+    "Dogs" : 386
+    "Cats" : 85
+    "Rats" : 15
+```

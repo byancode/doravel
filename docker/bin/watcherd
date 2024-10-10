@@ -1,7 +1,8 @@
-#!/bin/ash
+#!/bin/bash
 
 echo $$ > /var/run/watcherd.pid
 
+APP_PATH="${APP_PATH:-/var/www}"
 UNWATCH_FILE="$APP_PATH/.unwatch"
 TEMP_FILE="/tmp/unwatch_temp.$$"
 
@@ -16,7 +17,8 @@ cleanup() {
     exit 0
 }
 
-trap cleanup INT TERM
+trap cleanup SIGTERM
+trap cleanup SIGQUIT
 trap cleanup EXIT
 
 if [ -f "$UNWATCH_FILE" ]; then
@@ -53,10 +55,8 @@ WATCHED_FILES=$(eval "find '$APP_PATH' $EXCLUDE_FIND_ARGS -print")
 # Limpia el archivo temporal
 rm -f $TEMP_FILE
 
-# Construye el comando inotifywait con los archivos a observar
-COMMAND="inotifywait -m -e modify,create,delete $WATCHED_FILES"
 
 # Ejecuta el comando inotifywait y limpia los procesos PHP al recibir eventos
-eval $COMMAND | while read -r event; do
+inotifywait -m -e modify,create,delete $WATCHED_FILES | while read -r event; do
     cleanup;
 done

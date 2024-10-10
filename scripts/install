@@ -83,12 +83,13 @@ ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/develop"
 if [ ! -d ~/bin ]; then
     mkdir ~/bin
 fi
-
-curl -s $ENDPOINT/bin/doravel -o ~/bin/doravel
-
-if [ -f ~/bin/doravel ]; then
-    ln -sf ~/bin/doravel ~/bin/d
+if [ ! -d /usr/local/bin ]; then
+    mkdir -p /usr/local/bin
 fi
+
+curl -s $ENDPOINT/bin/doravel -o /usr/local/bin/doravel
+chmod +x /usr/local/bin/doravel
+ln -sf /usr/local/bin/doravel ~/bin/d
 
 if ! grep -q "export PATH=\$PATH:\$HOME/bin" ~/.bashrc; then
     echo "" >> ~/.bashrc

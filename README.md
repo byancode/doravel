@@ -18,6 +18,16 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/develop/scripts/install) && source ~/.bashrc
 ```
+> implemtenta las siguientes lineas en tu archivo .bashrc
+```bash
+export DORAVEL_CONTAINER=0
+
+if [ $UID -ne 0 ]; then
+    export DOCKER_SOCK_FILE="/run/user/$UID/docker.sock"
+else
+    export DOCKER_SOCK_FILE="/var/run/docker.sock"
+fi
+```
 
 # 💻 Comandos
 
@@ -65,3 +75,5 @@ return [
 ```bash
 docker run -p 80:80 byancode/doravel:php-8.2
 ```
+
+# TODO: sudo chmod 666 /var/run/docker.sock

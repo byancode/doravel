@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cleanup() {
+    exit 0;
+}
+
+trap cleanup SIGQUIT
+trap cleanup SIGTERM
+trap cleanup EXIT
+
+if [ ! -d node_modules ]; then
+    echo "Instalando dependencias de Node.js"
+    npm install
+fi
+
+/usr/local/bin/npx vite dev --host 0.0.0.0 --port 5173

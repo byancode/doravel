@@ -6,11 +6,12 @@ services:
             context: .
             dockerfile: Dockerfile
         environment:
+            DOCKER_SOCK_FILE: $DOCKER_SOCK_FILE
             APP_ENV: ${APP_ENV:-local}
         command: doraveld
         volumes:
+            - $DOCKER_SOCK_FILE:/var/run/docker.sock
             - .:/var/www
-            - /var/run/docker.sock:/var/run/docker.sock
         ports:
             - ${APP_PORT:-80}:8000
             - ${VITE_PORT:-5173}:5173
@@ -54,7 +55,7 @@ services:
         expose:
             - 1025
         ports:
-            - "${MAILPIT_DASHBOARD_PORT:-8025}:8025"
+            - ${MAILPIT_DASHBOARD_PORT:-8025}:8025
         networks:
             - doravel
     meilisearch:

@@ -1,7 +1,8 @@
-# CRONTAB
+# NOTE: this NOT is a SHELL script, is a crontab file
+#
 # https://crontab.guru/
 # https://crontab.guru/examples.html
-#
-# -----------------------------------
-# EVERY MONTH - create certificates
+# ---------------------------------- #
+# EVERY MONTH - renew certificates  #
+# ---------------------------------- #
 0 0 1 * * /usr/local/bin/certbot

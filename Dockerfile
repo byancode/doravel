@@ -20,11 +20,12 @@ WORKDIR /var/www
 
 COPY docker/supervisor/ /etc/supervisor/
 COPY docker/functions/* /usr/local/bin/
+COPY docker/doravel/* /usr/doravel/bin/
 COPY docker/bin/* /usr/local/bin/
-COPY workflows/ /root/.workflows/
-COPY workplan/ /root/.workplan/
+COPY .planning/ /root/.planning/
 COPY .doravel/ /root/.doravel/
 COPY .vscode/ /root/.vscode/
+COPY .flows/ /root/.flows/
 COPY bin/* /usr/local/bin/
 COPY stubs/ /root/.stubs/
 COPY docker/root/* /root/
@@ -42,16 +43,22 @@ RUN apk add --no-cache \
 		htop \
 		curl \
 		grep \
+		sudo \
         git \
 		tar \
 		xz \
         jq \
         yq \
     ; \
-	curl -fSL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" -o /tmp/gum.apk; \
+	curl -L "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_x86_64.apk" \
+		 -o /tmp/gum.apk; \
 	apk add --no-cache --allow-untrusted /tmp/gum.apk; \
 	\
-	doravel new .; \
+	mkdir -p /var/www; \
+	rm -rf /var/www/*; \
+	cd /var/www; \
+	\
+	/usr/doravel/bin/new .; \
 	\
 	apk cache -v clean; \
 	apk cache -v purge; \

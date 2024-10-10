@@ -4,19 +4,38 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      DOCKER_SOCK_FILE: $DOCKER_SOCK_FILE
+      DORAVEL_CONTAINER: 1
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_SOCK_FILE:-/var/run/docker.sock}:/var/run/docker.sock
       - ./bin/doravel:/usr/local/bin/doravel
+      - ./docker/doravel:/usr/doravel/bin
       - ./docker/bin/builder:/usr/local/bin/builder
   test:
     image: byancode/doravel:1.0.0
+    environment:
+      DOCKER_SOCK_FILE: $DOCKER_SOCK_FILE
+      DORAVEL_CONTAINER: 1
     volumes:
-      - ./demo:/var/www/demo
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.doravel:/root/.doravel
+      - ./docker/doravel:/usr/doravel/bin
+      - ./docker/supervisor/conf.d/:/etc/supervisor/conf.d/
+      - ${DOCKER_SOCK_FILE:-/var/run/docker.sock}:/var/run/docker.sock
       - ./bin/doravel:/usr/local/bin/doravel
-      - ./docker/bin/shuffle-ports:/usr/local/bin/shuffle-ports
-      - ./docker/bin/pre-built:/usr/local/bin/pre-built
-      - ./docker/bin/php:/usr/local/bin/php
-      - ./docker/bin/builder:/usr/local/bin/builder
-      - ./test/builder-test:/usr/local/bin/builder-test
       - ./test/installer:/usr/local/bin/installer
+      - ./test/installer-builder:/usr/local/bin/installer-builder
+      - ./test/builder-test:/usr/local/bin/builder-test
+      - ./docker/bin/doraveld:/usr/local/bin/doraveld
+      - ./docker/bin/pre-built:/usr/local/bin/pre-built
+      - ./docker/bin/nginxd:/usr/local/bin/nginxd
+      - ./docker/bin/octaned:/usr/local/bin/octaned
+      - ./docker/bin/builder:/usr/local/bin/builder
+      - ./docker/bin/watcherd:/usr/local/bin/watcherd
+      - ./docker/bin/composer:/usr/local/bin/composer
+      - ./docker/bin/php:/usr/local/bin/php
+      - ./docker/bin/shuffle-ports:/usr/local/bin/shuffle-ports
+      - ./docker/bin/supervisorctl:/usr/local/bin/supervisorctl
+      - ./docker/bin/artisand:/usr/local/bin/artisand
+      - ./docker/bin/certbot:/usr/local/bin/certbot
+      - ./docker/bin/artisan:/usr/local/bin/artisan

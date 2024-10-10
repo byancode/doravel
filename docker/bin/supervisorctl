@@ -2,19 +2,29 @@
 
 set -eu
 
+cleanup() {
+    exit 0
+}
+
+trap cleanup SIGQUIT
+trap cleanup SIGTERM
+trap cleanup EXIT
+
+APP_PATH="${APP_PATH:-/var/www}"
+
 if [ ! -f /usr/bin/supervisorctl ]; then
     gum log --time rfc822 --level fatal "No has instalado Supervisor"
     # TODO - aqui debe hacer informacion de como usar el comando builder para instalar Supervisor
     exit 1
 fi
 
-if [ ! -f /run/supervisord.sock ]; then
-    gum log --time rfc822 --level fatal "No has iniciado Supervisor con doraveld"
-    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar Supervisor
-    exit 1
-fi
+# if [ ! -f /run/supervisord.sock ]; then
+#     gum log --time rfc822 --level fatal "No has iniciado Supervisor con doraveld"
+#     # TODO - aqui debe hacer informacion de como usar el comando builder para instalar Supervisor
+#     exit 1
+# fi
 
-CONFIGURATION="$APP_PATH/.doravel/supervisord/$APP_ENV.conf"
+CONFIGURATION="$APP_PATH/.doravel/supervisor/$APP_ENV.conf"
 
 if [ ! -f $CONFIGURATION ]; then
     gum log --time rfc822 --level fatal "No se encontró el archivo de configuración $CONFIGURATION"
@@ -33,4 +43,4 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-/usr/bin/supervisorctl  --configuration $CONFIGURATION $@
+/usr/bin/supervisorctl  --configuration "$CONFIGURATION" $@

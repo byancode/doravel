@@ -1,5 +1,13 @@
 #!/bin/ash
 
+cleanup() {
+    exit 0
+}
+
+trap cleanup SIGTERM
+trap cleanup SIGQUIT
+trap cleanup EXIT
+
 if [ ! -f /usr/local/bin/php-cli ]; then
     gum log --time rfc822 --level fatal "No has instalado PHP"
     # TODO - aqui debe hacer informacion de como usar el comando builder para instalar PHP

@@ -1,6 +1,14 @@
 #!/bin/bash
 
-set -eu
+cleanup() {
+    exit 0
+}
+
+trap cleanup SIGTERM
+trap cleanup SIGQUIT
+trap cleanup EXIT
+
+APP_PATH="${APP_PATH:-/var/www}"
 
 if [ ! -f /usr/local/bin/php-cli ]; then
     gum log --time rfc822 --level fatal "No has instalado PHP"

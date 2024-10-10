@@ -1,0 +1,136 @@
+#!/bin/bash
+
+STATUS=0
+
+if [ ! -d ".doravel" ]; then
+    STATUS=1
+    echo "❌ Directory .doravel not found"
+else
+    echo "✅ Directory .doravel found"
+fi
+
+if [ ! -d "vendor" ]; then
+    STATUS=1
+    echo "❌ Directory vendor not found"
+else
+    echo "✅ Directory vendor found"
+fi
+
+if [ ! -d "node_modules" ]; then
+    STATUS=1
+    echo "❌ Directory node_modules not found"
+else
+    echo "✅ Directory node_modules found"
+fi
+
+if [ ! -d ".doravel/nginx/http.d" ]; then
+    STATUS=1
+    echo "❌ Directory .doravel/nginx/http.d not found"
+else
+    echo "✅ Directory .doravel/nginx/http.d found"
+fi
+
+if [ ! -d ".doravel/nginx/https.d" ]; then
+    STATUS=1
+    echo "❌ Directory .doravel/nginx/https.d not found"
+else
+    echo "✅ Directory .doravel/nginx/https.d found"
+fi
+
+for ENVIRONMENT in $(get_env_names); do
+    DOCKERCOMPOSE_NAME="docker-compose"
+    DOCKERFILE_PATH="Dockerfile"
+    ENV_PATH=".env"
+
+    if [ "$ENVIRONMENT" != "local" ]; then
+        DOCKERCOMPOSE_NAME="docker-compose.$ENVIRONMENT"
+        DOCKERFILE_PATH="Dockerfile.$ENVIRONMENT"
+        ENV_PATH=".env.$ENVIRONMENT"
+    fi
+
+    DOCKERCOMPOSE_PATH=$(find "$APP_PATH" -maxdepth 1 -name "$DOCKERCOMPOSE_NAME.y*ml" | head -n 1)
+
+    if [ -z "$DOCKERCOMPOSE_PATH" ]; then
+        STATUS=1
+        echo "❌ File $DOCKERCOMPOSE_NAME.yaml not found"
+    else
+        echo "✅ File $DOCKERCOMPOSE_NAME.yaml found"
+    fi
+
+    if [ ! -f "$ENV_PATH" ]; then
+        STATUS=1
+        echo "❌ File $ENV_PATH not found"
+    else
+        echo "✅ File $ENV_PATH found"
+    fi
+
+    if [ ! -f "$DOCKERFILE_PATH" ]; then
+        STATUS=1
+        echo "❌ File $DOCKERFILE_PATH not found"
+    else
+        echo "✅ File $DOCKERFILE_PATH found"
+    fi
+
+    if ! grep -qE "APP_ENV(\s+)?=(\s+)?$ENVIRONMENT" $ENV_PATH; then
+        STATUS=1
+        echo "❌ APP_ENV=$ENVIRONMENT not found in $ENV_PATH"
+    else
+        echo "✅ APP_ENV=$ENVIRONMENT found in $ENV_PATH"
+    fi
+
+    if [ ! -f ".doravel/cron/$ENVIRONMENT" ]; then
+        STATUS=1
+        echo "❌ File .doravel/cron/$ENVIRONMENT not found"
+    else
+        echo "✅ File .doravel/cron/$ENVIRONMENT found"
+    fi
+
+    if [ ! -f ".doravel/php/$ENVIRONMENT.ini" ]; then
+        STATUS=1
+        echo "❌ File .doravel/php/$ENVIRONMENT.ini not found"
+    else
+        echo "✅ File .doravel/php/$ENVIRONMENT.ini found"
+    fi
+
+    if [ ! -d ".doravel/php/$ENVIRONMENT.d" ]; then
+        STATUS=1
+        echo "❌ Directory .doravel/php/$ENVIRONMENT.d not found"
+    else
+        echo "✅ Directory .doravel/php/$ENVIRONMENT.d found"
+    fi
+
+    if [ ! -f ".doravel/supervisor/$ENVIRONMENT.conf" ]; then
+        STATUS=1
+        echo "❌ File .doravel/supervisor/$ENVIRONMENT.conf not found"
+    else
+        echo "✅ File .doravel/supervisor/$ENVIRONMENT.conf found"
+    fi
+
+    if [ ! -d ".doravel/supervisor/$ENVIRONMENT.d" ]; then
+        STATUS=1
+        echo "❌ Directory .doravel/supervisor/$ENVIRONMENT.d not found"
+    else
+        echo "✅ Directory .doravel/supervisor/$ENVIRONMENT.d found"
+    fi
+
+    if [ ! -f ".doravel/nginx/$ENVIRONMENT.conf" ]; then
+        STATUS=1
+        echo "❌ File .doravel/nginx/$ENVIRONMENT.conf not found"
+    else
+        echo "✅ File .doravel/nginx/$ENVIRONMENT.conf found"
+    fi
+done
+
+# echo ""
+# echo "--------------------------------"
+# echo ""
+
+# if [ $STATUS -eq 0 ]; then
+#     echo "✅ All files and directories found"
+#     elif gum confirm "👨‍⚕️ do you want to fix it?"; then
+#     gum spin --spinner dot --title "fixing" -- sleep 3
+#     doravel fix
+#     exit $?
+# fi
+
+# exit $STATUS

@@ -3,10 +3,24 @@
 # ❌ DO NOT EDIT ANYTHING FROM HERE ON ❌ #
 # --------------------------------------- #
 
+DORAVEL_ID="byancode"
 DORAVEL_VERSION="1.0.0"
 DORAVEL_ISOLATED=${DORAVEL_ISOLATED:-0}
 DORAVEL_CONTAINER=${DORAVEL_CONTAINER:-0}
 DORAVEL_INSTALLED=${DORAVEL_INSTALLED:-0}
+
+if [ -z "$UID" ]; then
+    GID=$(id -g)
+    UID=$(id -u)
+fi
+
+if [ $UID -ne 0 ] && [ $DORAVEL_CONTAINER -eq 0 ]; then
+    DEFAULT_SOCK_FILE="/run/user/$UID/docker.sock"
+else
+    DEFAULT_SOCK_FILE="/var/run/docker.sock"
+fi
+
+export DOCKER_SOCK_FILE=${DOCKER_SOCK_FILE:-$DEFAULT_SOCK_FILE}
 
 function print_help {
     echo '
@@ -174,21 +188,6 @@ doravel_image_run() {
     docker run --rm -it -v .:/var/www $DORAVEL_IMAGE $@
 }
 
-recursive_cp() {
-    ROOT_PATH=$1
-    DEST_PATH=$2
-    ORIGIN_PATH=$ROOT_PATH$DEST_PATH
-
-    for FROM_PATH in $(find $ORIGIN_PATH); do
-        TARGET_PATH=${FROM_PATH#$ROOT_PATH}
-        if [ -d $FROM_PATH ]; then
-            mkdir -vp $TARGET_PATH
-        elif [ ! -f $TARGET_PATH ]; then
-            cp -v $FROM_PATH $TARGET_PATH
-        fi
-    done
-}
-
 echo "Command: $COMMAND"
 echo "Environment: $ENV_NAME"
 
@@ -200,12 +199,29 @@ fi
 if [ ! -z "$COMMAND_DORAVEL" ]; then
     echo "Command doravel: $COMMAND_DORAVEL"
     if [ "$COMMAND_DORAVEL" == 'x' ]; then
-        VOLUMES=( "-v .:/var/www" )
         DOCKER_SOCKET_FILE="/var/run/docker.sock"
+        WORKDIR="/var/www"
+        ARGS=()
+
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -w|--workdir)
+                    WORKDIR="$2"
+                    shift 2
+                    ;;
+                *)
+                    ARGS+=("$1")
+                    shift
+                    ;;
+            esac
+        done
+
+        VOLUMES=( "-v .:$WORKDIR" )
         if [ -S "$DOCKER_SOCKET_FILE" ]; then
             VOLUMES+=( "-v $DOCKER_SOCKET_FILE:$DOCKER_SOCKET_FILE" )
         fi
-        docker run --rm -it ${VOLUMES[@]} -e "DORAVEL_ISOLATED=1" $DORAVEL_IMAGE $@
+
+        docker run --rm -it ${VOLUMES[@]} -w "$WORKDIR" -e "DORAVEL_ISOLATED=1" $DORAVEL_IMAGE ${ARGS[@]}
         exit $?
     elif [ "$COMMAND_DORAVEL" == 'fix' ]; then
         if [ -d "./bootstrap" ]; then
@@ -222,143 +238,15 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         exit 0
     elif [ "$COMMAND_DORAVEL" == 'doctor' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            STATUS=0
-            if [ ! -d .doravel ]; then
-                STATUS=1
-                echo "❌ Directory .doravel not found"
-            else
-                echo "✅ Directory .doravel found"
-            fi
-            if [ ! -d vendor ]; then
-                STATUS=1
-                echo "❌ Directory vendor not found"
-            else
-                echo "✅ Directory vendor found"
-            fi
-            if [ ! -d node_modules ]; then
-                STATUS=1
-                echo "❌ Directory node_modules not found"
-            else
-                echo "✅ Directory node_modules found"
-            fi
-
-            for ENVIROMENT in $(get_env_names); do
-                DOCKERCOMPOSE_NAME="docker-compose"
-                DOCKERFILE_PATH="Dockerfile"
-                ENV_PATH=".env"
-
-                if [ "$ENVIROMENT" != "local" ]; then
-                    DOCKERCOMPOSE_NAME="docker-compose.$ENVIROMENT"
-                    DOCKERFILE_PATH="Dockerfile.$ENVIROMENT"
-                    ENV_PATH=".env.$ENVIROMENT"
-                fi
-
-                DOCKERCOMPOSE_PATH=$(find . -maxdepth 1 -name "$DOCKERCOMPOSE_NAME.y*ml" | head -n 1)
-
-                if [ -z "$DOCKERCOMPOSE_PATH" ]; then
-                    STATUS=1
-                    echo "❌ File $DOCKERCOMPOSE_NAME.yaml not found"
-                else
-                    echo "✅ File $DOCKERCOMPOSE_NAME.yaml found"
-                fi
-
-                if [ ! -f "$ENV_PATH" ]; then
-                    STATUS=1
-                    echo "❌ File $ENV_PATH not found"
-                else
-                    echo "✅ File $ENV_PATH found"
-                fi
-
-                if [ ! -f "$DOCKERFILE_PATH" ]; then
-                    STATUS=1
-                    echo "❌ File $DOCKERFILE_PATH not found"
-                else
-                    echo "✅ File $DOCKERFILE_PATH found"
-                fi
-
-                if ! grep -qE "APP_ENV(\s+)?=(\s+)?$ENVIROMENT" $ENV_PATH; then
-                    STATUS=1
-                    echo "❌ APP_ENV=$ENVIROMENT not found in $ENV_PATH"
-                else
-                    echo "✅ APP_ENV=$ENVIROMENT found in $ENV_PATH"
-                fi
-
-                if [ ! -f .doravel/cron/$ENVIROMENT ]; then
-                    STATUS=1
-                    echo "❌ File .doravel/cron/$ENVIROMENT not found"
-                else
-                    echo "✅ File .doravel/cron/$ENVIROMENT found"
-                fi
-
-                if [ ! -f .doravel/php/$ENVIROMENT.ini ]; then
-                    STATUS=1
-                    echo "❌ File .doravel/php/$ENVIROMENT.ini not found"
-                else
-                    echo "✅ File .doravel/php/$ENVIROMENT.ini found"
-                fi
-
-                if [ ! -d .doravel/php/$ENVIRONMENT.d ]; then
-                    STATUS=1
-                    echo "❌ Directory .doravel/php/$ENVIRONMENT.d not found"
-                else
-                    echo "✅ Directory .doravel/php/$ENVIRONMENT.d found"
-                fi
-
-                if [ ! -f .doravel/supervisor/$ENVIROMENT.conf ]; then
-                    STATUS=1
-                    echo "❌ File .doravel/supervisor/$ENVIROMENT.conf not found"
-                else
-                    echo "✅ File .doravel/supervisor/$ENVIROMENT.conf found"
-                fi
-
-                if [ ! -d .doravel/supervisor/$ENVIRONMENT.d ]; then
-                    STATUS=1
-                    echo "❌ Directory .doravel/supervisor/$ENVIRONMENT.d not found"
-                else
-                    echo "✅ Directory .doravel/supervisor/$ENVIRONMENT.d found"
-                fi
-
-                if [ ! -f .doravel/nginx/$ENVIROMENT.conf ]; then
-                    STATUS=1
-                    echo "❌ File .doravel/nginx/$ENVIROMENT.conf not found"
-                else
-                    echo "✅ File .doravel/nginx/$ENVIROMENT.conf found"
-                fi
-
-                if [ ! -d .doravel/nginx/http.d ]; then
-                    STATUS=1
-                    echo "❌ Directory .doravel/nginx/http.d not found"
-                else
-                    echo "✅ Directory .doravel/nginx/http.d found"
-                fi
-
-                if [ ! -d .doravel/nginx/https.d ]; then
-                    STATUS=1
-                    echo "❌ Directory .doravel/nginx/https.d not found"
-                else
-                    echo "✅ Directory .doravel/nginx/https.d found"
-                fi
-            done
-            echo ""
-            echo "--------------------------------"
-            echo ""
-            if [ $STATUS -eq 0 ]; then
-                echo "✅ All files and directories found"
-            elif gum confirm "👨‍⚕️ do you want to fix it?"; then
-                gum spin --spinner dot --title "fixing" -- sleep 3
-                doravel fix
-                exit $?
-            fi
-
-            exit $STATUS
+            /usr/doravel/bin/doctor
+            exit $?
         else
             doravel x doravel doctor
             exit $?
         fi
     elif [ "$COMMAND_DORAVEL" == 'install' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            npm install && \
-            composer install
+            /usr/doravel/bin/install
             exit $?
         else
             doravel x doravel install
@@ -366,66 +254,18 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         fi
     elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            recursive_cp /root/ .workflows/
-            recursive_cp /root/ .workplan/
-            recursive_cp /root/ .doravel/
-            recursive_cp /root/ .vscode/
-
-            touch database/database.sqlite
-            SETUP_SCRIPT=".doravel/setup"
-
-            doravel init && \
-            doravel example destroy && \
-            artisan key:generate && \
-            artisan storage:link && \
-            doravel install
-            if [ $? -eq 1 ]; then
-                exit 1
-            elif [ -f $SETUP_SCRIPT ] && [ -x $SETUP_SCRIPT ]; then
-                $SETUP_SCRIPT
-                if [ $? -eq 0 ]; then
-                    echo "Setup completed 😃"
-                else
-                    echo "Setup failed 😔"
-                fi
-            fi
-            exit 0
+            /usr/doravel/bin/setup
+            exit $?
         else
             doravel x doravel setup
             exit $?
         fi
     elif [ "$COMMAND_DORAVEL" == 'new' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            DIRECTORY=$1
-            shift 1
-
-            if [ -z "$DIRECTORY" ]; then
-                echo "Project directory is required"
-                exit 1
-            fi
-
-            if [ "$DIRECTORY" != '.' ] && [ -d "$DIRECTORY" ]; then
-                echo "Directory $DIRECTORY already exists"
-                exit 1
-            fi
-
-            BRANCH="11.x"
-            mkdir -p "$DIRECTORY";
-            LARAVEL_FILE="$BRANCH.tar.gz"
-            LARAVEL_TMP_FILE="/tmp/$LARAVEL_FILE"
-            curl -fsSL "https://github.com/laravel/laravel/archive/refs/heads/$LARAVEL_FILE" \
-                -o "$LARAVEL_TMP_FILE";
-	        tar -xzf "$LARAVEL_TMP_FILE" -C "$DIRECTORY" --strip-components=1;
-            rm -f "$LARAVEL_TMP_FILE";
-
-            if [  "$DIRECTORY" != '.'  ]; then
-                cd $DIRECTORY
-            fi
-
-            doravel setup
+            /usr/doravel/bin/new $@
             exit $?
         else
-            doravel x doravel new $@
+            doravel x --workdir /app doravel new $@
             exit $?
         fi
     fi
@@ -436,86 +276,18 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
 
     if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            DOCKER_COMPOSE_FILE="$DOCKER_COMPOSE_NAME.yaml"
-            STUBS_PATH="/root/.stubs"
-
-            if [ ! -f "$ENV_FILE" ]; then
-                cp -f "$STUBS_PATH/.env" "$ENV_FILE"
-            fi
-            if [ ! -f "$DOCKER_FILE" ]; then
-                cp -f "$STUBS_PATH/Dockerfile.built" "$DOCKER_FILE"
-            fi
-            if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
-                cp -f "$STUBS_PATH/docker-compose.yaml" "$DOCKER_COMPOSE_FILE"
-            fi
-
-            DOCKERFILE_NAME=$(basename $DOCKER_FILE)
-            FOLDERS=(
-                ".doravel/php/$ENV_NAME.d"
-                ".doravel/supervisor/$ENV_NAME.d"
-            )
-            for FOLDER in "${FOLDERS[@]}"; do
-                if [ ! -d "$FOLDER" ]; then
-                    mkdir -vp "$FOLDER"
-                fi
-            done
-            if [ $DORAVEL_INSTALLED -eq 1 ]; then
-                for FOLDER in "${FOLDERS[@]}"; do
-                    recursive_cp /root/ $FOLDER/
-                done
-            fi
-            sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $ENV_FILE
-            sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $DOCKER_FILE
-            cp -vf /root/.doravel/cron/local .doravel/cron/$ENV_NAME
-            cp -vf /root/.doravel/php/local.ini .doravel/php/$ENV_NAME.ini
-            cp -vf /root/.doravel/nginx/local.conf .doravel/nginx/$ENV_NAME.conf
-            cp -vf /root/.doravel/supervisor/local.conf .doravel/supervisor/$ENV_NAME.conf
-            yq '.services.app.build.dockerfile="'$DOCKERFILE_NAME'", .services.app.environment.APP_ENV="'$ENV_NAME'"' \
-                < "$STUBS_PATH/docker-compose.yaml" \
-                > "$DOCKER_COMPOSE_FILE";
-
-            echo "created environment $ENV_NAME"
-            exit 0
+            /usr/doravel/bin/init $ENV_NAME
+            exit $?
         else
             doravel x doravel init
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            if [ "$ENV_NAME" == "local" ]; then
-                gum log --time rfc822 --level fatal "No se puede eliminar el entorno local."
-                exit 1
-            fi
-            if [ "$ENV_NAME" == "$APP_ENV" ] && [ $DORAVEL_ISOLATED -eq 0 ]; then
-                gum log --time rfc822 --level fatal "No se puede eliminar el entorno actual."
-                exit 1
-            fi
-            KEYWORD="destroy"
-            PASSWORD=$(gum input --placeholder "Escribe '$KEYWORD' para confirmar" --header "Estas seguro de eliminar el entorno ${ENV_NAME}?" --password --header.foreground=190)
-            if [ "$PASSWORD" = "$KEYWORD" ]; then
-                rm -vf "$ENV_FILE"
-                rm -vf "$DOCKER_FILE"
-                rm -vf "$DOCKER_COMPOSE_FILE"
-                rm -vf ".doravel/cron/$ENV_NAME"
-                rm -vf ".doravel/php/$ENV_NAME.ini"
-                rm -rf ".doravel/php/$ENV_NAME.d"
-                rm -rf ".doravel/nginx/$ENV_NAME.d"
-                rm -vf ".doravel/nginx/$ENV_NAME.conf"
-                rm -vf ".doravel/supervisor/$ENV_NAME.conf"
-                rm -rf ".doravel/supervisor/$ENV_NAME.d"
-                echo "👌 destroyed environment $ENV_NAME"
-                exit 0
-            else
-                gum log --time rfc822 --level error "No se ha confirmado la eliminacion."
-                echo ""
-                if gum confirm "quieres intentar de nuevo?"; then
-                    doravel $ENV_NAME destroy
-                    exit $?
-                fi
-                exit 1
-            fi
+            /usr/doravel/bin/destroy $ENV_NAME $@
+            exit $?
         else
-            doravel x doravel $ENV_NAME destroy
+            doravel x doravel $ENV_NAME destroy $@
             exit $?
         fi
     fi
@@ -526,58 +298,26 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 0
 fi
 
-DIR_NAME=$(basename $(pwd))
-PROJECT_NAME=$(echo $DIR_NAME | sed 's/[^a-zA-Z0-9]/-/g')
-PROJECT_NAME="${PROJECT_NAME}__${ENV_NAME}"
-
 if [ -z "$DOCKER_COMPOSE_FILE" ]; then
     echo "the $DOCKER_COMPOSE_FILE file does not exist"
     exit 0
 fi
 
-DOCKER_COMPOSE="docker compose --project-name $PROJECT_NAME --env-file $ENV_FILE --file $DOCKER_COMPOSE_FILE"
+DOCKER_COMPOSE="docker compose --project-name $ENV_NAME --env-file $ENV_FILE --file $DOCKER_COMPOSE_FILE"
+
+service_is_running() {
+    $DOCKER_COMPOSE ps --services --status running | grep -q "$1"
+    return $?
+}
 
 container_exec() {
-    if ! $DOCKER_COMPOSE ps --services --status running | grep -q "app"; then
+    RUNNING=$(service_is_running "app" && echo 0 || echo 1)
+    if [ $RUNNING -eq 1 ]; then
         echo "Service 'app' is not running"
         exit 1
     else
         $DOCKER_COMPOSE exec app $@
         exit $?
-    fi
-}
-
-supervisorctl_exec() {
-    if [ $DORAVEL_CONTAINER -eq 1 ]; then
-        COMMANDS=( "start" "stop" "restart" "status" "reload" "remove" "enable" "disable" )
-
-        COMMAND="$1"
-        shift
-
-        if [ -z "$COMMAND" ] || [[ ! " ${COMMANDS[@]} " =~ " $COMMAND " ]]; then
-            supervisorctl $@
-            exit $?
-        fi
-
-        VALUE="$1"
-        shift
-
-        if [ -z "$VALUE" ]; then
-            supervisorctl $COMMAND
-            exit $?
-        elif [ "$VALUE" == "all" ]; then
-            supervisorctl $COMMAND $VALUE
-            exit $?
-        else
-            supervisorctl $COMMAND $(supervisorctl status | sed -n "/$VALUE/p" | awk '{print $1}')
-            exit $?
-        fi
-
-        supervisorctl $@
-        exit $?
-    else
-        container_exec doravel supervisorctl $@
-        exist $?
     fi
 }
 
@@ -607,11 +347,11 @@ docker_find_ports() {
 
 docker_print_ports() {
     REMOTE_IP="$1"
-    LOCAL_IP="$2"
+    NETWORK_IP="$2"
     LINE="$3"
 
-    SERVICE=$(echo $LINE | cut -d":" -f1)
-    PORTS=$(echo $LINE | cut -d":" -f2 | tr ',' '\n')
+    SERVICE=$(echo $LINE | cut -d ":" -f1)
+    PORTS=$(echo $LINE | cut -d ":" -f2 | tr ',' '\n')
 
     if [ "$PORTS" == "" ]; then
         echo ""
@@ -621,7 +361,7 @@ docker_print_ports() {
     for PORT in $PORTS; do
         echo -e "\n$SERVICE [$PORT]:"
         echo -e "  🌐  http://$REMOTE_IP:$PORT"
-        echo -e "  🏠  http://$LOCAL_IP:$PORT"
+        echo -e "  🏠  http://$NETWORK_IP:$PORT"
         echo -e "  💻  http://localhost:$PORT"
         echo -e "---"
     done
@@ -638,7 +378,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         exit 0
     elif [ "$COMMAND_ENVIRONMENT" == "ports" ]; then
         SERVICES=$($DOCKER_COMPOSE ps --status running --services | tr '\n' ' ')
-        LOCAL_IP=$(hostname -i | cut -d" " -f1)
+        NETWORK_IP=$(hostname -i | cut -d" " -f1)
 
         if [ -z "$1" ]; then
             echo "Usage: doravel ports [list|show|shuffle]"
@@ -649,14 +389,14 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             LINES=$(echo $(docker_ports) | tr ' ' '\n')
 
             for LINE in $LINES; do
-                docker_print_ports "$REMOTE_IP" "$LOCAL_IP" "$LINE"
+                docker_print_ports "$REMOTE_IP" "$NETWORK_IP" "$LINE"
             done
             exit 0
         elif [ "$1" == "shuffle" ]; then
             if [ $DORAVEL_CONTAINER -eq 1 ]; then
                 shuffle-ports --env $ENV_NAME
             else
-                docker run --rm -it -v .:/var/www $DORAVEL_IMAGE shuffle-ports --env $ENV_NAME
+                doravel x doravel $ENV_NAME ports shuffle
             fi
             exit 0
         elif [ "$1" == "show" ]; then
@@ -671,7 +411,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
                 if [ -z "$LINE" ]; then
                     continue
                 fi
-                docker_print_ports "$REMOTE_IP" "$LOCAL_IP" "$LINE"
+                docker_print_ports "$REMOTE_IP" "$NETWORK_IP" "$LINE"
             done
             exit 0
         else
@@ -679,12 +419,21 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             exit 1
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "reload" ]; then
-        supervisorctl_exec reload
-        supervisorctl_exec restart all
-        exit $?
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            /usr/doravel/bin/reload
+            exit $?
+        else
+            container_exec doravel reload
+            exit $?
+        fi
     elif [ "$COMMAND_ENVIRONMENT" == "supervisorctl" ]; then
-        supervisorctl_exec $@
-        exit $?
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            supervisorctl $@
+            exit $?
+        else
+            container_exec supervisorctl $@
+            exit $?
+        fi
     elif [[ " ${COMMANDS_ARTISAN[@]} " =~ " $COMMAND_ENVIRONMENT " ]]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             artisan $COMMAND_ENVIRONMENT $@

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -eu
+
+recursive_cp() {
+    ROOT_PATH=$1
+    DEST_PATH=$2
+    ORIGIN_PATH=$ROOT_PATH$DEST_PATH
+
+    for FROM_PATH in $(find $ORIGIN_PATH); do
+        TARGET_PATH=${FROM_PATH#$ROOT_PATH}
+        if [ -d $FROM_PATH ]; then
+            mkdir -vp $TARGET_PATH
+        elif [ ! -f $TARGET_PATH ]; then
+            cp -v $FROM_PATH $TARGET_PATH
+        fi
+    done
+}
+
+if [ -f /root/.stubs/README.md ]; then
+    cp -vf /root/.stubs/README.md ./README.md
+fi
+
+if [ -f /usr/local/bin/doravel ]; then
+    cp -vf /usr/local/bin/doravel ./doravel
+fi
+
+recursive_cp /root/ .planning/
+recursive_cp /root/ .doravel/
+recursive_cp /root/ .vscode/
+recursive_cp /root/ .flows/
+
+touch database/database.sqlite
+SETUP_SCRIPT=".doravel/setup"
+
+/usr/doravel/bin/init local
+/usr/doravel/bin/destroy example --force
+
+if [ -f $SETUP_SCRIPT ] && [ -x $SETUP_SCRIPT ]; then
+    $SETUP_SCRIPT
+    if [ $? -eq 0 ]; then
+        echo "Setup completed 😃"
+        exit 0
+    else
+        echo "Setup failed 😔"
+        exit 1
+    fi
+fi

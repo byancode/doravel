@@ -1,14 +1,17 @@
 FROM byancode/doravel:1.0.0
 
+# IMPORTANT: DO NOT REMOVE OR CHANGE THIS VALUE
 ENV APP_ENV=local
 
 RUN set -eux; \
     apk add --no-cache libuv; \
     # PRE-BUILT
     pre-built \
+    # https://unofficial-builds.nodejs.org/download/release/
+    --node "22.2.0" \
     # download composer
     # https://github.com/composer/composer/tags
-    --composer "2.1.9" \
+    --composer "2.8.1" \
     # PHP PACKAGES
     # https://pkgs.alpinelinux.org/packages?name=php83&branch=v3.20&arch=x86_64&origin=yes
     --php "8.3" \

@@ -1,15 +1,19 @@
 #!/bin/ash
 
-echo $$ > /var/run/doraveld.pid
-
 echo "Iniciando doraveld..."
 
+echo $$ > /var/run/doraveld.pid
+
 cleanup() {
+    if [ -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    fi
     rm -f /var/run/doraveld.pid
     exit 0
 }
 
-trap cleanup INT TERM
+trap cleanup SIGQUIT
+trap cleanup SIGTERM
 trap cleanup EXIT
 
 if [ ! -f /usr/bin/supervisord ]; then
@@ -30,16 +34,63 @@ if [ ! -f /usr/local/bin/composer ]; then
     exit 1
 fi
 
-while true; do
-    CONFIGURATION_FILE="/var/www/.doravel/supervisor/$APP_ENV.conf"
+if [ ! -f /usr/local/bin/npx ]; then
+    gum log --time rfc822 --level fatal "No has instalado node npx npm"
+    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar npx
+    exit 1
+fi
 
+APP_PATH="${APP_PATH:-/var/www}"
+CONFIGURATION_FILE="$APP_PATH/.doravel/supervisor/$APP_ENV.conf"
+STARTUP_FILE="$APP_PATH/.doravel/startup"
+PID_FILE="/var/run/supervisord.pid"
+
+update_configuration_file() {
+    CONFIGURATION_PATH="/etc/supervisor/conf.d/$1.conf"
+    VALUE=$(is_true $2 && echo 'true' || echo 'false')
+    sed -i "s/^autostart=.*/autostart=$VALUE/" $CONFIGURATION_PATH
+    sed -i "s/^autorestart=.*/autorestart=$VALUE/" $CONFIGURATION_PATH
+}
+
+update_configurations() {
+    source $(get_env_file $APP_ENV)
+    VITE_ENABLED=${VITE_ENABLED:-'true'}
+    REVERB_ENABLED=${REVERB_ENABLED:-'true'}
+    SCHEDULE_ENABLED=${SCHEDULE_ENABLED:-'true'}
+
+    if [ ! -d  $APP_PATH/vendor/laravel/reverb ]; then
+        REVERB_ENABLED='false'
+    fi
+
+    update_configuration_file 'vite' $VITE_ENABLED
+    update_configuration_file 'reverb' $REVERB_ENABLED
+    update_configuration_file 'schedule' $SCHEDULE_ENABLED
+}
+
+cd $APP_PATH;
+
+while true; do
     if [ ! -f $CONFIGURATION_FILE ]; then
-        echo "No se encontró el archivo de configuración $CONFIGURATION_FILE, esperando 2 segundos..."
+        gum log --time rfc822 --level fatal "No se encontró el archivo de configuración $CONFIGURATION_FILE"
         sleep 2
         continue
     fi
 
-    /usr/bin/supervisord --nodaemon --configuration $CONFIGURATION_FILE
+
+    update_configurations;
+
+    if [ -x /usr/doravel/bin/install]; then
+        /usr/doravel/bin/install &
+        child=$!
+        wait $child
+    fi
+
+    if [ -x "$STARTUP_FILE" ]; then
+        $STARTUP_FILE
+    fi
+
+    /usr/bin/supervisord --nodaemon --configuration "$CONFIGURATION_FILE" --pidfile "$PID_FILE" &
+    child=$!
+    wait $child
     echo "supervisord se ha detenido. Reiniciando en 1 segundo..."
-    sleep 1
 done

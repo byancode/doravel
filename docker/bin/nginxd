@@ -1,13 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
 echo $$ > /var/run/nginxd.pid
 
 cleanup() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    fi
+
     rm -f /var/run/nginxd.pid
     exit 0
 }
 
-trap cleanup INT TERM
+trap cleanup SIGQUIT
+trap cleanup SIGTERM
 trap cleanup EXIT
 
 if [ ! -f /usr/sbin/nginx ]; then
@@ -23,4 +28,9 @@ if [ ! -f $CONFIGURATION_FILE ]; then
     exit 1
 fi
 
-/usr/sbin/nginx -c $CONFIGURATION_FILE -g "daemon off;" $@
+# TODO - habilitar reverb a nginx conf si existe la carpeta vendor/laravel/reverb
+
+echo "Iniciando nginx..."
+/usr/sbin/nginx -c "$CONFIGURATION_FILE" -g "daemon off;" $@ &
+child=$!
+wait "$child"

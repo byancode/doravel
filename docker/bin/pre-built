@@ -2,9 +2,15 @@
 
 set -eux;
 
+if [ $DORAVEL_INSTALLED -eq 1 ]; then
+	echo "Doravel ya está instalado";
+	exit 0;
+fi
+
+PHP_VERSION="8.3"
+NODE_VERSION="22.2.0"
 COMPOSER_VERSION="2.8.1"
 PHP_EXTENSIONS=""
-PHP_VERSION="8.3"
 
 declare -A BUILD_PACKAGES
 declare -A PECL_EXTENSIONS
@@ -36,6 +42,10 @@ parse_arguments() {
         PHP_VERSION="$2"
         shift 2
         ;;
+      --node)
+        NODE_VERSION="$2"
+        shift 2
+        ;;
       --php-extensions)
         PHP_EXTENSIONS="$2"
         shift 2
@@ -61,6 +71,7 @@ parse_arguments() {
 }
 
 parse_arguments $@;
+
 
 PHP_VERSION=$(echo "$PHP_VERSION" | sed -E 's/^([0-9]+)\.([0-9]+).*/\1\2/g')
 PHP_PREFIX="php${PHP_VERSION}"
@@ -88,6 +99,16 @@ for KEY in "${!PECL_EXTENSIONS[@]}"; do
 	curl -L "https://pecl.php.net/get/${FILE_NAME}" \
 		 -o "/tmp/${FILE_NAME}";
 done
+
+
+curl -L "https://unofficial-builds.nodejs.org/download/release/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64-musl.tar.xz" \
+	 -o "/tmp/node.tar.xz";
+
+
+mkdir -p /root/.local/share/node;
+rm -rf /root/.local/share/node/*;
+tar -xJf /tmp/node.tar.xz -C /root/.local/share/node --strip-components=1;
+ln -sf /root/.local/share/node/bin/* /usr/local/bin/;
 
 chmod +x /usr/local/bin/*;
 ln -sf /usr/bin/${PHP_PREFIX} /usr/local/bin/php-cli;
@@ -127,6 +148,7 @@ done
 
 
 apk del --no-network .build-deps;
+sed -i 's/DORAVEL_INSTALLED=0/DORAVEL_INSTALLED=1/' /root/.rc;
 
 rm -vf /var/spool/cron/crontabs/*;
 rm -vf /usr/include/iconv.h;

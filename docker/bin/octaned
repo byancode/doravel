@@ -1,11 +1,14 @@
 #!/bin/sh
 
+echo $$ > /var/run/octaned.pid
+
 cleanup() {
-    artisan octane:stop;
-    exist 0;
+    rm -f /var/run/octaned.pid
+    exit 0;
 }
 
-trap cleanup INT TERM
+trap cleanup SIGTERM
+trap cleanup SIGQUIT
 trap cleanup EXIT
 
 artisan octane:start --server=swoole $@

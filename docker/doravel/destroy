@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -eu
+
+FORCE=0
+ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -f|--force)
+            FORCE=1
+            shift
+            ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+APP_ENV=${APP_ENV:-'local'}
+ENV_NAME="${ARGS[0]:-$APP_ENV}"
+
+DOCKER_COMPOSE_FILE=$(get_docker_compose_file "$ENV_NAME")
+DOCKER_FILE=$(get_dockerfile "$ENV_NAME")
+ENV_FILE=$(get_env_file "$ENV_NAME")
+
+if [ "$ENV_NAME" == "local" ]; then
+    gum log --time rfc822 --level fatal "No se puede eliminar el entorno local."
+    exit 1
+fi
+
+if [ "$ENV_NAME" == "$APP_ENV" ] && [ $DORAVEL_ISOLATED -eq 0 ]; then
+    gum log --time rfc822 --level fatal "No se puede eliminar el entorno actual."
+    exit 1
+fi
+
+KEYWORD="destroy"
+PASSWORD="$KEYWORD"
+
+if [ $FORCE -eq 0 ]; then
+    PASSWORD=$(gum input --placeholder "Escribe '$KEYWORD' para confirmar" --header "Estas seguro de eliminar el entorno ${ENV_NAME}?" --password --header.foreground=190)
+fi
+
+if [ "$PASSWORD" == "$KEYWORD" ]; then
+    rm -vf "$ENV_FILE"
+    rm -vf "$DOCKER_FILE"
+    rm -vf "$DOCKER_COMPOSE_FILE"
+    rm -vf ".doravel/cron/$ENV_NAME"
+    rm -vf ".doravel/php/$ENV_NAME.ini"
+    rm -rf ".doravel/php/$ENV_NAME.d"
+    rm -rf ".doravel/nginx/$ENV_NAME.d"
+    rm -vf ".doravel/nginx/$ENV_NAME.conf"
+    rm -vf ".doravel/supervisor/$ENV_NAME.conf"
+    rm -rf ".doravel/supervisor/$ENV_NAME.d"
+    echo "👌 destroyed environment $ENV_NAME"
+    exit 0
+else
+    gum log --time rfc822 --level error "No se ha confirmado la eliminacion."
+    echo ""
+    if gum confirm "quieres intentar de nuevo?"; then
+        /usr/doravel/bin/destroy $ENV_NAME
+        exit $?
+    fi
+    exit 1
+fi

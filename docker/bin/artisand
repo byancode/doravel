@@ -1,6 +1,18 @@
-#!/bin/ash
+#!/bin/bash
 
-set -eux
+set -eu
+
+echo $$ > /var/run/artisand.pid
+
+cleanup() {
+    rm -f /var/run/artisand.pid
+    exit 0
+}
+
+trap cleanup SIGTERM
+trap cleanup SIGQUIT
+trap cleanup EXIT
+
 
 if [ ! -f /usr/local/bin/php-cli ]; then
     gum log --time rfc822 --level fatal "No has instalado PHP"
@@ -8,8 +20,10 @@ if [ ! -f /usr/local/bin/php-cli ]; then
     exit 1
 fi
 
+APP_PATH="${APP_PATH:-/var/www}"
 source $(get_env_file $APP_ENV)
 
+OCTANE_ENABLED=${OCTANE_ENABLED:-'true'}
 TIMEZONE_FILE='/usr/share/zoneinfo/'$APP_TIMEZONE
 
 if [ -z "$APP_TIMEZONE" ] || [ ! -f "$TIMEZONE_FILE" ]; then
@@ -34,7 +48,7 @@ if [ ! -L $APP_PATH/public/storage ]; then
     /usr/local/bin/artisan storage:link
 fi
 
-if [ -d $APP_PATH/vendor/laravel/octane ] && is_true ${OCTANE_ENABLED:-'false'}; then
+if [ -d $APP_PATH/vendor/laravel/octane ] && is_true $OCTANE_ENABLED; then
     /usr/local/bin/octaned $@
 else
     /usr/local/bin/artisan serve $@

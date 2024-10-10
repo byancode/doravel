@@ -9,6 +9,7 @@ fi
 #
 # SET ALIAS FOR COMMANDS
 #
+alias ll="ls -alF"
 alias d="doravel"
 alias a="doravel $APP_ENV artisan"
 alias c="doravel $APP_ENV composer"

@@ -2,11 +2,13 @@
     "recommendations": [
         "pomdtr.excalidraw-editor",
         "tldraw-org.tldraw-vscode",
-        "exodiusstudios.comment-anchors",
         "porifa.laravel-intelephense",
+        "exodiusstudios.comment-anchors",
         "bmewburn.vscode-intelephense-client",
         "mehedidracula.php-namespace-resolver",
         "shd101wyy.markdown-preview-enhanced",
-        "terrastruct.d2"
+        "tomoyukim.vscode-mermaid-editor",
+        "bierner.markdown-mermaid",
+        "terrastruct.d2",
     ]
 }

@@ -5,6 +5,7 @@ set -eux
 COMMAND="$1"
 shift 1
 
+APP_PATH="${APP_PATH:-/var/www}"
 # Definir variables
 DOMAIN="server"
 CERT_DIR="${APP_PATH}/.doravel/.ssl"
