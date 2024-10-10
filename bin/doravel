@@ -199,7 +199,6 @@ fi
 if [ ! -z "$COMMAND_DORAVEL" ]; then
     echo "Command doravel: $COMMAND_DORAVEL"
     if [ "$COMMAND_DORAVEL" == 'x' ]; then
-        DOCKER_SOCKET_FILE="/var/run/docker.sock"
         WORKDIR="/var/www"
         ARGS=()
 
@@ -216,10 +215,10 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             esac
         done
 
-        VOLUMES=( "-v .:$WORKDIR" )
-        if [ -S "$DOCKER_SOCKET_FILE" ]; then
-            VOLUMES+=( "-v $DOCKER_SOCKET_FILE:$DOCKER_SOCKET_FILE" )
-        fi
+        VOLUMES=(
+            "-v .:$WORKDIR"
+            "-v $DOCKER_SOCK_FILE:/var/run/docker.sock"
+        )
 
         docker run --rm -it ${VOLUMES[@]} -w "$WORKDIR" -e "DORAVEL_ISOLATED=1" $DORAVEL_IMAGE ${ARGS[@]}
         exit $?
