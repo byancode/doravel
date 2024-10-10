@@ -59,7 +59,7 @@ if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
 fi
 
 for RAW_PORT in $(cat "$DOCKER_COMPOSE_FILE" | yq '.services.*.ports[]'); do
-    if [[ ! "$RAW_PORT" =~ ^\$\{?([[:alnum:]]+_PORT) ]]; then
+    if [[ ! "$RAW_PORT" =~ ^\$\{?([[:alnum:]_]+_PORT) ]]; then
         continue
     fi
     VAR_NAME="${BASH_REMATCH[1]}"
