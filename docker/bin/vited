@@ -13,4 +13,9 @@ if [ ! -d node_modules ]; then
     npm install
 fi
 
-/usr/local/bin/npx vite dev --host 0.0.0.0 --port 5173
+source $(get_env_file $APP_ENV)
+
+VITE_HOST=${VITE_HOST:-localhost}
+VITE_PORT=${VITE_PORT:-5173}
+
+/usr/local/bin/npx vite dev --host $VITE_HOST --port $VITE_PORT --strictPort
