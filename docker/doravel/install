@@ -1,6 +1,4 @@
 #!/bin/bash
-set -eu
-
 artisan key:generate
 artisan storage:link
 composer install
