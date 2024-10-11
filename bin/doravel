@@ -95,20 +95,21 @@ COMMANDS_ENVIRONMENT=(
     "timestamp"
     "compose"
     "destroy"
+    "install"
     "reload"
+    "doctor"
     "deploy"
     "debug"
     "ports"
+    "exec"
     "init"
 )
 
 COMMANDS_DORAVEL=(
     "package"
     "upgrade"
-    "install"
     "update"
     "logout"
-    "doctor"
     "login"
     "setup"
     "fix"
@@ -204,6 +205,10 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
 
         while [[ $# -gt 0 ]]; do
             case "$1" in
+                --env)
+                    ENV_NAME=$2
+                    shift 2
+                    ;;
                 -w|--workdir)
                     WORKDIR="$2"
                     shift 2
@@ -220,7 +225,13 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             "-v $DOCKER_SOCK_FILE:/var/run/docker.sock"
         )
 
-        docker run --rm -it ${VOLUMES[@]} -w "$WORKDIR" -e "DORAVEL_ISOLATED=1" $DORAVEL_IMAGE ${ARGS[@]}
+        docker run --rm -it \
+            ${VOLUMES[@]} \
+            -w "$WORKDIR" \
+            -e "APP_ENV=$ENV_NAME" \
+            -e "DORAVEL_ISOLATED=1" \
+            $DORAVEL_IMAGE \
+            ${ARGS[@]}
         exit $?
     elif [ "$COMMAND_DORAVEL" == 'fix' ]; then
         if [ -d "./bootstrap" ]; then
@@ -235,22 +246,6 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             echo "No bootstrap or storage directories found"
         fi
         exit 0
-    elif [ "$COMMAND_DORAVEL" == 'doctor' ]; then
-        if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            /usr/doravel/bin/doctor
-            exit $?
-        else
-            doravel x doravel doctor
-            exit $?
-        fi
-    elif [ "$COMMAND_DORAVEL" == 'install' ]; then
-        if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            /usr/doravel/bin/install
-            exit $?
-        else
-            doravel x doravel install
-            exit $?
-        fi
     elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             /usr/doravel/bin/setup
@@ -278,7 +273,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             /usr/doravel/bin/init $ENV_NAME
             exit $?
         else
-            doravel x doravel init
+            doravel x doravel $ENV_NAME init
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
@@ -417,12 +412,36 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             echo "Service $1 not found"
             exit 1
         fi
+    elif [ "$COMMAND_ENVIRONMENT" == 'doctor' ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            /usr/doravel/bin/doctor
+            exit $?
+        else
+            container_exec doravel $ENV_NAME doctor
+            exit $?
+        fi
+    elif [ "$COMMAND_ENVIRONMENT" == 'install' ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            /usr/doravel/bin/install
+            exit $?
+        else
+            container_exec doravel $ENV_NAME install
+            exit $?
+        fi
     elif [ "$COMMAND_ENVIRONMENT" == "reload" ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             /usr/doravel/bin/reload
             exit $?
         else
-            container_exec doravel reload
+            container_exec doravel $ENV_NAME reload
+            exit $?
+        fi
+    elif [ "$COMMAND_ENVIRONMENT" == "exec" ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            $@
+            exit $?
+        else
+            container_exec $@
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "supervisorctl" ]; then
