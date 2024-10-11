@@ -15,6 +15,7 @@ services:
             - .:/var/www
         ports:
             - ${APP_PORT:-80}:8000
+            - ${REVERB_PORT:-8080}:9000
             - ${VITE_PORT:-5173}:${VITE_PORT:-5173}
         networks:
             - doravel

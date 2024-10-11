@@ -144,8 +144,8 @@ if [ $IS_SUBCOMMAND -eq 0 ]; then
 fi
 
 if [[ ! " ${COMMANDS[@]} " =~ " $COMMAND " ]]; then
-    echo "Command not found"
-    exit 0
+    echo "❌ Command not found"
+    exit 1
 fi
 
 ENV_NAME=$(sed 's/\*$//g' <<< "$ENV_NAME")
@@ -191,16 +191,16 @@ doravel_image_run() {
     docker run --rm -it -v .:/var/www $DORAVEL_IMAGE $@
 }
 
-echo "Command: $COMMAND"
-echo "Environment: $ENV_NAME"
+# echo "Command: $COMMAND"
+# echo "Environment: $ENV_NAME"
 
 if [ ! -z "$COMMAND_DORAVEL" ] && [ $IS_SUBCOMMAND -eq 1 ]; then
-    echo "Command not found"
-    exit 0
+    echo "❌ Command not found"
+    exit 1
 fi
 
 if [ ! -z "$COMMAND_DORAVEL" ]; then
-    echo "Command doravel: $COMMAND_DORAVEL"
+    # echo "Command doravel: $COMMAND_DORAVEL"
     if [ "$COMMAND_DORAVEL" == 'x' ]; then
         WORKDIR="/var/www"
         ARGS=()
@@ -271,7 +271,7 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
 fi
 
 if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
-    echo "Command environment"
+    # echo "Command environment"
 
     if [ "$COMMAND_ENVIRONMENT" == 'init' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
@@ -293,13 +293,13 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
 fi
 
 if [ ! -f "$ENV_FILE" ]; then
-    echo "the $ENV_FILE file does not exist"
-    exit 0
+    echo "❌ the $ENV_FILE file does not exist"
+    exit 10
 fi
 
 if [ -z "$DOCKER_COMPOSE_FILE" ]; then
-    echo "the $DOCKER_COMPOSE_FILE file does not exist"
-    exit 0
+    echo "❌ the $DOCKER_COMPOSE_FILE file does not exist"
+    exit 1
 fi
 
 DOCKER_COMPOSE="docker compose --project-name $ENV_NAME --env-file $ENV_FILE --file $DOCKER_COMPOSE_FILE"
@@ -312,7 +312,7 @@ service_is_running() {
 container_exec() {
     RUNNING=$(service_is_running "app" && echo 0 || echo 1)
     if [ $RUNNING -eq 1 ]; then
-        echo "Service 'app' is not running"
+        echo "❌ Service 'app' is not running"
         exit 1
     else
         $DOCKER_COMPOSE exec app $@
