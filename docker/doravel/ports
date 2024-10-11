@@ -1,0 +1,88 @@
+#!/bin/bash
+
+COMMAND=$1
+shift
+
+docker_ports() {
+    LINES=$(doravel $APP_ENV compose ps --status running --format json | jq '.Service + "|" + .Ports')
+    while IFS= read -r LINE; do
+        if [ -z "$LINE" ]; then
+            continue
+        fi
+
+        SERVICE=$(echo $LINE | cut -d"|" -f1 | cut -d'"' -f2)
+        PORTS=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
+
+        if [ -z "$PORTS" ]; then
+            continue
+        fi
+
+        JOINED_PORTS=$(echo $PORTS | tr '\n' ' ' | sed 's/ /,/g' | sed 's/,$//')
+
+        echo -e "$SERVICE:$JOINED_PORTS"
+    done <<< "$LINES"
+}
+
+docker_find_ports() {
+    echo $(docker_ports) | tr ' ' '\n' | grep "$1"
+}
+
+docker_print_ports() {
+    SERVICE=$(echo $1 | cut -d ":" -f1)
+    PORTS=$(echo $1 | cut -d ":" -f2 | tr ',' '\n')
+
+    if [ "$PORTS" == "" ]; then
+        echo ""
+        exit 0
+    fi
+
+    for PORT in $PORTS; do
+        echo -e "\n$SERVICE [$PORT]:"
+        echo -e "  🌐  http://$REMOTE_IP:$PORT"
+        echo -e "  🏠  http://$NETWORK_IP:$PORT"
+        echo -e "  💻  http://localhost:$PORT"
+        echo -e "---"
+    done
+}
+
+list_command() {
+    LINES=$(echo $(docker_ports) | tr ' ' '\n')
+
+    for LINE in $LINES; do
+        docker_print_ports "$LINE"
+    done
+}
+
+show_command() {
+    ARGUMENTS=$(echo "$@" | xargs | tr ' ' '\n')
+    if [ -z "$ARGUMENTS" ]; then
+        gum log --time rfc822 --level error "No services provided"
+        exit 1
+    fi
+    for SERVICE in $ARGUMENTS; do
+        LINE=$(docker_find_ports "$SERVICE")
+        if [ -z "$LINE" ]; then
+            continue
+        fi
+        docker_print_ports "$LINE"
+    done
+}
+
+shuffle_command() {
+    /usr/local/bin/shuffle-ports --env $APP_ENV
+}
+
+case $COMMAND in
+    "list")
+        list_command $@
+        ;;
+    "show")
+        show_command $@
+        ;;
+    "shuffle")
+        shuffle_command $@
+        ;;
+    *)
+        echo "Usage: doravel ports [list|show|shuffle] [service]"
+        ;;
+esac
