@@ -44,4 +44,11 @@ yq '.services.app.build.dockerfile="'$DOCKERFILE_NAME'", .services.app.environme
 > "$DOCKER_COMPOSE_FILE";
 
 echo "created environment $ENV_NAME"
+
+if [ "$ENV_NAME" == "local" ]; then
+    exit 0
+fi
+
+/usr/local/bin/shuffle-ports --env "$ENV_NAME"
+
 exit 0
