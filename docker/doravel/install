@@ -1,5 +1,16 @@
 #!/bin/bash
-artisan key:generate
-artisan storage:link
+
+source $(get_env_file $APP_ENV)
+
+APP_PATH=${APP_PATH:-"/var/www"}
+cd $APP_PATH;
+
+if [ -z "$APP_KEY" ]; then
+    artisan key:generate
+fi
+if [ ! -L public/storage ]; then
+    artisan storage:link
+fi
+
 composer install
 npm install
