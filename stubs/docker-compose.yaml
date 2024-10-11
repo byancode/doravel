@@ -6,8 +6,9 @@ services:
             context: .
             dockerfile: Dockerfile
         environment:
+            APP_ENV: $APP_ENV
+            NETWORK_IP: $NETWORK_IP
             DOCKER_SOCK_FILE: $DOCKER_SOCK_FILE
-            APP_ENV: ${APP_ENV:-local}
         command: doraveld
         volumes:
             - $DOCKER_SOCK_FILE:/var/run/docker.sock
