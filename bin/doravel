@@ -9,18 +9,20 @@ DORAVEL_ISOLATED=${DORAVEL_ISOLATED:-0}
 DORAVEL_CONTAINER=${DORAVEL_CONTAINER:-0}
 DORAVEL_INSTALLED=${DORAVEL_INSTALLED:-0}
 
-if [ -z "$UID" ]; then
-    GID=$(id -g)
-    UID=$(id -u)
-fi
-
-if [ $UID -ne 0 ] && [ $DORAVEL_CONTAINER -eq 0 ]; then
-    DEFAULT_SOCK_FILE="/run/user/$UID/docker.sock"
+if [ $(id -u) -ne 0 ] && [ $DORAVEL_CONTAINER -eq 0 ]; then
+    DEFAULT_SOCK_FILE="/run/user/$(id -u)/docker.sock"
 else
     DEFAULT_SOCK_FILE="/var/run/docker.sock"
 fi
 
+if [ -x "$(command -v hostname)" ] && [ -z "$NETWORK_IP" ]; then
+    DEFAULT_NETWORK_IP=$(hostname -I | awk '{print $1}')
+else
+    DEFAULT_NETWORK_IP="0.0.0.0"
+fi
+
 export DOCKER_SOCK_FILE=${DOCKER_SOCK_FILE:-$DEFAULT_SOCK_FILE}
+export NETWORK_IP=${NETWORK_IP:-$DEFAULT_NETWORK_IP}
 
 function print_help {
     echo '
@@ -230,6 +232,9 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             -w "$WORKDIR" \
             -e "APP_ENV=$ENV_NAME" \
             -e "DORAVEL_ISOLATED=1" \
+            -e "DORAVEL_CONTAINER=1" \
+            -e "NETWORK_IP=$NETWORK_IP" \
+            -e "DOCKER_SOCK_FILE=$DOCKER_SOCK_FILE" \
             $DORAVEL_IMAGE \
             ${ARGS[@]}
         exit $?
@@ -315,52 +320,6 @@ container_exec() {
     fi
 }
 
-docker_ports() {
-    LINES=$($DOCKER_COMPOSE ps --status running --format json | jq '.Service + "|" + .Ports')
-    while IFS= read -r LINE; do
-        if [ -z "$LINE" ]; then
-            continue
-        fi
-
-        SERVICE=$(echo $LINE | cut -d"|" -f1 | cut -d'"' -f2)
-        PORTS=$(echo $LINE | grep -oP ':::\K\d+(?=-)')
-
-        if [ -z "$PORTS" ]; then
-            continue
-        fi
-
-        JOINED_PORTS=$(echo $PORTS | tr '\n' ' ' | sed 's/ /,/g' | sed 's/,$//')
-
-        echo -e "$SERVICE:$JOINED_PORTS"
-    done <<< "$LINES"
-}
-
-docker_find_ports() {
-    echo $(docker_ports) | tr ' ' '\n' | grep "$1"
-}
-
-docker_print_ports() {
-    REMOTE_IP="$1"
-    NETWORK_IP="$2"
-    LINE="$3"
-
-    SERVICE=$(echo $LINE | cut -d ":" -f1)
-    PORTS=$(echo $LINE | cut -d ":" -f2 | tr ',' '\n')
-
-    if [ "$PORTS" == "" ]; then
-        echo ""
-        exit 0
-    fi
-
-    for PORT in $PORTS; do
-        echo -e "\n$SERVICE [$PORT]:"
-        echo -e "  🌐  http://$REMOTE_IP:$PORT"
-        echo -e "  🏠  http://$NETWORK_IP:$PORT"
-        echo -e "  💻  http://localhost:$PORT"
-        echo -e "---"
-    done
-}
-
 if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
     $DOCKER_COMPOSE $COMMAND_DOCKER_COMPOSE $@;
     exit 0
@@ -371,46 +330,12 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         $DOCKER_COMPOSE $@;
         exit 0
     elif [ "$COMMAND_ENVIRONMENT" == "ports" ]; then
-        SERVICES=$($DOCKER_COMPOSE ps --status running --services | tr '\n' ' ')
-        NETWORK_IP=$(hostname -i | cut -d" " -f1)
-
-        if [ -z "$1" ]; then
-            echo "Usage: doravel ports [list|show|shuffle]"
-            exit 0
-        fi
-
-        if [ "$1" == "list" ]; then
-            LINES=$(echo $(docker_ports) | tr ' ' '\n')
-
-            for LINE in $LINES; do
-                docker_print_ports "$REMOTE_IP" "$NETWORK_IP" "$LINE"
-            done
-            exit 0
-        elif [ "$1" == "shuffle" ]; then
-            if [ $DORAVEL_CONTAINER -eq 1 ]; then
-                shuffle-ports --env $ENV_NAME
-            else
-                doravel x doravel $ENV_NAME ports shuffle
-            fi
-            exit 0
-        elif [ "$1" == "show" ]; then
-            shift 1
-            ARGUMENTS=$(echo "$@" | sed 's/^ +| +$//' | tr ' ' '\n')
-            if [ -z "$ARGUMENTS" ]; then
-                echo "No services provided"
-                exit 1
-            fi
-            for SERVICE in $ARGUMENTS; do
-                LINE=$(docker_find_ports "$SERVICE")
-                if [ -z "$LINE" ]; then
-                    continue
-                fi
-                docker_print_ports "$REMOTE_IP" "$NETWORK_IP" "$LINE"
-            done
-            exit 0
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            /usr/doravel/bin/ports $@
+            exit $?
         else
-            echo "Service $1 not found"
-            exit 1
+            container_exec doravel $ENV_NAME ports $@
+            exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == 'doctor' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
