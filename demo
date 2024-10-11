@@ -1,8 +1,7 @@
 #!/bin/ash
 
-VOLUMES=(
-    "docker-compose"
-    "docker-compose.local"
-)
+sudo cp -f bin/doravel /usr/local/bin/doravel
+sudo chmod +x /usr/local/bin/doravel
 
-echo ${#VOLUMES[@]}
+cp -f bin/doravel ~/bin/doravel
+ln -fs ~/bin/doravel ~/bin/d
