@@ -58,7 +58,7 @@ update_configurations() {
     REVERB_ENABLED=${REVERB_ENABLED:-'true'}
     SCHEDULE_ENABLED=${SCHEDULE_ENABLED:-'true'}
 
-    if [ ! -d  $APP_PATH/vendor/laravel/reverb ]; then
+    if [ ! -d "$APP_PATH/vendor/laravel/reverb" ]; then
         REVERB_ENABLED='false'
     fi
 
@@ -79,10 +79,8 @@ while true; do
 
     update_configurations;
 
-    if [ -x /usr/doravel/bin/install]; then
-        /usr/doravel/bin/install &
-        child=$!
-        wait $child
+    if [ -x "/usr/doravel/bin/install" ]; then
+        /usr/doravel/bin/install
     fi
 
     if [ -x "$STARTUP_FILE" ]; then
