@@ -15,7 +15,7 @@ fi
 
 source $(get_env_file $APP_ENV)
 
-VITE_HOST=${VITE_HOST:-localhost}
+VITE_HOST=${VITE_HOST:-"0.0.0.0"}
 VITE_PORT=${VITE_PORT:-5173}
 
 /usr/local/bin/npx vite dev --host $VITE_HOST --port $VITE_PORT --strictPort
