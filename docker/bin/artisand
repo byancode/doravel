@@ -20,7 +20,7 @@ if [ ! -f /usr/local/bin/php-cli ]; then
     exit 1
 fi
 
-APP_PATH="${APP_PATH:-/var/www}"
+APP_PATH=${APP_PATH:-"/var/www"}
 source $(get_env_file $APP_ENV)
 
 OCTANE_ENABLED=${OCTANE_ENABLED:-'true'}

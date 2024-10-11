@@ -12,7 +12,7 @@ trap cleanup SIGQUIT
 trap cleanup SIGTERM
 trap cleanup EXIT
 
-APP_PATH="${APP_PATH:-/var/www}"
+APP_PATH=${APP_PATH:-"/var/www"}
 CRONTAB_DIR="/var/spool/cron/crontabs"
 CRONTAB_FILE="$CRONTAB_DIR/$(whoami)"
 

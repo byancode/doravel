@@ -40,7 +40,7 @@ if [ ! -f /usr/local/bin/npx ]; then
     exit 1
 fi
 
-APP_PATH="${APP_PATH:-/var/www}"
+APP_PATH=${APP_PATH:-"/var/www"}
 CONFIGURATION_FILE="$APP_PATH/.doravel/supervisor/$APP_ENV.conf"
 STARTUP_FILE="$APP_PATH/.doravel/startup"
 PID_FILE="/var/run/supervisord.pid"

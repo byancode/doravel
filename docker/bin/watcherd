@@ -2,7 +2,7 @@
 
 echo $$ > /var/run/watcherd.pid
 
-APP_PATH="${APP_PATH:-/var/www}"
+APP_PATH=${APP_PATH:-"/var/www"}
 UNWATCH_FILE="$APP_PATH/.unwatch"
 TEMP_FILE="/tmp/unwatch_temp.$$"
 
