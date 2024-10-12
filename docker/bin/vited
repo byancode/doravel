@@ -1,6 +1,10 @@
 #!/bin/bash
+source /root/.bashrc
 
 cleanup() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    fi
     exit 0;
 }
 
@@ -9,8 +13,8 @@ trap cleanup SIGTERM
 trap cleanup EXIT
 
 if [ ! -d node_modules ]; then
-    echo "Instalando dependencias de Node.js"
-    npm install
+    gum log --time rfc822 --level fatal "No has instalado las dependencias de Node.js"
+    exit 1
 fi
 
 source $(get_env_file $APP_ENV)
@@ -18,4 +22,6 @@ source $(get_env_file $APP_ENV)
 VITE_HOST=${VITE_HOST:-"0.0.0.0"}
 VITE_PORT=${VITE_PORT:-5173}
 
-/usr/local/bin/npx vite dev --host $VITE_HOST --port $VITE_PORT --strictPort
+/usr/local/bin/npx vite dev --host $VITE_HOST --port $VITE_PORT --strictPort &
+child=$!
+wait "$child"

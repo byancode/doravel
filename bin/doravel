@@ -357,7 +357,7 @@ container_exec() {
         echo "❌ Service 'app' is not running"
         exit 1
     else
-        $DOCKER_COMPOSE exec app $@
+        $DOCKER_COMPOSE exec -it app $@
         exit $?
     fi
 }
@@ -377,7 +377,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
                 doravel $ENV_NAME compose run --rm app doravel $ENV_NAME ports $@
                 exit $?
             else
-                doravel $ENV_NAME exec app doravel $ENV_NAME ports $@
+                doravel $ENV_NAME exec doravel $ENV_NAME ports $@
                 exit $?
             fi
         fi
@@ -462,6 +462,6 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
 fi
 
 if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
-    $DOCKER_COMPOSE $COMMAND_DOCKER_COMPOSE $@;
-    exit 0
+    $DOCKER_COMPOSE $COMMAND_DOCKER_COMPOSE $@
+    exit $?
 fi
