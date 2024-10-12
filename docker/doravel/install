@@ -1,16 +1,20 @@
 #!/bin/bash
+source /root/.bashrc
 
+APP_ENV=${APP_ENV:-local}
 source $(get_env_file $APP_ENV)
 
-APP_PATH=${APP_PATH:-"/var/www"}
-cd $APP_PATH;
+gum spin --spinner dot --title "composer install..." -- composer install --quiet --no-interaction --no-progress
+gum log --time rfc822 --level info "Composer dependencies installed"
 
 if [ -z "$APP_KEY" ]; then
-    artisan key:generate
+    artisan key:generate --quiet --force
+    gum log --time rfc822 --level info "APP_KEY generated"
 fi
-if [ ! -L public/storage ]; then
-    artisan storage:link
+if [ ! -L "public/storage" ]; then
+    artisan storage:link --quiet --force
+    gum log --time rfc822 --level info "public/storage linked"
 fi
 
-composer install
-npm install
+gum spin --spinner dot --title "npm install..." -- npm install
+gum log --time rfc822 --level info "NPM dependencies installed"

@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# This script is executed when use the command `doravel setup`
-
-if [ "$APP_ENV" == "local" ]; then
-    echo "setup local"
-else
-    echo "setup $APP_ENV"
-fi

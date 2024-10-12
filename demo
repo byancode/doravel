@@ -1,4 +1,5 @@
-#!/bin/ash
+#!/bin/bash
+
 
 sudo cp -f bin/doravel /usr/local/bin/doravel
 sudo chmod +x /usr/local/bin/doravel

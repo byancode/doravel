@@ -2,8 +2,22 @@
 
 source ~/.bashrc
 
-COMMAND=$1
-shift
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -e|--env)
+            APP_ENV=$2
+            shift 2
+            ;;
+        list|show|shuffle)
+            COMMAND=$1
+            shift
+            ;;
+        *)
+            echo "Usage: doravel ports [list|show|shuffle] [service]"
+            exit 1
+            ;;
+    esac
+done
 
 docker_ports() {
     LINES=$(doravel $APP_ENV compose ps --status running --format json | jq '.Service + "|" + .Ports')
@@ -83,8 +97,5 @@ case $COMMAND in
         ;;
     "shuffle")
         shuffle_command $@
-        ;;
-    *)
-        echo "Usage: doravel ports [list|show|shuffle] [service]"
         ;;
 esac

@@ -21,7 +21,8 @@ if [ ! -f /usr/local/bin/composer ]; then
 fi
 
 if [ ! -d "./vendor" ]; then
-    composer install
+    gum log --time rfc822 --level fatal "No has instalado las dependencias de Composer"
+    exit 1
 fi
 
 APP_ENV=${APP_ENV:-'local'}

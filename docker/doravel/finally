@@ -1,0 +1,22 @@
+#!/bin/bash
+
+DIRECTORY="$1"
+
+gum style \
+    --foreground 212 --border double --border-foreground 99 \
+    --align center --width 50 --padding "1 2" \
+    "¡Gracias por instalar Doravel!
+     Versión: 1.0.0"
+
+if [ "$DIRECTORY" != "." ]; then
+    gum style \
+        --foreground 99 --border-foreground 99 \
+        --align center --width 50 --padding "0 2" \
+        "Tu siguiente paso es ingresar al directorio:" \
+        --border normal
+
+    gum style \
+        --foreground 226 --border normal --border-foreground 226 \
+        --align center --width 50 --padding "1 2" \
+        "cd $DIRECTORY"
+fi

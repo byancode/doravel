@@ -1,6 +1,7 @@
 #!/bin/ash
 
 echo "Iniciando doraveld..."
+source /root/.bashrc
 
 echo $$ > /var/run/doraveld.pid
 
@@ -76,14 +77,9 @@ while true; do
         continue
     fi
 
-
     update_configurations;
 
-    if [ -x "/usr/doravel/bin/install" ]; then
-        /usr/doravel/bin/install
-    fi
-
-    if [ -x "$STARTUP_FILE" ]; then
+    if [ -f "$STARTUP_FILE" ] && [ -x "$STARTUP_FILE" ]; then
         $STARTUP_FILE
     fi
 

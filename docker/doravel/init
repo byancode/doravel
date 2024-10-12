@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -eu
-
 APP_ENV=${APP_ENV:-'local'}
 ENV_NAME="${1:-$APP_ENV}"
 
@@ -10,9 +8,9 @@ DOCKER_FILE=$(get_dockerfile "$ENV_NAME")
 ENV_FILE=$(get_env_file "$ENV_NAME")
 STUBS_PATH="/root/.stubs"
 
-echo "$DOCKER_COMPOSE_FILE"
-echo "$DOCKER_FILE"
-echo "$ENV_FILE"
+# echo "$DOCKER_COMPOSE_FILE"
+# echo "$DOCKER_FILE"
+# echo "$ENV_FILE"
 
 if [ ! -f "$ENV_FILE" ]; then
     cp -f "$STUBS_PATH/.env" "$ENV_FILE"
@@ -29,26 +27,26 @@ FOLDERS=(
     ".doravel/php"
     ".doravel/supervisor"
 )
+
 for FOLDER in "${FOLDERS[@]}"; do
-    mkdir -vp "$FOLDER/$ENV_NAME.d"
-    find /root/$FOLDER/local.d/ -maxdepth 1 -type f -exec cp -vf {} "$FOLDER/$ENV_NAME.d/" \;
+    mkdir -p "$FOLDER/$ENV_NAME.d"
+    find /root/$FOLDER/local.d/ -maxdepth 1 -type f -exec cp -f {} "$FOLDER/$ENV_NAME.d/" \;
 done
+
 sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $ENV_FILE
 sed -e "s/APP_ENV=.*/APP_ENV=$ENV_NAME/" -i $DOCKER_FILE
-cp -vf /root/.doravel/cron/local .doravel/cron/$ENV_NAME
-cp -vf /root/.doravel/php/local.ini .doravel/php/$ENV_NAME.ini
-cp -vf /root/.doravel/nginx/local.conf .doravel/nginx/$ENV_NAME.conf
-cp -vf /root/.doravel/supervisor/local.conf .doravel/supervisor/$ENV_NAME.conf
+cp -f /root/.doravel/cron/local .doravel/cron/$ENV_NAME
+cp -f /root/.doravel/php/local.ini .doravel/php/$ENV_NAME.ini
+cp -f /root/.doravel/nginx/local.conf .doravel/nginx/$ENV_NAME.conf
+cp -f /root/.doravel/supervisor/local.conf .doravel/supervisor/$ENV_NAME.conf
 yq '.services.app.build.dockerfile="'$DOCKERFILE_NAME'", .services.app.environment.APP_ENV="'$ENV_NAME'"' \
 < "$STUBS_PATH/docker-compose.yaml" \
 > "$DOCKER_COMPOSE_FILE";
 
-echo "created environment $ENV_NAME"
+gum log --time rfc822 --level info "created environment $ENV_NAME"
 
 if [ "$ENV_NAME" == "local" ]; then
     exit 0
 fi
 
 /usr/local/bin/shuffle-ports --env "$ENV_NAME"
-
-exit 0

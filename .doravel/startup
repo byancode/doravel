@@ -1,6 +1,6 @@
 #!/bin/bash
-
 # This script is executed when use the command `doravel reload`
+source /root/.bashrc
 
 if [ "$APP_ENV" == "local" ]; then
     echo "startup local"

@@ -1,6 +1,6 @@
-# 🛠️ Doravel (Beta)
+# 🛠️ Doravel (Dev)
 
-Integrando Doravel en tu proyecto, no necesitas crear imagenes privadas, puedes ejecutar tu proyecto de forma segura mediante tu repositorio git privado
+Integrando Doravel en tu proyecto, no necesitas crear imágenes privadas, puedes ejecutar tu proyecto de forma segura mediante tu repositorio git privado
 
 ---
 
@@ -16,43 +16,33 @@ Es una imagen con todo lo necesario para tener laravel funcionando junto con un 
 # 📦 Instalación
 > copia y pega en consola de tu computadora
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/byancode/doravel/develop/scripts/install) && source ~/.bashrc
+bash <(curl -fsSL "https://raw.githubusercontent.com/byancode/doravel/develop/bin/install")
 ```
-> implemtenta las siguientes lineas en tu archivo .bashrc
+> Implementa las siguientes lineas en tu archivo .bashrc, .zshrc, .shrc
+```Shell
+eval "$(doravel env)"
+```
+### Crea tu primer proyecto doravel
 ```bash
-export DORAVEL_CONTAINER=0
-
-if [ $UID -ne 0 ]; then
-    export DOCKER_SOCK_FILE="/run/user/$UID/docker.sock"
-else
-    export DOCKER_SOCK_FILE="/var/run/docker.sock"
-fi
+doravel new myproject
+```
+```bash
+cd myproject
+```
+### Integra doravel en tu proyecto laravel existente
+```bash
+doravel setup
 ```
 
 # 💻 Comandos
 
 ```bash
 # local
-./doravel up
-./doravel down
+doravel up -d
+doravel down
 # production
-./doravel prod up
-./doravel prod down
-```
-
-## Dockerfile
-#### Variables de entorno
-```env
-# PHP
-PHP_OPCACHE_ENABLED=true
-PHP_UPLOAD_MAX_FILESIZE=1G
-PHP_MAX_EXECUTION_TIME=60
-PHP_POST_MAX_SIZE=1G
-PHP_MEMORY_LIMIT=512M
-
-# NPM
-NPM_AUTO_INSTALL=true
-NPM_AUTO_BUILD=true
+doravel prod up -d --build
+doravel prod down
 ```
 
 ## Octane Config
@@ -70,10 +60,3 @@ return [
     ],
 ];
 ```
-
-## Docker run
-```bash
-docker run -p 80:80 byancode/doravel:php-8.2
-```
-
-# TODO: sudo chmod 666 /var/run/docker.sock

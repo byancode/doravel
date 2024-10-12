@@ -1,15 +1,16 @@
 #!/bin/bash
+source /root/.bashrc
 
 DIRECTORY=$1
 shift 1
 
 if [ -z "$DIRECTORY" ]; then
-    echo "Project directory is required"
+    gum log --time rfc822 --level error "Project directory is required"
     exit 1
 fi
 
 if [ "$DIRECTORY" != '.' ] && [ -d "$DIRECTORY" ]; then
-    echo "Directory $DIRECTORY already exists"
+    gum log --time rfc822 --level error "Directory $DIRECTORY already exists"
     exit 1
 fi
 
@@ -19,15 +20,14 @@ mkdir -p "$DIRECTORY";
 LARAVEL_FILE="$BRANCH.tar.gz"
 LARAVEL_TMP_FILE="/tmp/$LARAVEL_FILE"
 
-curl -L "https://github.com/laravel/laravel/archive/refs/heads/$LARAVEL_FILE" \
+gum spin --spinner dot --title "Laravel $BRANCH downloading..." -- \
+    curl -sL "https://github.com/laravel/laravel/archive/refs/heads/$LARAVEL_FILE" \
      -o "$LARAVEL_TMP_FILE";
 
-tar -xzf "$LARAVEL_TMP_FILE" -C "$DIRECTORY" --strip-components=1;
+gum spin --spinner dot --title "Laravel $BRANCH Installing..." -- \
+    tar -xzf "$LARAVEL_TMP_FILE" -C "$DIRECTORY" --strip-components=1;
 rm -f "$LARAVEL_TMP_FILE";
 
-if [  "$DIRECTORY" != '.'  ]; then
-    cd $DIRECTORY
-fi
+gum log --time rfc822 --level info "Laravel $BRANCH installed"
 
-/usr/doravel/bin/setup
-exit $?
+cd "$DIRECTORY";

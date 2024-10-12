@@ -1,0 +1,5 @@
+#!/bin/bash
+source /root/.bashrc
+
+gum spin --spinner dot --title "Build docker image..." -- doravel compose build --quiet app
+gum log --time rfc822 --level info "Docker image built"

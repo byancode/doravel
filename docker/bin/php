@@ -24,7 +24,8 @@ if [[ "$@" =~ "artisan" ]] && [ "$PWD" == "$APP_PATH" ]; then
     fi
 
     if [ ! -d "$APP_PATH/vendor" ]; then
-        composer install
+        gum log --time rfc822 --level fatal "No has instalado las dependencias de Composer"
+        exit 1
     fi
 fi
 

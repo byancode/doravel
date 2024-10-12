@@ -2,6 +2,7 @@
 # --------------------------------------- #
 # ❌ DO NOT EDIT ANYTHING FROM HERE ON ❌ #
 # --------------------------------------- #
+trap 'exit' INT TERM QUIT
 
 DORAVEL_ID="byancode"
 DORAVEL_VERSION="1.0.0"
@@ -97,7 +98,6 @@ COMMANDS_ENVIRONMENT=(
     "timestamp"
     "compose"
     "destroy"
-    "install"
     "reload"
     "doctor"
     "deploy"
@@ -105,17 +105,22 @@ COMMANDS_ENVIRONMENT=(
     "ports"
     "exec"
     "init"
+    "down"
+    "run"
+    "up"
 )
 
 COMMANDS_DORAVEL=(
     "package"
     "upgrade"
+    "install"
     "update"
     "logout"
     "login"
     "setup"
     "fix"
     "new"
+    "env"
     "x"
 )
 
@@ -257,14 +262,51 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             exit $?
         else
             doravel x doravel setup
-            exit $?
+            if [ $? -eq 0 ]; then
+                doravel install
+                exit $?
+            else
+                exit 1
+            fi
         fi
     elif [ "$COMMAND_DORAVEL" == 'new' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             /usr/doravel/bin/new $@
             exit $?
         else
-            doravel x --workdir /app doravel new $@
+            DIRECTORY=$1
+            shift 1
+            doravel x --workdir /app doravel new $DIRECTORY
+            if [ $? -eq 0 ]; then
+                cd "$DIRECTORY"
+                doravel setup
+                if [ $? -eq 0 ]; then
+                    doravel x /usr/doravel/bin/finally "$DIRECTORY"
+                    exit $?
+                else
+                    exit 1
+                fi
+            else
+                exit 1
+            fi
+        fi
+    elif [ "$COMMAND_DORAVEL" == 'env' ]; then
+        echo '# Environment variables for doravel
+export DORAVEL_CONTAINER=0
+if [ $UID -ne 0 ]; then
+    export DOCKER_SOCK_FILE="/run/user/$UID/docker.sock"
+else
+    export DOCKER_SOCK_FILE="/var/run/docker.sock"
+fi
+alias d="doravel"'
+        exit 0
+    elif [ "$COMMAND_DORAVEL" == 'install' ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            /usr/doravel/bin/install $@
+            exit $?
+        else
+            doravel x /usr/doravel/bin/builder && \
+            doravel compose run --rm app doravel install $@
             exit $?
         fi
     fi
@@ -320,10 +362,6 @@ container_exec() {
     fi
 }
 
-if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
-    $DOCKER_COMPOSE $COMMAND_DOCKER_COMPOSE $@;
-    exit 0
-fi
 
 if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
     if [ "$COMMAND_ENVIRONMENT" == "compose" ]; then
@@ -331,11 +369,17 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         exit 0
     elif [ "$COMMAND_ENVIRONMENT" == "ports" ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            /usr/doravel/bin/ports $@
+            /usr/doravel/bin/ports --env "$ENV_NAME" $@
             exit $?
         else
-            container_exec doravel $ENV_NAME ports $@
-            exit $?
+            RUNNING=$(service_is_running "app" && echo 0 || echo 1)
+            if [ $RUNNING -eq 1 ]; then
+                doravel $ENV_NAME compose run --rm app doravel $ENV_NAME ports $@
+                exit $?
+            else
+                doravel $ENV_NAME exec app doravel $ENV_NAME ports $@
+                exit $?
+            fi
         fi
     elif [ "$COMMAND_ENVIRONMENT" == 'doctor' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
@@ -343,14 +387,6 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             exit $?
         else
             container_exec doravel $ENV_NAME doctor
-            exit $?
-        fi
-    elif [ "$COMMAND_ENVIRONMENT" == 'install' ]; then
-        if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            /usr/doravel/bin/install
-            exit $?
-        else
-            container_exec doravel $ENV_NAME install
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "reload" ]; then
@@ -367,6 +403,30 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             exit $?
         else
             container_exec $@
+            exit $?
+        fi
+    elif [ "$COMMAND_ENVIRONMENT" == "up" ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            gum log --time rfc822 --level error "Command not available inside doravel container"
+            exit 1
+        else
+            $DOCKER_COMPOSE up $@
+            exit $?
+        fi
+    elif [ "$COMMAND_ENVIRONMENT" == "run" ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            gum log --time rfc822 --level error "Command not available inside doravel container"
+            exit 1
+        else
+            $DOCKER_COMPOSE run $@
+            exit $?
+        fi
+    elif [ "$COMMAND_ENVIRONMENT" == "down" ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ] && [ "$ENV_NAME" == "$APP_ENV" ]; then
+            gum log --time rfc822 --level error "You can't use 'doravel $ENV_NAME down' in the same environment"
+            exit 1
+        else
+            $DOCKER_COMPOSE down $@
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "supervisorctl" ]; then
@@ -399,4 +459,9 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         echo "Timestamp set to $ENV_FILE 😃"
         exit 0
     fi
+fi
+
+if [ ! -z "$COMMAND_DOCKER_COMPOSE" ]; then
+    $DOCKER_COMPOSE $COMMAND_DOCKER_COMPOSE $@;
+    exit 0
 fi

@@ -37,15 +37,18 @@ else
 fi
 
 if [ ! -d $APP_PATH/vendor ]; then
-    /usr/local/bin/composer install
+    gum log --time rfc822 --level fatal "No has instalado las dependencias de Composer"
+    exit 1
 fi
 
 if [ -z "$APP_KEY" ]; then
-    /usr/local/bin/artisan key:generate
+    gum log --time rfc822 --level fatal "No has configurado la APP_KEY"
+    exit 1
 fi
 
 if [ ! -L $APP_PATH/public/storage ]; then
-    /usr/local/bin/artisan storage:link
+    gum log --time rfc822 --level fatal "No has linkeado la carpeta public/storage"
+    exit 1
 fi
 
 if [ -d $APP_PATH/vendor/laravel/octane ] && is_true $OCTANE_ENABLED; then
