@@ -192,10 +192,6 @@ COMMAND_ENVIRONMENT=$(echo " ${COMMANDS_ENVIRONMENT[@]} " | grep -o " $COMMAND "
 COMMAND_DORAVEL=$(echo " ${COMMANDS_DORAVEL[@]} " | grep -o " $COMMAND " | xargs)
 DORAVEL_IMAGE="byancode/doravel:$DORAVEL_VERSION"
 
-doravel_image_run() {
-    docker run --rm -it -v .:/var/www $DORAVEL_IMAGE $@
-}
-
 # echo "Command: $COMMAND"
 # echo "Environment: $ENV_NAME"
 
@@ -446,11 +442,14 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             exit $?
         fi
     elif [[ " ${COMMANDS_BIN[@]} " =~ " $COMMAND_ENVIRONMENT " ]]; then
+        RUNNING=$(service_is_running "app" && echo 0 || echo 1)
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             $COMMAND_ENVIRONMENT $@
             exit $?
-        else
+        elif [ $RUNNING -eq 1 ]; then
             container_exec $COMMAND_ENVIRONMENT $@
+        else
+            $DOCKER_COMPOSE run --rm -it app $COMMAND_ENVIRONMENT $@
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "timestamp" ]; then
