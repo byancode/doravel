@@ -83,8 +83,9 @@ while true; do
         $STARTUP_FILE
     fi
 
-    /usr/bin/supervisord --nodaemon --configuration "$CONFIGURATION_FILE" --pidfile "$PID_FILE" &
+    /usr/bin/supervisord --nodaemon --configuration "$CONFIGURATION_FILE" &
     child=$!
+    echo $child > $PID_FILE
     wait $child
     echo "supervisord se ha detenido. Reiniciando en 1 segundo..."
 done
