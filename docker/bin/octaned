@@ -1,4 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+
+source /root/.bashrc
+
+source $(get_env_file $APP_ENV)
 
 echo $$ > /var/run/octaned.pid
 
@@ -11,4 +15,7 @@ trap cleanup SIGTERM
 trap cleanup SIGQUIT
 trap cleanup EXIT
 
-artisan octane:start --server=swoole $@
+OCTANE_SERVER=${OCTANE_SERVER:-"swoole"}
+OCTANE_OPTIONS=${OCTANE_OPTIONS:-""}
+
+artisan octane:start --server=$OCTANE_SERVER $@ $OCTANE_OPTIONS
