@@ -446,10 +446,19 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
             $COMMAND_ENVIRONMENT $@
             exit $?
-        elif [ $RUNNING -eq 1 ]; then
+        elif [ $RUNNING -eq 0 ]; then
             container_exec $COMMAND_ENVIRONMENT $@
+            exit $?
         else
-            $DOCKER_COMPOSE run --rm -it app $COMMAND_ENVIRONMENT $@
+            $DOCKER_COMPOSE run \
+            --workdir "/var/www" \
+            --env "APP_ENV=$ENV_NAME" \
+            --env "DORAVEL_ISOLATED=1" \
+            --env "DORAVEL_CONTAINER=1" \
+            --env "NETWORK_IP=$NETWORK_IP" \
+            --env "DOCKER_SOCK_FILE=$DOCKER_SOCK_FILE" \
+            --rm -it app \
+            $COMMAND_ENVIRONMENT $@
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "timestamp" ]; then
