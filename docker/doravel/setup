@@ -1,6 +1,22 @@
 #!/bin/bash
 source /root/.bashrc
 
+PROJECT_NAME=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
+ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --project-name)
+            PROJECT_NAME=$2
+            shift 2
+            ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
 recursive_cp() {
     ROOT_PATH=$1
     DEST_PATH=$2
@@ -22,6 +38,7 @@ fi
 
 if [ -f /usr/local/bin/doravel ]; then
     cp -f /usr/local/bin/doravel doravel
+    sed -i 's/^PROJECT_NAME=.*/PROJECT_NAME="'$PROJECT_NAME'"/' doravel
 fi
 
 recursive_cp /root/ .planning/
