@@ -65,5 +65,5 @@ for RAW_PORT in $(cat "$DOCKER_COMPOSE_FILE" | yq '.services.*.ports[]'); do
     VAR_NAME="${BASH_REMATCH[1]}"
     NEW_PORT=$(shuf -i $MIN_PORT-$MAX_PORT -n 1)
     sed -i "s/$VAR_NAME=[0-9]*/$VAR_NAME=$NEW_PORT/" "$ENV_FILE"
-    log_info "Replaced $VAR_NAME=$NEW_PORT"
+    log_info "Assigned $VAR_NAME=$NEW_PORT"
 done
