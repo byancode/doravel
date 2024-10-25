@@ -1,10 +1,13 @@
 #!/bin/bash
+
+PROJECT_NAME="doravel"
+
 # --------------------------------------- #
 # ❌ DO NOT EDIT ANYTHING FROM HERE ON ❌ #
 # --------------------------------------- #
 trap 'exit' INT TERM QUIT
 
-DORAVEL_ID="byancode"
+SCRIPT_FILE=$(readlink -f "$0")
 DORAVEL_VERSION="1.0.0"
 DORAVEL_ISOLATED=${DORAVEL_ISOLATED:-0}
 DORAVEL_CONTAINER=${DORAVEL_CONTAINER:-0}
@@ -57,6 +60,19 @@ Run "doravel COMMAND --help" for more information on a command.
 │             YOU CAN USE DOCKER COMPOSE COMMANDS                          │
 └──────────────────────────────────────────────────────────────────────────┘
 '
+}
+
+doravel_exec() {
+    if [ -f "$SCRIPT_FILE" ] && [ -x "$SCRIPT_FILE" ]; then
+        $SCRIPT_FILE $@
+        return $?
+    elif [ -f "$SCRIPT_FILE" ]; then
+        bash $SCRIPT_FILE $@
+        return $?
+    else
+        doravel $@
+        return $?
+    fi
 }
 
 ENDPOINT="https://raw.githubusercontent.com/byancode/doravel/develop"
@@ -118,6 +134,7 @@ COMMANDS_DORAVEL=(
     "logout"
     "login"
     "setup"
+    "name"
     "fix"
     "new"
     "env"
@@ -208,7 +225,7 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
 
         while [[ $# -gt 0 ]]; do
             case "$1" in
-                --env)
+                -e|--env)
                     ENV_NAME=$2
                     shift 2
                     ;;
@@ -239,6 +256,9 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
             $DORAVEL_IMAGE \
             ${ARGS[@]}
         exit $?
+    elif [ "$COMMAND_DORAVEL" == 'name' ]; then
+        echo "$PROJECT_NAME"
+        exit 0
     elif [ "$COMMAND_DORAVEL" == 'fix' ]; then
         if [ -d "./bootstrap" ]; then
             sudo chown -R $(id -un):$(id -gn) ./bootstrap/cache
@@ -254,12 +274,12 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         exit 0
     elif [ "$COMMAND_DORAVEL" == 'setup' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            /usr/doravel/bin/setup
+            /usr/doravel/bin/setup $@
             exit $?
         else
-            doravel x doravel setup
+            doravel_exec x doravel setup $@
             if [ $? -eq 0 ]; then
-                doravel install
+                doravel_exec install
                 exit $?
             else
                 exit 1
@@ -272,17 +292,20 @@ if [ ! -z "$COMMAND_DORAVEL" ]; then
         else
             DIRECTORY=$1
             shift 1
-            doravel x --workdir /app doravel new $DIRECTORY
+            DIRECTORY_NAME=$(basename $DIRECTORY)
+            doravel_exec x --workdir /app doravel new $DIRECTORY
             if [ $? -eq 0 ]; then
                 cd "$DIRECTORY"
-                doravel setup
+                doravel_exec setup --project-name $DIRECTORY_NAME
                 if [ $? -eq 0 ]; then
-                    doravel x /usr/doravel/bin/finally "$DIRECTORY"
+                    doravel_exec x /usr/doravel/bin/finally "$DIRECTORY"
                     exit $?
                 else
+                    echo "❌ Error setting up project"
                     exit 1
                 fi
             else
+                echo "❌ Error creating project"
                 exit 1
             fi
         fi
@@ -301,8 +324,8 @@ alias d="doravel"'
             /usr/doravel/bin/install $@
             exit $?
         else
-            doravel x /usr/doravel/bin/builder && \
-            doravel compose run --rm app doravel install $@
+            doravel_exec x /usr/doravel/bin/builder && \
+            doravel_exec compose run --rm app doravel install $@
             exit $?
         fi
     fi
@@ -316,7 +339,7 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             /usr/doravel/bin/init $ENV_NAME
             exit $?
         else
-            doravel x doravel $ENV_NAME init
+            doravel_exec x doravel $ENV_NAME init
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "destroy" ]; then
@@ -324,10 +347,15 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
             /usr/doravel/bin/destroy $ENV_NAME $@
             exit $?
         else
-            doravel x doravel $ENV_NAME destroy $@
+            doravel_exec x doravel $ENV_NAME destroy $@
             exit $?
         fi
     fi
+fi
+
+if [ ! -f "./doravel" ]; then
+    echo "❌ doravel file not found in $(pwd)"
+    exit 1
 fi
 
 if [ ! -f "$ENV_FILE" ]; then
@@ -340,7 +368,9 @@ if [ -z "$DOCKER_COMPOSE_FILE" ]; then
     exit 1
 fi
 
-DOCKER_COMPOSE="docker compose --project-name $ENV_NAME --env-file $ENV_FILE --file $DOCKER_COMPOSE_FILE"
+DORAVEL_NAME=$(./doravel name || echo $PROJECT_NAME)
+COMPOSE_NAME="$ENV_NAME-$DORAVEL_NAME"
+DOCKER_COMPOSE="docker compose --project-name $COMPOSE_NAME --env-file $ENV_FILE --file $DOCKER_COMPOSE_FILE"
 
 service_is_running() {
     $DOCKER_COMPOSE ps --services --status running | grep -q "$1"
@@ -370,10 +400,10 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
         else
             RUNNING=$(service_is_running "app" && echo 0 || echo 1)
             if [ $RUNNING -eq 1 ]; then
-                doravel $ENV_NAME compose run --rm app doravel $ENV_NAME ports $@
+                doravel_exec $ENV_NAME compose run --rm app doravel $ENV_NAME ports $@
                 exit $?
             else
-                doravel $ENV_NAME exec doravel $ENV_NAME ports $@
+                doravel_exec $ENV_NAME exec doravel $ENV_NAME ports $@
                 exit $?
             fi
         fi
