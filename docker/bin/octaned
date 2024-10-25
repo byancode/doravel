@@ -16,6 +16,6 @@ trap cleanup SIGQUIT
 trap cleanup EXIT
 
 OCTANE_SERVER=${OCTANE_SERVER:-"swoole"}
-OCTANE_OPTIONS=${OCTANE_OPTIONS:-""}
+OCTANE_SERVER_ARGS=${OCTANE_SERVER_ARGS:-""}
 
-artisan octane:start --server=$OCTANE_SERVER $@ $OCTANE_OPTIONS
+artisan octane:start --server=$OCTANE_SERVER $@ $OCTANE_SERVER_ARGS
