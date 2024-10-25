@@ -36,6 +36,7 @@ RUN apk add --no-cache \
 		ca-certificates \
 		docker-compose \
 		inotify-tools \
+		apache2-utils \
         supervisor \
 		openssl \
 		docker \
