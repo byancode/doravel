@@ -1,6 +1,8 @@
 #!/bin/bash
+source /root/.bashrc
 
 set -eu
+
 
 FORCE=0
 ARGS=()

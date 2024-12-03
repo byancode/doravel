@@ -1,0 +1,403 @@
+#!/bin/bash
+
+source /root/.bashrc
+
+trap 'exit' INT TERM QUIT
+
+ENV_NAME=${APP_ENV:-local}
+DIRECTORY_PATH=".doravel/supervisor/%s.d"
+
+print_usage() {
+    echo "Usage: doravel program [command] [name]"
+    echo "Commands:"
+    echo "  ls|list         List all available programs."
+    echo "  cp|copy         Copy a program configuration."
+    echo "  rm|remove       Remove a program configuration."
+    echo "  mv|move         Move a program configuration."
+    echo "  rn|rename       Rename an existing program configuration."
+    echo "  new             Create a new program configuration."
+    echo "  edit            Edit a program configuration."
+}
+
+if [[ $# -eq 0 ]] ; then
+    print_usage
+    exit 1
+fi
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -e|--env)
+            ENV_NAME=$2
+            shift 2
+            ;;
+        ls|list)
+            COMMAND=$1
+            shift 1
+            break
+            ;;
+        cp|copy)
+            COMMAND=$1
+            shift 1
+            break
+            ;;
+        rm|remove)
+            COMMAND=$1
+            shift 1
+            break
+            ;;
+        mv|move)
+            COMMAND=$1
+            shift 1
+            break
+            ;;
+        rn|rename)
+            COMMAND=$1
+            shift 1
+            break
+            ;;
+        new|edit)
+            COMMAND=$1
+            shift 1
+            break
+            ;;
+        *)
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$COMMAND" ]; then
+    print_usage
+    exit 1
+fi
+
+DIRECTORY=$(printf "$DIRECTORY_PATH" "$ENV_NAME")
+
+program_list() {
+    find "$DIRECTORY" -name *.conf -type f -exec basename {} \; | sed 's/\.conf$//'
+    return $?
+}
+
+list_command() {
+    program_list | xargs -I {} echo "{},$DIRECTORY/{}.conf" | gum table -c "Name,File" --print --border="none"
+    return $?
+}
+
+rename_command() {
+    NAME="$1"
+    NEW_NAME="$2"
+
+    if [ -z "$NAME" ]; then
+        NAME=$(program_list | gum choose --header="Select program to rename: " || exit 1)
+        if [[ $? -ne 0 ]]; then
+            gum log --time rfc822 --level error "No program selected"
+            return 1
+        fi
+    fi
+
+    if [ -z "$NEW_NAME" ]; then
+        echo "📄 File: $DIRECTORY/$NAME.conf"
+        echo "-----------------------"
+        NEW_NAME=$(gum input --prompt="New name: " --placeholder="Enter name as [a-zA-Z0-9_-]" || exit 1)
+        if [[ $? -ne 0 ]]; then
+            gum log --time rfc822 --level error "No new name provided"
+            return 1
+        fi
+    fi
+
+    if [ -z "$NAME" ] || [ -z "$NEW_NAME" ]; then
+        echo "Usage: program rename [name] [new_name]"
+        return 1
+    fi
+
+    if [[ ! "$NEW_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        gum log --time rfc822 --level error "Invalid program name: $NEW_NAME"
+        return 1
+    fi
+
+    PROGRAM_FILE="$DIRECTORY/$NAME.conf"
+    NEW_PROGRAM_FILE=$DIRECTORY/$NEW_NAME.conf
+
+    if [ ! -f "$PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program not found: $NAME"
+        return 1
+    fi
+
+    if [ -f "$NEW_PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program already exists: $NAME"
+        return 1
+    fi
+
+    sed -i "s/^\[program:$NAME\]/\[program:$NEW_NAME\]/" "$PROGRAM_FILE" && \
+    mv "$PROGRAM_FILE" "$NEW_PROGRAM_FILE"
+    if [ $? -eq 0 ]; then
+        gum log --time rfc822 --level info "Program renamed!"
+        echo "$NEW_NAME,$NEW_PROGRAM_FILE" | gum table -c "Name,File" --print --border="none"
+        return 0
+    else
+        gum log --time rfc822 --level error "Failed to rename program: $NAME -> $NEW_NAME"
+        return 1
+    fi
+}
+
+copy_command() {
+    NAME="$1"
+
+    if [ -z "$NAME" ]; then
+        COUNT=$(program_list | wc -l)
+        if [ $COUNT -eq 0 ]; then
+            gum log --time rfc822 --level error "No programs found"
+            return 1
+        fi
+        NAME=$(program_list | gum filter)
+    fi
+
+    if [ -z "$NAME" ]; then
+        echo "Usage: program cp [name]"
+        return 1
+    fi
+
+    PROGRAM_FILE="$DIRECTORY/$NAME.conf"
+
+    if [ ! -f "$PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program not found: $NAME"
+        return 1
+    fi
+
+    SELECTED=$(get_env_names | grep -v "^$ENV_NAME$" | gum choose --header="Move to environment: " || exit 1)
+    if [ -z "$SELECTED" ] || [ $? -ne 0 ]; then
+        gum log --time rfc822 --level error "No environment selected"
+        return 1
+    fi
+
+    TARGET_PROGRAM_FILE=$(printf "$DIRECTORY_PATH" "$SELECTED")/$NAME.conf
+
+    if [ -f "$TARGET_PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program already exists: $NAME"
+        return 1
+    fi
+
+    cp "$PROGRAM_FILE" "$TARGET_PROGRAM_FILE"
+    if [ $? -eq 0 ]; then
+        gum log --time rfc822 --level info "Program copied!"
+        echo "$NAME,$TARGET_PROGRAM_FILE" | gum table -c "Name,File" --print --border="none"
+        return 0
+    else
+        gum log --time rfc822 --level error "Failed to copy program: $NAME"
+        return 1
+    fi
+}
+
+remove_command() {
+    NAME="$1"
+
+    if [ -z "$NAME" ]; then
+        COUNT=$(program_list | wc -l)
+        if [ $COUNT -eq 0 ]; then
+            gum log --time rfc822 --level error "No programs found"
+            return 1
+        fi
+        NAME=$(program_list | gum filter)
+    fi
+
+
+    if [ -z "$NAME" ]; then
+        echo "Usage: program rm [name]"
+        return 1
+    fi
+
+    if [ ! -f "$DIRECTORY/$NAME.conf" ]; then
+        COUNT=$(program_list | wc -l)
+        if [ $COUNT -eq 0 ]; then
+            gum log --time rfc822 --level error "No programs found"
+            return 1
+        fi
+        NAME=$(program_list | gum filter)
+    fi
+
+    PROGRAM_FILE="$DIRECTORY/$NAME.conf"
+
+    if [ ! -f "$PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program not found: $NAME"
+        return 1
+    fi
+
+    INPUT_CONFIRM=$(gum input --prompt="Write '$NAME' to confirm: " --placeholder="Are you sure ?")
+
+    if [ "$INPUT_CONFIRM" == "$NAME" ]; then
+        rm -f "$PROGRAM_FILE"
+        gum log --time rfc822 --level info "Program removed: $NAME"
+        return 0
+    else
+        gum log --time rfc822 --level error "Failed to remove program: $NAME"
+        return 1
+    fi
+}
+
+move_command() {
+    NAME="$1"
+
+    if [ -z "$NAME" ]; then
+        COUNT=$(program_list | wc -l)
+        if [ $COUNT -eq 0 ]; then
+            gum log --time rfc822 --level error "No programs found"
+            return 1
+        fi
+        NAME=$(program_list | gum filter)
+    fi
+
+    if [ -z "$NAME" ]; then
+        echo "Usage: program mv [name]"
+        return 1
+    fi
+
+    PROGRAM_FILE="$DIRECTORY/$NAME.conf"
+
+    if [ ! -f "$PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program not found: $NAME"
+        return 1
+    fi
+
+    SELECTED=$(get_env_names | grep -v "^$ENV_NAME$" | gum choose --header="Move to environment: " || exit 1)
+    if [ -z "$SELECTED" ] || [ $? -ne 0 ]; then
+        gum log --time rfc822 --level error "No environment selected"
+        return 1
+    fi
+
+    TARGET_PROGRAM_FILE=$(printf "$DIRECTORY_PATH" "$SELECTED")/$NAME.conf
+
+    if [ -f "$TARGET_PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program already exists: $NAME"
+        return 1
+    fi
+
+    mv "$PROGRAM_FILE" "$TARGET_PROGRAM_FILE"
+    if [ $? -eq 0 ]; then
+        gum log --time rfc822 --level info "Program moved!"
+        echo "$NAME,$TARGET_PROGRAM_FILE" | gum table -c "Name,File" --print --border="none"
+        return 0
+    else
+        gum log --time rfc822 --level error "Failed to move program: $NAME"
+        return 1
+    fi
+}
+
+new_command() {
+    NAME="$1"
+
+    if [ -z "$NAME" ]; then
+        echo "Usage: program new [name]"
+        return 1
+    fi
+
+    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        gum log --time rfc822 --level error "Invalid program name: $NAME"
+        return 1
+    fi
+
+    PROGRAM_FILE="$DIRECTORY/$NAME.conf"
+
+    if [ -f "$PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program already exists: $NAME"
+        return 1
+    fi
+
+    CONTENT=()
+    CONTENT+=("[program:$NAME]")
+    INPUT_COMMAND=$(gum input --prompt="Command: "  --placeholder="Que comando vas a ejecutar ?")
+    CONTENT+=("command=$INPUT_COMMAND")
+    CONTENT+=("stdout_logfile=/var/log/%(program_name)-stdout.log")
+    CONTENT+=("stderr_logfile=/var/log/%(program_name)-stderr.log")
+    CONTENT+=("stopsignal=SIGTERM")
+    CONTENT+=("directory=/var/www")
+    INPUT_AUTORESTART=$(gum confirm "Quieres que se reinicie automaticamente ?" && echo "true" || echo "false")
+    CONTENT+=("autorestart=$INPUT_AUTORESTART")
+    INPUT_AUTOSTART=$(gum confirm "Quieres que se inicie automaticamente ?" && echo "true" || echo "false")
+    CONTENT+=("autostart=$INPUT_AUTOSTART")
+    CONTENT+=("numprocs=1")
+
+    CONTENT_LENGTH=$((${#CONTENT[@]} * 2))
+    CONTENT_BODY=$(IFS=$'\n'; echo "${CONTENT[*]}")
+
+    gum log --level info "File: $PROGRAM_FILE"
+    echo "$CONTENT_BODY" | gum write --show-line-numbers --show-cursor-line --char-limit=0 > "$PROGRAM_FILE"
+    if [ $? -eq 0 ]; then
+        gum log --time rfc822 --level info "Program created: $NAME"
+        echo "$NAME,$PROGRAM_FILE" | gum table -c "Name,File" --print --border="none"
+        return 0
+    else
+        rm -f "$PROGRAM_FILE"
+        gum log --time rfc822 --level error "Failed to create program: $NAME"
+        return 1
+    fi
+}
+
+edit_command() {
+    NAME="$1"
+
+    if [ -z "$NAME" ]; then
+        COUNT=$(program_list | wc -l)
+        if [ $COUNT -eq 0 ]; then
+            gum log --time rfc822 --level error "No programs found"
+            return 1
+        fi
+        NAME=$(program_list | gum filter)
+    fi
+
+    if [ -z "$NAME" ]; then
+        echo "Usage: program edit [name]"
+        return 1
+    fi
+
+    PROGRAM_FILE="$DIRECTORY/$NAME.conf"
+
+    if [ ! -f "$PROGRAM_FILE" ]; then
+        gum log --time rfc822 --level error "Program not found: $NAME"
+        return 1
+    fi
+
+    echo "📄 File: $PROGRAM_FILE"
+    echo "-----------------------"
+
+    CONTENT=$(cat "$PROGRAM_FILE" | gum write --show-line-numbers --show-cursor-line --char-limit=0 || exit 1)
+    if [ $? -eq 1 ]; then
+        gum log --time rfc822 --level error "Failed to read program: $NAME"
+        return 1
+    else
+        echo "$CONTENT" > "$PROGRAM_FILE"
+        gum log --time rfc822 --level info "Program updated: $NAME"
+        return 0
+    fi
+}
+
+case "$COMMAND" in
+    ls|list)
+        list_command $@
+        exit $?
+        ;;
+    cp|copy)
+        copy_command $@
+        exit $?
+        ;;
+    rm|remove)
+        remove_command $@
+        exit $?
+        ;;
+    mv|move)
+        move_command $@
+        exit $?
+        ;;
+    rn|rename)
+        rename_command $@
+        exit $?
+        ;;
+    new)
+        new_command $@
+        exit $?
+        ;;
+    edit)
+        edit_command $@
+        exit $?
+        ;;
+esac

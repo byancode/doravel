@@ -11,6 +11,7 @@ RUN set -eux; \
     # packages are removed after installation
     # https://pkgs.alpinelinux.org/packages
     --build-pkg "coreutils" \
+    --build-pkg "imagemagick-dev" \
     --build-pkg "gmp-dev" \
     --build-pkg "gcc" \
     # https://github.com/composer/composer/tags
@@ -89,11 +90,13 @@ RUN set -eux; \
     --php-enable "phpdbg-readline" \
     --php-enable "option-checking=fatal" \
     # https://pecl.php.net/package/swoole
-    --php-extension "swoole=5.1.1" \
+    --php-extension "swoole=5.1.6" \
     # https://pecl.php.net/package/redis
-    --php-extension "redis=6.0.2" \
+    --php-extension "redis=6.1.0" \
     # https://pecl.php.net/package/uv
     --php-extension "uv=0.3.0" \
+    # https://pecl.php.net/package/imagick
+    --php-extension "imagick=3.7.0" \
 ;
 
 COPY . /var/www

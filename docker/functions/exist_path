@@ -1,0 +1,4 @@
+#!/bin/ash
+
+echo " $PATH " | tr ":" " " | grep -q " $1 "
+exit $?

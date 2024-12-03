@@ -4,5 +4,7 @@
 sudo cp -f bin/doravel /usr/local/bin/doravel
 sudo chmod +x /usr/local/bin/doravel
 
-cp -f bin/doravel ~/bin/doravel
-ln -fs ~/bin/doravel ~/bin/d
+cp -f bin/doravel /home/byancode/bin/doravel
+chmod +x /home/byancode/bin/doravel
+rm -f /home/byancode/bin/d
+ln -fs /home/byancode/bin/doravel /home/byancode/bin/d

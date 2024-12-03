@@ -22,10 +22,11 @@ services:
         depends_on:
             - memcached
             - postgres
+            - mysql
             - redis
     redis:
         restart: on-failure
-        image: redis
+        image: redis:${REDIS_VERSION:-latest}
         volumes:
             - data-redis:/data
         expose:
@@ -54,6 +55,8 @@ services:
     mailpit:
         restart: on-failure
         image: axllent/mailpit:${MAILPIT_VERSION:-latest}
+        labels:
+            - env.MAIL_HOST=mailpit
         expose:
             - 1025
         ports:
@@ -90,6 +93,9 @@ services:
             POSTGRES_DB: $DB_DATABASE
             POSTGRES_USER: $DB_USERNAME
             POSTGRES_PASSWORD: $DB_PASSWORD
+        labels:
+            - env.DB_CONNECTION=pgsql
+            - env.DB_HOST=postgres
         expose:
             - 5432
         volumes:
@@ -111,6 +117,38 @@ services:
             - data-pgadmin:/var/lib/pgadmin
         networks:
             - doravel
+    mysql:
+        restart: on-failure
+        image: mysql:${MYSQL_VERSION:-8}
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+            MYSQL_DATABASE: ${DB_DATABASE:-doravel}
+            MYSQL_USER: ${DB_USERNAME:-doravel}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_TCP_PORT: ${DB_PORT:-3306}
+        expose:
+            - ${DB_PORT:-3306}
+        labels:
+            - env.DB_CONNECTION=mysql
+            - env.DB_HOST=mysql
+        volumes:
+            - data-mysql:/var/lib/mysql
+        networks:
+            - doravel
+    phpmyadmin:
+        restart: on-failure
+        image: phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION:-latest}
+        environment:
+            PMA_HOST: ${DB_HOST:-mysql}
+            PMA_PORT: ${DB_PORT:-3306}
+            PMA_USER: ${DB_USERNAME:-root}
+            PMA_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+        ports:
+            - ${PHPMYADMIN_PORT:-8080}:80
+        networks:
+            - doravel
+        depends_on:
+            - mysql
 networks:
     doravel:
         driver: bridge
@@ -118,5 +156,6 @@ volumes:
     data-meilisearch:
     data-postgres:
     data-pgadmin:
+    data-mysql:
     data-redis:
     data-minio:

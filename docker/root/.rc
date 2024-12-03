@@ -16,6 +16,6 @@ export REMOTE_IP=$(cat $REMOTE_IP_FILE)
 
 # PATH
 
-if [ -d "/root/bin" ]; then
-    add_bin_path "/root/bin"
+if ! exist_path "/root/bin"; then
+    export PATH="/root/bin:$PATH"
 fi

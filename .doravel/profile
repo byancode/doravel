@@ -3,8 +3,8 @@
 #
 # EXPORT ENVIRONMENT VARIABLES
 #
-if [ -d "$APP_PATH/.doravel/bin" ]; then
-    add_bin_path "$APP_PATH/.doravel/bin"
+if ! exist_path "$APP_PATH/.doravel/bin"; then
+    export PATH="$APP_PATH/.doravel/bin:$PATH"
 fi
 #
 # SET ALIAS FOR COMMANDS

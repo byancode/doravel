@@ -114,6 +114,7 @@ COMMANDS_ENVIRONMENT=(
     "timestamp"
     "compose"
     "destroy"
+    "program"
     "reload"
     "doctor"
     "deploy"
@@ -407,12 +408,20 @@ if [ ! -z "$COMMAND_ENVIRONMENT" ]; then
                 exit $?
             fi
         fi
-    elif [ "$COMMAND_ENVIRONMENT" == 'doctor' ]; then
+    elif [ "$COMMAND_ENVIRONMENT" == 'program' ]; then
         if [ $DORAVEL_CONTAINER -eq 1 ]; then
-            /usr/doravel/bin/doctor
+            /usr/doravel/bin/program --env "$ENV_NAME" $@
             exit $?
         else
-            container_exec doravel $ENV_NAME doctor
+            container_exec doravel $ENV_NAME program $@
+            exit $?
+        fi
+    elif [ "$COMMAND_ENVIRONMENT" == 'doctor' ]; then
+        if [ $DORAVEL_CONTAINER -eq 1 ]; then
+            /usr/doravel/bin/doctor $@
+            exit $?
+        else
+            container_exec doravel $ENV_NAME doctor $@
             exit $?
         fi
     elif [ "$COMMAND_ENVIRONMENT" == "reload" ]; then

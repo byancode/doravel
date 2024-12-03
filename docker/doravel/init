@@ -1,4 +1,5 @@
 #!/bin/bash
+source /root/.bashrc
 
 APP_ENV=${APP_ENV:-'local'}
 ENV_NAME="${1:-$APP_ENV}"
