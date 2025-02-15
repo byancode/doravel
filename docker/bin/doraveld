@@ -3,19 +3,33 @@
 echo "Iniciando doraveld..."
 source /root/.bashrc
 
-echo $$ > /var/run/doraveld.pid
-
-cleanup() {
-    if [ -z "$child" ]; then
+onSigTerm() {
+    if [ ! -z "$child" ]; then
         kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
     fi
-    rm -f /var/run/doraveld.pid
-    exit 0
 }
 
-trap cleanup SIGQUIT
-trap cleanup SIGTERM
-trap cleanup EXIT
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
 
 if [ ! -f /usr/bin/supervisord ]; then
     gum log --time rfc822 --level fatal "No has instalado supervisord"

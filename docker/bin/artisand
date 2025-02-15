@@ -2,16 +2,32 @@
 
 set -eu
 
-echo $$ > /var/run/artisand.pid
+onSigTerm() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
 
-cleanup() {
-    rm -f /var/run/artisand.pid
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    fi
     exit 0
 }
 
-trap cleanup SIGTERM
-trap cleanup SIGQUIT
-trap cleanup EXIT
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
 
 
 if [ ! -f /usr/local/bin/php-cli ]; then
@@ -52,7 +68,11 @@ if [ ! -L $APP_PATH/public/storage ]; then
 fi
 
 if [ -d $APP_PATH/vendor/laravel/octane ] && is_true $OCTANE_ENABLED; then
-    /usr/local/bin/octaned $@
+    /usr/local/bin/octaned $@ &
+    child=$!
+    wait "$child"
 else
-    /usr/local/bin/artisan serve $@
+    /usr/local/bin/artisan serve $@ &
+    child=$!
+    wait "$child"
 fi

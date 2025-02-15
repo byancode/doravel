@@ -1,16 +1,33 @@
 #!/bin/bash
 set -eu
 
-cleanup() {
+onSigTerm() {
     if [ ! -z "$child" ]; then
         kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
     fi
-    exit 0
 }
 
-trap cleanup SIGQUIT
-trap cleanup SIGTERM
-trap cleanup EXIT
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
 
 APP_PATH=${APP_PATH:-"/var/www"}
 CRONTAB_DIR="/var/spool/cron/crontabs"

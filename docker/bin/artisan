@@ -1,12 +1,32 @@
 #!/bin/ash
 
-cleanup() {
-    exit 0
+onSigTerm() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
+    fi
 }
 
-trap cleanup SIGTERM
-trap cleanup SIGQUIT
-trap cleanup EXIT
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
 
 if [ ! -f /usr/local/bin/php-cli ]; then
     gum log --time rfc822 --level fatal "No has instalado PHP"
@@ -29,7 +49,11 @@ APP_ENV=${APP_ENV:-'local'}
 COMMAND="/usr/local/bin/php /var/www/artisan"
 
 if [ "$APP_ENV" == "local" ]; then
-    $COMMAND $@
+    $COMMAND $@ &
+    child=$!
+    wait "$child"
 else
-    $COMMAND --env="$APP_ENV" $@
+    $COMMAND --env="$APP_ENV" $@ &
+    child=$!
+    wait "$child"
 fi

@@ -2,13 +2,33 @@
 
 set -eu
 
-cleanup() {
-    exit 0
+onSigTerm() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
+    fi
 }
 
-trap cleanup SIGQUIT
-trap cleanup SIGTERM
-trap cleanup EXIT
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
 
 APP_PATH=${APP_PATH:-"/var/www"}
 
@@ -43,4 +63,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-/usr/bin/supervisorctl  --configuration "$CONFIGURATION" $@
+/usr/bin/supervisorctl  --configuration "$CONFIGURATION" $@ &
+child=$!
+wait "$child"

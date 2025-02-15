@@ -1,12 +1,34 @@
 #!/bin/bash
 set -eu
 
-cleanup() {
-    exit 0
+onSigTerm() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
+    fi
 }
 
-trap cleanup SIGQUIT
-trap cleanup SIGTERM
-trap cleanup EXIT
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
 
-/usr/local/bin/artisan schedule:work $@
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
+
+/usr/local/bin/artisan schedule:work $@ &
+child=$!
+wait "$child"

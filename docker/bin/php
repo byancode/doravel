@@ -1,12 +1,32 @@
 #!/bin/bash
 
-cleanup() {
-    exit 0
+onSigTerm() {
+    if [ ! -z "$child" ]; then
+        kill -SIGTERM $child 2>/dev/null
+    else
+        exit 0
+    fi
 }
 
-trap cleanup SIGTERM
-trap cleanup SIGQUIT
-trap cleanup EXIT
+onSigQuit() {
+    if [ ! -z "$child" ]; then
+        kill -SIGQUIT $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+onSigKill() {
+    if [ ! -z "$child" ]; then
+        kill -SIGKILL $child 2>/dev/null
+    else
+        exit 0
+    fi
+}
+
+trap onSigTerm SIGTERM
+trap onSigQuit SIGQUIT
+trap onSigKill SIGKILL
 
 APP_PATH=${APP_PATH:-"/var/www"}
 
@@ -52,15 +72,17 @@ if [ ! -f $PHP_INI_FILE ]; then
     PHP_INI_FILE="/etc/php/php.ini"
 fi
 
-# PHP
-sed -e 's/upload_max_filesize\s?=.*/upload_max_filesize = '$PHP_UPLOAD_MAX_FILESIZE'/' -i $PHP_INI_FILE
-sed -e 's/max_execution_time\s?=.*/max_execution_time = '$PHP_MAX_EXECUTION_TIME'/' -i $PHP_INI_FILE
-sed -e 's/post_max_size\s?=.*/post_max_size = '$PHP_POST_MAX_SIZE'/' -i $PHP_INI_FILE
-sed -e 's/memory_limit\s?=.*/memory_limit = '$PHP_MEMORY_LIMIT'/' -i $PHP_INI_FILE
-
-# OPCACHE
 OPCACHE_ENABLE=$(is_true $PHP_OPCACHE_ENABLED && echo 1 || echo 0)
-sed -e 's/opcache.enable\s?=.*/opcache.enable = '$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
-sed -e 's/opcache.enable_cli\s?=.*/opcache.enable_cli='$OPCACHE_ENABLE'/' -i $PHP_INI_FILE
 
-/usr/local/bin/php-cli -c "$PHP_INI_FILE" -d variables_order=EGPCS $@
+/usr/local/bin/php-cli \
+    -c "$PHP_INI_FILE" \
+    -d variables_order=EGPCS \
+    -d "upload_max_filesize=$PHP_UPLOAD_MAX_FILESIZE" \
+    -d "max_execution_time=$PHP_MAX_EXECUTION_TIME" \
+    -d "post_max_size=$PHP_POST_MAX_SIZE" \
+    -d "memory_limit=$PHP_MEMORY_LIMIT" \
+    -d "opcache.enable_cli=$OPCACHE_ENABLE" \
+    -d "opcache.enable=$OPCACHE_ENABLE" \
+    $@ &
+child=$!
+wait "$child"

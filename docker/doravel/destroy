@@ -45,16 +45,16 @@ if [ $FORCE -eq 0 ]; then
 fi
 
 if [ "$PASSWORD" == "$KEYWORD" ]; then
-    rm -f "$ENV_FILE"
-    rm -f "$DOCKER_FILE"
-    rm -f "$DOCKER_COMPOSE_FILE"
-    rm -f ".doravel/cron/$ENV_NAME"
-    rm -f ".doravel/php/$ENV_NAME.ini"
-    rm -f ".doravel/php/$ENV_NAME.d"
-    rm -f ".doravel/nginx/$ENV_NAME.d"
-    rm -f ".doravel/nginx/$ENV_NAME.conf"
-    rm -f ".doravel/supervisor/$ENV_NAME.conf"
-    rm -f ".doravel/supervisor/$ENV_NAME.d"
+    [ -f "$ENV_FILE" ] && rm -f "$ENV_FILE"
+    [ -f "$DOCKER_FILE" ] && rm -f "$DOCKER_FILE"
+    [ -f "$DOCKER_COMPOSE_FILE" ] && rm -f "$DOCKER_COMPOSE_FILE"
+    [ -f ".doravel/cron/$ENV_NAME" ] && rm -f ".doravel/cron/$ENV_NAME"
+    [ -f ".doravel/php/$ENV_NAME.ini" ] && rm -f ".doravel/php/$ENV_NAME.ini"
+    [ -d ".doravel/php/$ENV_NAME.d" ] && rm -Rf ".doravel/php/$ENV_NAME.d"
+    [ -d ".doravel/nginx/$ENV_NAME.d" ] && rm -Rf ".doravel/nginx/$ENV_NAME.d"
+    [ -f ".doravel/nginx/$ENV_NAME.conf" ] && rm -f ".doravel/nginx/$ENV_NAME.conf"
+    [ -f ".doravel/supervisor/$ENV_NAME.conf" ] && rm -f ".doravel/supervisor/$ENV_NAME.conf"
+    [ -d ".doravel/supervisor/$ENV_NAME.d" ] && rm -Rf ".doravel/supervisor/$ENV_NAME.d"
     gum log --time rfc822 --level info "destroyed environment $ENV_NAME"
     exit 0
 else
