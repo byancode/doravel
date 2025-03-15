@@ -27,7 +27,6 @@ COPY docker/bin/* /usr/local/bin/
 COPY .planning/ /root/.planning/
 COPY .doravel/ /root/.doravel/
 COPY .vscode/ /root/.vscode/
-COPY .flows/ /root/.flows/
 COPY bin/* /usr/local/bin/
 COPY stubs/ /root/.stubs/
 COPY docker/root/* /root/

@@ -44,9 +44,13 @@ fi
 recursive_cp /root/ .planning/
 recursive_cp /root/ .doravel/
 recursive_cp /root/ .vscode/
-recursive_cp /root/ .flows/
 
 touch database/database.sqlite
+
+if [ -f /var/www/.env ]; then
+    cp -f /var/www/.env .env.backup.$(date +%s)
+    rm -f /var/www/.env
+fi
 
 /usr/doravel/bin/init local
 /usr/doravel/bin/destroy example --force
