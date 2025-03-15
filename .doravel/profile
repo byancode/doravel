@@ -14,3 +14,5 @@ alias d="doravel"
 alias a="doravel $APP_ENV artisan"
 alias c="doravel $APP_ENV composer"
 alias s="doravel $APP_ENV supervisorctl"
+
+PS1='\[\e[31m\]$APP_ENV\[\e[0m\]:\w\$ '
