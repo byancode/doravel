@@ -33,25 +33,25 @@ trap onSigKill SIGKILL
 
 if [ ! -f /usr/bin/supervisord ]; then
     gum log --time rfc822 --level fatal "No has instalado supervisord"
-    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar supervisor
+    # TODO - aquí debe hacer información de como usar el comando builder para instalar supervisor
     exit 1
 fi
 
 if [ ! -f /usr/local/bin/php-cli ]; then
     gum log --time rfc822 --level fatal "No has instalado PHP"
-    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar PHP
+    # TODO - aquí debe hacer información de como usar el comando builder para instalar PHP
     exit 1
 fi
 
 if [ ! -f /usr/local/bin/composer ]; then
     gum log --time rfc822 --level fatal "No has instalado Composer"
-    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar Composer
+    # TODO - aquí debe hacer información de como usar el comando builder para instalar Composer
     exit 1
 fi
 
 if [ ! -f /usr/local/bin/npx ]; then
     gum log --time rfc822 --level fatal "No has instalado node npx npm"
-    # TODO - aqui debe hacer informacion de como usar el comando builder para instalar npx
+    # TODO - aquí debe hacer información de como usar el comando builder para instalar npx
     exit 1
 fi
 
