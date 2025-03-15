@@ -22,6 +22,12 @@
     },
     "dbmlERDPreviewer.preferredTheme": "dark",
     "cSpell.words": [
-        "nginx"
+        "autorestart",
+        "doraveld",
+        "nginx",
+        "nodaemon",
+        "supervisorctl",
+        "supervisord",
+        "swoole"
     ]
 }
